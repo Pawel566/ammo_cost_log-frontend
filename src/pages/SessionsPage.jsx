@@ -2,18 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { sessionsAPI, gunsAPI, ammoAPI } from '../services/api';
 
 const SessionsPage = () => {
-  const [sessions, setSessions] = useState([]);
+  const [sessions, setSessions] = useState({ cost_sessions: [], accuracy_sessions: [] });
   const [guns, setGuns] = useState([]);
   const [ammo, setAmmo] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [formType, setFormType] = useState('cost'); // 'cost' or 'accuracy'
   const [formData, setFormData] = useState({
     gun_id: '',
     ammo_id: '',
     date: new Date().toISOString().split('T')[0],
     shots: '',
-    notes: ''
+    notes: '',
+    distance_m: '',
+    hits: ''
   });
 
   useEffect(() => {
@@ -60,23 +63,43 @@ const SessionsPage = () => {
       return;
     }
     
+    if (formType === 'accuracy') {
+      const hits = parseInt(formData.hits);
+      if (hits < 0 || hits > shots) {
+        setError('Liczba trafień musi być między 0 a liczbą strzałów');
+        return;
+      }
+      if (!formData.distance_m || parseInt(formData.distance_m) <= 0) {
+        setError('Dystans musi być większy od 0');
+        return;
+      }
+    }
+    
     try {
       const sessionData = {
         gun_id: parseInt(formData.gun_id),
         ammo_id: parseInt(formData.ammo_id),
         date: formData.date,
-        shots: shots,
-        cost: 0, // Backend automatycznie obliczy koszt, ale wymaga tego pola
-        notes: formData.notes || null
+        shots: shots
       };
       
-      const response = await sessionsAPI.create(sessionData);
+      let response;
+      if (formType === 'cost') {
+        response = await sessionsAPI.createCost(sessionData);
+      } else {
+        sessionData.distance_m = parseInt(formData.distance_m);
+        sessionData.hits = parseInt(formData.hits);
+        response = await sessionsAPI.createAccuracy(sessionData);
+      }
+      
       setFormData({
         gun_id: '',
         ammo_id: '',
         date: new Date().toISOString().split('T')[0],
         shots: '',
-        notes: ''
+        notes: '',
+        distance_m: '',
+        hits: ''
       });
       setShowForm(false);
       setError(null);
@@ -111,13 +134,29 @@ const SessionsPage = () => {
       <div className="card">
         <div className="card-header">
           <h2 className="card-title">Zarządzanie sesjami strzeleckimi</h2>
-          <button 
-            className="btn btn-primary" 
-            onClick={() => setShowForm(!showForm)}
-            disabled={guns.length === 0 || ammo.length === 0}
-          >
-            {showForm ? 'Anuluj' : 'Dodaj sesję'}
-          </button>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button 
+              className={`btn ${formType === 'cost' ? 'btn-primary' : 'btn-secondary'}`}
+              onClick={() => setFormType('cost')}
+              disabled={showForm}
+            >
+              Sesja kosztowa
+            </button>
+            <button 
+              className={`btn ${formType === 'accuracy' ? 'btn-primary' : 'btn-secondary'}`}
+              onClick={() => setFormType('accuracy')}
+              disabled={showForm}
+            >
+              Sesja celnościowa
+            </button>
+            <button 
+              className="btn btn-success" 
+              onClick={() => setShowForm(!showForm)}
+              disabled={guns.length === 0 || ammo.length === 0}
+            >
+              {showForm ? 'Anuluj' : 'Dodaj sesję'}
+            </button>
+          </div>
         </div>
 
         {guns.length === 0 && (
@@ -194,6 +233,35 @@ const SessionsPage = () => {
                 required
               />
             </div>
+            
+            {formType === 'accuracy' && (
+              <>
+                <div className="form-group">
+                  <label className="form-label">Dystans (metry) *</label>
+                  <input
+                    type="number"
+                    min="1"
+                    className="form-input"
+                    value={formData.distance_m}
+                    onChange={(e) => setFormData({ ...formData, distance_m: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Liczba trafień *</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max={formData.shots || 0}
+                    className="form-input"
+                    value={formData.hits}
+                    onChange={(e) => setFormData({ ...formData, hits: e.target.value })}
+                    required
+                  />
+                </div>
+              </>
+            )}
+            
             <div className="form-group">
               <label className="form-label">Notatki</label>
               <textarea
@@ -211,9 +279,9 @@ const SessionsPage = () => {
       </div>
 
       <div className="card">
-        <h3 className="card-title">Historia sesji</h3>
-        {sessions.length === 0 ? (
-          <p className="text-center">Brak zarejestrowanych sesji</p>
+        <h3 className="card-title">Historia sesji kosztowych</h3>
+        {sessions.cost_sessions.length === 0 ? (
+          <p className="text-center">Brak zarejestrowanych sesji kosztowych</p>
         ) : (
           <table className="table">
             <thead>
@@ -227,7 +295,7 @@ const SessionsPage = () => {
               </tr>
             </thead>
             <tbody>
-              {sessions.map((session) => (
+              {sessions.cost_sessions.map((session) => (
                 <tr key={session.id}>
                   <td>{new Date(session.date).toLocaleDateString('pl-PL')}</td>
                   <td>{getGunName(session.gun_id)}</td>
@@ -235,6 +303,46 @@ const SessionsPage = () => {
                   <td>{session.shots}</td>
                   <td>{session.cost.toFixed(2)} zł</td>
                   <td>{session.notes || '-'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      <div className="card">
+        <h3 className="card-title">Historia sesji celnościowych</h3>
+        {sessions.accuracy_sessions.length === 0 ? (
+          <p className="text-center">Brak zarejestrowanych sesji celnościowych</p>
+        ) : (
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Broń</th>
+                <th>Amunicja</th>
+                <th>Dystans</th>
+                <th>Strzały</th>
+                <th>Trafienia</th>
+                <th>Celność</th>
+                <th>Komentarz AI</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sessions.accuracy_sessions.map((session) => (
+                <tr key={session.id}>
+                  <td>{new Date(session.date).toLocaleDateString('pl-PL')}</td>
+                  <td>{getGunName(session.gun_id)}</td>
+                  <td>{getAmmoName(session.ammo_id)}</td>
+                  <td>{session.distance_m} m</td>
+                  <td>{session.shots}</td>
+                  <td>{session.hits}</td>
+                  <td style={{ fontWeight: 'bold', color: session.accuracy_percent >= 80 ? '#28a745' : session.accuracy_percent >= 60 ? '#ffc107' : '#dc3545' }}>
+                    {session.accuracy_percent}%
+                  </td>
+                  <td style={{ fontSize: '12px', maxWidth: '200px' }}>
+                    {session.ai_comment || '-'}
+                  </td>
                 </tr>
               ))}
             </tbody>
