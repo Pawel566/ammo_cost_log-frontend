@@ -21,6 +21,7 @@ export const ammoAPI = {
   getAll: () => api.get('/ammo'),
   create: (ammoData) => api.post('/ammo', ammoData),
   delete: (id) => api.delete(`/ammo/${id}`),
+  addQuantity: (id, amount) => api.post(`/ammo/${id}/add`, { amount })
 };
 
 // Sessions API

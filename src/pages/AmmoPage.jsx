@@ -72,6 +72,24 @@ const AmmoPage = () => {
     }
   };
 
+  const handleAddQuantity = async (id) => {
+    const amountStr = window.prompt('Ile sztuk dodać?');
+    if (amountStr === null) return;
+    const amount = parseInt(amountStr, 10);
+    if (Number.isNaN(amount) || amount <= 0) {
+      setError('Wprowadź poprawną dodatnią liczbę');
+      return;
+    }
+    try {
+      await ammoAPI.addQuantity(id, amount);
+      setError(null);
+      fetchAmmo();
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Błąd podczas dodawania ilości amunicji');
+      console.error(err);
+    }
+  };
+
   if (loading) {
     return <div className="text-center">Ładowanie...</div>;
   }
@@ -169,6 +187,13 @@ const AmmoPage = () => {
                   <td>{item.price_per_unit.toFixed(2)} zł</td>
                   <td>{item.units_in_package || 0} szt.</td>
                   <td>
+                    <button
+                      className="btn btn-primary"
+                      onClick={() => handleAddQuantity(item.id)}
+                      style={{ marginRight: '8px' }}
+                    >
+                      Dodaj ilość
+                    </button>
                     <button
                       className="btn btn-danger"
                       onClick={() => handleDelete(item.id)}
