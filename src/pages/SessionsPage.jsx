@@ -9,6 +9,7 @@ const SessionsPage = () => {
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [formType, setFormType] = useState('cost'); // 'cost' or 'accuracy'
+  const [apiKey, setApiKey] = useState(localStorage.getItem('openai_api_key') || '');
   const [formData, setFormData] = useState({
     gun_id: '',
     ammo_id: '',
@@ -22,6 +23,12 @@ const SessionsPage = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  const handleApiKeyChange = (e) => {
+    const key = e.target.value;
+    setApiKey(key);
+    localStorage.setItem('openai_api_key', key);
+  };
 
   const fetchData = async () => {
     try {
@@ -89,6 +96,7 @@ const SessionsPage = () => {
       } else {
         sessionData.distance_m = parseInt(formData.distance_m);
         sessionData.hits = parseInt(formData.hits);
+        sessionData.openai_api_key = apiKey;
         response = await sessionsAPI.createAccuracy(sessionData);
       }
       
@@ -179,6 +187,35 @@ const SessionsPage = () => {
 
         {showForm && guns.length > 0 && ammo.length > 0 && (
           <form onSubmit={handleSubmit}>
+            {formType === 'accuracy' && (
+              <div className="form-group">
+                <label className="form-label">
+                  Klucz API OpenAI 
+                  <span 
+                    title="Klucz API OpenAI jest potrzebny do generowania inteligentnych komentarzy dla sesji celnościowych. Komentarze zawierają ocenę wyników i sugestie poprawy techniki strzeleckiej. Klucz można uzyskać na platform.openai.com"
+                    style={{ 
+                      cursor: 'help', 
+                      color: '#007bff', 
+                      marginLeft: '5px',
+                      fontSize: '14px'
+                    }}
+                  >
+                    ⓘ
+                  </span>
+                </label>
+                <input
+                  type="password"
+                  className="form-input"
+                  value={apiKey}
+                  onChange={handleApiKeyChange}
+                  placeholder="sk-..."
+                  style={{ fontFamily: 'monospace' }}
+                />
+                <small className="form-text text-muted">
+                  Klucz jest przechowywany lokalnie w przeglądarce i używany tylko do generowania komentarzy AI
+                </small>
+              </div>
+            )}
             <div className="form-group">
               <label className="form-label">Broń *</label>
               <select
