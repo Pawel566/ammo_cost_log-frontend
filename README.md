@@ -1,39 +1,50 @@
-# Ammo Cost Log - Frontend
+# 🎯 Ammo Cost Log - Frontend
 
-Interfejs użytkownika do aplikacji śledzenia kosztów i celności strzeleckich.
+React frontend do aplikacji zarządzania strzelectwem z inteligentnym asystentem AI.
 
-## Co robi
-- Zarządzanie bronią i amunicją
-- Dodawanie sesji kosztowych i celnościowych
-- Przeglądanie historii sesji
-- Wykresy miesięczne (koszty i celność)
-- Statystyki ogólne
+## ✨ Funkcjonalności
 
-## Technologie
-- **React** - framework UI
-- **Vite** - build tool
-- **Axios** - HTTP client
-- **CSS** - styling
+- **Zarządzanie sprzętem** - katalog broni i amunicji z cenami
+- **Śledzenie kosztów** - sesje strzeleckie z automatycznym obliczaniem wydatków
+- **Analiza celności** - pomiar wyników z komentarzami AI (GPT-5-mini)
+- **Statystyki** - miesięczne podsumowania i wykresy
 
-## Jak uruchomić
+## 🛠️ Technologie
 
-1. Zainstaluj zależności:
+- React, Vite, React Router, CSS3
+
+## 🚀 Instalacja
+
 ```bash
 npm install
-```
-
-2. Uruchom serwer deweloperski:
-```bash
 npm run dev
 ```
 
-Aplikacja będzie dostępna na: http://localhost:3000
+**Dostęp**: http://localhost:3000  
+**Wymagania**: Backend uruchomiony na porcie 8000
 
-## Wymagania
-- Backend musi być uruchomiony na porcie 8000
-- Node.js 16+ i npm
+## 📱 Strony aplikacji
 
-## Plany na przyszłość
-- **System logowania** - interfejs dla kont użytkowników
-- **Profile użytkowników** - wybór poziomu zaawansowania
-- **Personalizacja AI** - komentarze dostosowane do poziomu doświadczenia
+- **Strona główna** (`/`) - opis aplikacji i nawigacja
+- **Broń** (`/guns`) - zarządzanie bronią
+- **Amunicja** (`/ammo`) - zarządzanie amunicją  
+- **Sesje** (`/sessions`) - historia sesji strzeleckich
+- **Podsumowanie** (`/summary`) - statystyki i wykresy
+
+## 🎨 Design
+
+Nowoczesny design z gradientami, animacjami CSS i responsywnym layoutem. Kolorowe oznaczenia wyników celności.
+
+## 🚀 Deployment
+
+Automatyczny deployment na Vercel przez GitHub.
+
+## 🔮 Plany na przyszłość
+
+- Konta użytkowników z prywatnymi kolekcjami
+- Poziomy zaawansowania
+- Personalizacja AI komentarzy
+
+---
+
+**Stworzone z ❤️ dla społeczności strzeleckiej**
