@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import HomePage from './pages/HomePage';
 import GunsPage from './pages/GunsPage';
 import AmmoPage from './pages/AmmoPage';
 import SessionsPage from './pages/SessionsPage';
@@ -36,7 +37,7 @@ function App() {
 
         <main className="container">
           <Routes>
-            <Route path="/" element={<SummaryPage />} />
+            <Route path="/" element={<HomePage />} />
             <Route path="/guns" element={<GunsPage />} />
             <Route path="/ammo" element={<AmmoPage />} />
             <Route path="/sessions" element={<SessionsPage />} />
