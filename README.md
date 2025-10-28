@@ -26,14 +26,15 @@ npm run dev
 ## 📱 Strony aplikacji
 
 - **Strona główna** (`/`) - opis aplikacji i nawigacja
-- **Broń** (`/guns`) - zarządzanie bronią
-- **Amunicja** (`/ammo`) - zarządzanie amunicją  
-- **Sesje** (`/sessions`) - historia sesji strzeleckich
+- **Broń** (`/guns`) - zarządzanie bronią (dodaj, edytuj, usuń)
+- **Amunicja** (`/ammo`) - zarządzanie amunicją
+- **Sesje kosztowe** (`/cost-sessions`) - historia sesji z filtrowaniem
+- **Sesje celnościowe** (`/accuracy-sessions`) - analiza celności z AI
 - **Podsumowanie** (`/summary`) - statystyki i wykresy
 
 ## 🎨 Design
 
-Nowoczesny design z gradientami, animacjami CSS i responsywnym layoutem. Kolorowe oznaczenia wyników celności.
+Szary motyw (#545454) z białym tekstem i zielonymi akcentami (#4caf50). Profesjonalne ikony SVG, responsywny layout, filtr wyszukiwania dla sesji.
 
 ## 🚀 Deployment
 
@@ -44,7 +45,3 @@ Automatyczny deployment na Vercel przez GitHub.
 - Konta użytkowników z prywatnymi kolekcjami
 - Poziomy zaawansowania
 - Personalizacja AI komentarzy
-
----
-
-**Stworzone z ❤️ dla społeczności strzeleckiej**

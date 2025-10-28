@@ -1,34 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { sessionsAPI, gunsAPI, ammoAPI } from '../services/api';
 
-const SessionsPage = () => {
-  const [sessions, setSessions] = useState({ cost_sessions: [], accuracy_sessions: [] });
+const CostSessionsPage = () => {
+  const [sessions, setSessions] = useState([]);
+  const [filteredSessions, setFilteredSessions] = useState([]);
   const [guns, setGuns] = useState([]);
   const [ammo, setAmmo] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
-  const [formType, setFormType] = useState('cost'); // 'cost' or 'accuracy'
-  const [apiKey, setApiKey] = useState(localStorage.getItem('openai_api_key') || '');
+  const [filterType, setFilterType] = useState('');
+  const [filterValue, setFilterValue] = useState('');
   const [formData, setFormData] = useState({
     gun_id: '',
     ammo_id: '',
     date: new Date().toISOString().split('T')[0],
     shots: '',
-    notes: '',
-    distance_m: '',
-    hits: ''
+    notes: ''
   });
 
   useEffect(() => {
     fetchData();
   }, []);
 
-  const handleApiKeyChange = (e) => {
-    const key = e.target.value;
-    setApiKey(key);
-    localStorage.setItem('openai_api_key', key);
-  };
+  useEffect(() => {
+    applyFilters();
+  }, [filterType, filterValue, sessions]);
 
   const fetchData = async () => {
     try {
@@ -39,7 +36,9 @@ const SessionsPage = () => {
         ammoAPI.getAll()
       ]);
       
-      setSessions(sessionsRes.data);
+      const allSessions = sessionsRes.data.cost_sessions || [];
+      setSessions(allSessions);
+      setFilteredSessions(allSessions);
       setGuns(gunsRes.data);
       setAmmo(ammoRes.data);
       setError(null);
@@ -70,18 +69,6 @@ const SessionsPage = () => {
       return;
     }
     
-    if (formType === 'accuracy') {
-      const hits = parseInt(formData.hits);
-      if (hits < 0 || hits > shots) {
-        setError('Liczba trafień musi być między 0 a liczbą strzałów');
-        return;
-      }
-      if (!formData.distance_m || parseInt(formData.distance_m) <= 0) {
-        setError('Dystans musi być większy od 0');
-        return;
-      }
-    }
-    
     try {
       const sessionData = {
         gun_id: parseInt(formData.gun_id),
@@ -90,24 +77,14 @@ const SessionsPage = () => {
         shots: shots
       };
       
-      let response;
-      if (formType === 'cost') {
-        response = await sessionsAPI.createCost(sessionData);
-      } else {
-        sessionData.distance_m = parseInt(formData.distance_m);
-        sessionData.hits = parseInt(formData.hits);
-        sessionData.openai_api_key = apiKey;
-        response = await sessionsAPI.createAccuracy(sessionData);
-      }
+      const response = await sessionsAPI.createCost(sessionData);
       
       setFormData({
         gun_id: '',
         ammo_id: '',
         date: new Date().toISOString().split('T')[0],
         shots: '',
-        notes: '',
-        distance_m: '',
-        hits: ''
+        notes: ''
       });
       setShowForm(false);
       setError(null);
@@ -133,6 +110,56 @@ const SessionsPage = () => {
     return ammoItem ? ammoItem.name : 'Nieznana amunicja';
   };
 
+  const getGunType = (gunId) => {
+    const gun = guns.find(g => g.id === gunId);
+    return gun ? gun.type : '';
+  };
+
+  const applyFilters = () => {
+    if (!filterType || !filterValue) {
+      setFilteredSessions(sessions);
+      return;
+    }
+
+    let filtered = [...sessions];
+
+    switch(filterType) {
+      case 'gunName':
+        filtered = filtered.filter(session => 
+          getGunName(session.gun_id).toLowerCase().includes(filterValue.toLowerCase())
+        );
+        break;
+      case 'gunType':
+        filtered = filtered.filter(session => 
+          getGunType(session.gun_id) === filterValue
+        );
+        break;
+      case 'dateFrom':
+        filtered = filtered.filter(session => session.date >= filterValue);
+        break;
+      case 'dateTo':
+        filtered = filtered.filter(session => session.date <= filterValue);
+        break;
+      case 'minCost':
+        filtered = filtered.filter(session => session.cost >= parseFloat(filterValue));
+        break;
+      case 'maxCost':
+        filtered = filtered.filter(session => session.cost <= parseFloat(filterValue));
+        break;
+      default:
+        break;
+    }
+
+    setFilteredSessions(filtered);
+  };
+
+  const clearFilters = () => {
+    setFilterType('');
+    setFilterValue('');
+  };
+
+  const gunTypes = [...new Set(guns.map(g => g.type).filter(Boolean))];
+
   if (loading) {
     return <div className="text-center">Ładowanie...</div>;
   }
@@ -141,30 +168,14 @@ const SessionsPage = () => {
     <div>
       <div className="card">
         <div className="card-header">
-          <h2 className="card-title">Zarządzanie sesjami strzeleckimi</h2>
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <button 
-              className={`btn ${formType === 'cost' ? 'btn-primary' : 'btn-secondary'}`}
-              onClick={() => setFormType('cost')}
-              disabled={showForm}
-            >
-              Sesja kosztowa
-            </button>
-            <button 
-              className={`btn ${formType === 'accuracy' ? 'btn-primary' : 'btn-secondary'}`}
-              onClick={() => setFormType('accuracy')}
-              disabled={showForm}
-            >
-              Sesja celnościowa
-            </button>
-            <button 
-              className="btn btn-success" 
-              onClick={() => setShowForm(!showForm)}
-              disabled={guns.length === 0 || ammo.length === 0}
-            >
-              {showForm ? 'Anuluj' : 'Dodaj sesję'}
-            </button>
-          </div>
+          <h2 className="card-title">Sesje kosztowe</h2>
+          <button 
+            className="btn btn-success" 
+            onClick={() => setShowForm(!showForm)}
+            disabled={guns.length === 0 || ammo.length === 0}
+          >
+            {showForm ? 'Anuluj' : 'Dodaj sesję'}
+          </button>
         </div>
 
         {guns.length === 0 && (
@@ -187,35 +198,6 @@ const SessionsPage = () => {
 
         {showForm && guns.length > 0 && ammo.length > 0 && (
           <form onSubmit={handleSubmit}>
-            {formType === 'accuracy' && (
-              <div className="form-group">
-                <label className="form-label">
-                  Klucz API OpenAI 
-                  <span 
-                    title="Klucz API OpenAI jest potrzebny do generowania inteligentnych komentarzy dla sesji celnościowych. Komentarze zawierają ocenę wyników i sugestie poprawy techniki strzeleckiej. Klucz można uzyskać na platform.openai.com"
-                    style={{ 
-                      cursor: 'help', 
-                      color: '#007bff', 
-                      marginLeft: '5px',
-                      fontSize: '14px'
-                    }}
-                  >
-                    ⓘ
-                  </span>
-                </label>
-                <input
-                  type="password"
-                  className="form-input"
-                  value={apiKey}
-                  onChange={handleApiKeyChange}
-                  placeholder="sk-..."
-                  style={{ fontFamily: 'monospace' }}
-                />
-                <small className="form-text text-muted">
-                  Klucz jest przechowywany lokalnie w przeglądarce i używany tylko do generowania komentarzy AI
-                </small>
-              </div>
-            )}
             <div className="form-group">
               <label className="form-label">Broń *</label>
               <select
@@ -270,35 +252,6 @@ const SessionsPage = () => {
                 required
               />
             </div>
-            
-            {formType === 'accuracy' && (
-              <>
-                <div className="form-group">
-                  <label className="form-label">Dystans (metry) *</label>
-                  <input
-                    type="number"
-                    min="1"
-                    className="form-input"
-                    value={formData.distance_m}
-                    onChange={(e) => setFormData({ ...formData, distance_m: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Liczba trafień *</label>
-                  <input
-                    type="number"
-                    min="0"
-                    max={formData.shots || 0}
-                    className="form-input"
-                    value={formData.hits}
-                    onChange={(e) => setFormData({ ...formData, hits: e.target.value })}
-                    required
-                  />
-                </div>
-              </>
-            )}
-            
             <div className="form-group">
               <label className="form-label">Notatki</label>
               <textarea
@@ -317,7 +270,90 @@ const SessionsPage = () => {
 
       <div className="card">
         <h3 className="card-title">Historia sesji kosztowych</h3>
-        {sessions.cost_sessions.length === 0 ? (
+        
+        <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#404040', borderRadius: '5px' }}>
+          <h4 style={{ marginBottom: '15px' }}>Filtry wyszukiwania</h4>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+            <div className="form-group" style={{ flex: '1', minWidth: '200px' }}>
+              <label className="form-label">Typ filtra</label>
+              <select
+                className="form-input"
+                value={filterType}
+                onChange={(e) => {
+                  setFilterType(e.target.value);
+                  setFilterValue('');
+                }}
+              >
+                <option value="">Wybierz typ filtra</option>
+                <option value="gunName">Nazwa broni</option>
+                <option value="gunType">Rodzaj broni</option>
+                <option value="dateFrom">Data od</option>
+                <option value="dateTo">Data do</option>
+                <option value="minCost">Koszt od (zł)</option>
+                <option value="maxCost">Koszt do (zł)</option>
+              </select>
+            </div>
+            <div className="form-group" style={{ flex: '1', minWidth: '200px' }}>
+              <label className="form-label">Wartość</label>
+              {filterType === 'gunName' && (
+                <input
+                  type="text"
+                  className="form-input"
+                  value={filterValue}
+                  onChange={(e) => setFilterValue(e.target.value)}
+                  placeholder="Wpisz nazwę broni"
+                />
+              )}
+              {filterType === 'gunType' && (
+                <select
+                  className="form-input"
+                  value={filterValue}
+                  onChange={(e) => setFilterValue(e.target.value)}
+                >
+                  <option value="">Wybierz rodzaj</option>
+                  {gunTypes.map(type => (
+                    <option key={type} value={type}>{type}</option>
+                  ))}
+                </select>
+              )}
+              {(filterType === 'dateFrom' || filterType === 'dateTo') && (
+                <input
+                  type="date"
+                  className="form-input"
+                  value={filterValue}
+                  onChange={(e) => setFilterValue(e.target.value)}
+                />
+              )}
+              {(filterType === 'minCost' || filterType === 'maxCost') && (
+                <input
+                  type="number"
+                  className="form-input"
+                  value={filterValue}
+                  onChange={(e) => setFilterValue(e.target.value)}
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                />
+              )}
+              {!filterType && (
+                <input
+                  type="text"
+                  className="form-input"
+                  disabled
+                  placeholder="Wybierz typ filtra"
+                />
+              )}
+            </div>
+            <button className="btn btn-secondary" onClick={clearFilters} disabled={!filterType}>
+              Wyczyść
+            </button>
+          </div>
+          <div style={{ marginTop: '10px', color: '#666' }}>
+            Znaleziono: {filteredSessions.length} z {sessions.length}
+          </div>
+        </div>
+
+        {filteredSessions.length === 0 ? (
           <p className="text-center">Brak zarejestrowanych sesji kosztowych</p>
         ) : (
           <table className="table">
@@ -332,7 +368,7 @@ const SessionsPage = () => {
               </tr>
             </thead>
             <tbody>
-              {sessions.cost_sessions.map((session) => (
+              {filteredSessions.map((session) => (
                 <tr key={session.id}>
                   <td>{new Date(session.date).toLocaleDateString('pl-PL')}</td>
                   <td>{getGunName(session.gun_id)}</td>
@@ -346,48 +382,9 @@ const SessionsPage = () => {
           </table>
         )}
       </div>
-
-      <div className="card">
-        <h3 className="card-title">Historia sesji celnościowych</h3>
-        {sessions.accuracy_sessions.length === 0 ? (
-          <p className="text-center">Brak zarejestrowanych sesji celnościowych</p>
-        ) : (
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Data</th>
-                <th>Broń</th>
-                <th>Amunicja</th>
-                <th>Dystans</th>
-                <th>Strzały</th>
-                <th>Trafienia</th>
-                <th>Celność</th>
-                <th>Komentarz AI</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sessions.accuracy_sessions.map((session) => (
-                <tr key={session.id}>
-                  <td>{new Date(session.date).toLocaleDateString('pl-PL')}</td>
-                  <td>{getGunName(session.gun_id)}</td>
-                  <td>{getAmmoName(session.ammo_id)}</td>
-                  <td>{session.distance_m} m</td>
-                  <td>{session.shots}</td>
-                  <td>{session.hits}</td>
-                  <td style={{ fontWeight: 'bold', color: session.accuracy_percent >= 80 ? '#28a745' : session.accuracy_percent >= 60 ? '#ffc107' : '#dc3545' }}>
-                    {session.accuracy_percent}%
-                  </td>
-                  <td style={{ fontSize: '12px', maxWidth: '200px' }}>
-                    {session.ai_comment || '-'}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
     </div>
   );
 };
 
-export default SessionsPage;
+export default CostSessionsPage;
+

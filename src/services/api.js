@@ -15,6 +15,7 @@ const api = axios.create({
 export const gunsAPI = {
   getAll: () => api.get('/guns'),
   create: (gunData) => api.post('/guns', gunData),
+  update: (id, gunData) => api.put(`/guns/${id}`, gunData),
   delete: (id) => api.delete(`/guns/${id}`),
 };
 

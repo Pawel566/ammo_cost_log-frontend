@@ -4,7 +4,8 @@ import { AuthProvider } from './hooks/useAuth.jsx';
 import HomePage from './pages/HomePage';
 import GunsPage from './pages/GunsPage';
 import AmmoPage from './pages/AmmoPage';
-import SessionsPage from './pages/SessionsPage';
+import CostSessionsPage from './pages/CostSessionsPage';
+import AccuracySessionsPage from './pages/AccuracySessionsPage';
 import SummaryPage from './pages/SummaryPage';
 import './App.css';
 
@@ -27,7 +28,10 @@ function App() {
                     <Link to="/ammo">Amunicja</Link>
                   </li>
                   <li>
-                    <Link to="/sessions">Sesje</Link>
+                    <Link to="/cost-sessions">Sesje kosztowe</Link>
+                  </li>
+                  <li>
+                    <Link to="/accuracy-sessions">Sesje celnościowe</Link>
                   </li>
                   <li>
                     <Link to="/summary">Podsumowanie</Link>
@@ -42,7 +46,8 @@ function App() {
               <Route path="/" element={<HomePage />} />
               <Route path="/guns" element={<GunsPage />} />
               <Route path="/ammo" element={<AmmoPage />} />
-              <Route path="/sessions" element={<SessionsPage />} />
+              <Route path="/cost-sessions" element={<CostSessionsPage />} />
+              <Route path="/accuracy-sessions" element={<AccuracySessionsPage />} />
               <Route path="/summary" element={<SummaryPage />} />
             </Routes>
           </main>

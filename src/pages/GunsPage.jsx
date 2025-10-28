@@ -6,9 +6,11 @@ const GunsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     caliber: '',
+    type: '',
     notes: ''
   });
 
@@ -37,18 +39,42 @@ const GunsPage = () => {
       const gunData = {
         name: formData.name,
         caliber: formData.caliber || null,
+        type: formData.type || null,
         notes: formData.notes || null
       };
       
-      await gunsAPI.create(gunData);
-      setFormData({ name: '', caliber: '', notes: '' });
+      if (editingId) {
+        await gunsAPI.update(editingId, gunData);
+        setEditingId(null);
+      } else {
+        await gunsAPI.create(gunData);
+      }
+      
+      setFormData({ name: '', caliber: '', type: '', notes: '' });
       setShowForm(false);
       setError(null);
       fetchGuns();
     } catch (err) {
-      setError(err.response?.data?.detail || 'Błąd podczas dodawania broni');
+      setError(err.response?.data?.detail || 'Błąd podczas zapisywania broni');
       console.error(err);
     }
+  };
+
+  const handleEdit = (gun) => {
+    setFormData({
+      name: gun.name,
+      caliber: gun.caliber || '',
+      type: gun.type || '',
+      notes: gun.notes || ''
+    });
+    setEditingId(gun.id);
+    setShowForm(true);
+  };
+
+  const handleCancel = () => {
+    setShowForm(false);
+    setEditingId(null);
+    setFormData({ name: '', caliber: '', type: '', notes: '' });
   };
 
   const handleDelete = async (id) => {
@@ -74,7 +100,13 @@ const GunsPage = () => {
           <h2 className="card-title">Zarządzanie bronią</h2>
           <button 
             className="btn btn-primary" 
-            onClick={() => setShowForm(!showForm)}
+            onClick={() => {
+              if (showForm) {
+                handleCancel();
+              } else {
+                setShowForm(true);
+              }
+            }}
           >
             {showForm ? 'Anuluj' : 'Dodaj broń'}
           </button>
@@ -109,6 +141,21 @@ const GunsPage = () => {
               />
             </div>
             <div className="form-group">
+              <label className="form-label">Rodzaj broni</label>
+              <select
+                className="form-input"
+                value={formData.type}
+                onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+              >
+                <option value="">Wybierz rodzaj</option>
+                <option value="Pistolet">Pistolet</option>
+                <option value="Karabin">Karabin</option>
+                <option value="Strzelba">Strzelba</option>
+                <option value="Broń krótka">Broń krótka</option>
+                <option value="Inna">Inna</option>
+              </select>
+            </div>
+            <div className="form-group">
               <label className="form-label">Notatki</label>
               <textarea
                 className="form-input"
@@ -118,7 +165,7 @@ const GunsPage = () => {
               />
             </div>
             <button type="submit" className="btn btn-success">
-              Dodaj broń
+              {editingId ? 'Zapisz zmiany' : 'Dodaj broń'}
             </button>
           </form>
         )}
@@ -133,6 +180,7 @@ const GunsPage = () => {
             <thead>
               <tr>
                 <th>Nazwa</th>
+                <th>Rodzaj</th>
                 <th>Kaliber</th>
                 <th>Notatki</th>
                 <th>Akcje</th>
@@ -142,9 +190,17 @@ const GunsPage = () => {
               {guns.map((gun) => (
                 <tr key={gun.id}>
                   <td>{gun.name}</td>
+                  <td>{gun.type || '-'}</td>
                   <td>{gun.caliber || '-'}</td>
                   <td>{gun.notes || '-'}</td>
                   <td>
+                    <button
+                      className="btn btn-primary"
+                      onClick={() => handleEdit(gun)}
+                      style={{ marginRight: '10px' }}
+                    >
+                      Edytuj
+                    </button>
                     <button
                       className="btn btn-danger"
                       onClick={() => handleDelete(gun.id)}

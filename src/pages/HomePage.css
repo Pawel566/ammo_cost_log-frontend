@@ -1,7 +1,7 @@
 /* HomePage Styles */
 .homepage {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #3a3a3a;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -11,15 +11,16 @@
 .homepage-container {
   max-width: 1200px;
   width: 100%;
-  background: rgba(255, 255, 255, 0.95);
+  background: #545454;
   border-radius: 20px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
   overflow: hidden;
+  color: #ffffff;
 }
 
 /* Header */
 .homepage-header {
-  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+  background: #2c2c2c;
   color: white;
   text-align: center;
   padding: 40px 20px;
@@ -48,7 +49,7 @@
 
 /* App Description */
 .app-description h2 {
-  color: #2c3e50;
+  color: #ffffff;
   font-size: 2rem;
   margin-bottom: 30px;
   text-align: center;
@@ -61,17 +62,18 @@
 }
 
 .feature-card {
-  background: white;
+  background: #404040;
   padding: 25px;
   border-radius: 15px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
   text-align: center;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  color: #ffffff;
 }
 
 .feature-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.7);
 }
 
 .feature-icon {
@@ -80,13 +82,13 @@
 }
 
 .feature-card h3 {
-  color: #2c3e50;
+  color: #ffffff;
   font-size: 1.3rem;
   margin: 0 0 10px 0;
 }
 
 .feature-card p {
-  color: #666;
+  color: #cccccc;
   line-height: 1.5;
   margin: 0;
 }
@@ -99,16 +101,17 @@
 }
 
 .login-card {
-  background: white;
+  background: #404040;
   padding: 40px;
   border-radius: 15px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   width: 100%;
   max-width: 400px;
+  color: #ffffff;
 }
 
 .login-card h2 {
-  color: #2c3e50;
+  color: #ffffff;
   text-align: center;
   margin-bottom: 30px;
   font-size: 1.8rem;
@@ -124,7 +127,7 @@
 
 .form-group label {
   display: block;
-  color: #2c3e50;
+  color: #ffffff;
   font-weight: 600;
   margin-bottom: 8px;
 }
@@ -132,21 +135,23 @@
 .form-group input {
   width: 100%;
   padding: 12px 15px;
-  border: 2px solid #e1e8ed;
+  border: 2px solid #666666;
   border-radius: 8px;
   font-size: 1rem;
   transition: border-color 0.3s ease;
   box-sizing: border-box;
+  background-color: #3a3a3a;
+  color: #ffffff;
 }
 
 .form-group input:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #4caf50;
 }
 
 .login-btn {
   width: 100%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #4caf50;
   color: white;
   border: none;
   padding: 15px;
@@ -159,25 +164,26 @@
 
 .login-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+  background: #45a049;
 }
 
 .register-link {
   text-align: center;
   padding-top: 20px;
-  border-top: 1px solid #e1e8ed;
+  border-top: 1px solid #666666;
 }
 
 .register-link p {
-  color: #666;
+  color: #cccccc;
   margin: 0 0 15px 0;
 }
 
 .register-btn {
   display: inline-block;
   background: transparent;
-  color: #667eea;
-  border: 2px solid #667eea;
+  color: #4caf50;
+  border: 2px solid #4caf50;
   padding: 10px 25px;
   border-radius: 8px;
   text-decoration: none;
@@ -186,14 +192,14 @@
 }
 
 .register-btn:hover {
-  background: #667eea;
+  background: #4caf50;
   color: white;
   transform: translateY(-2px);
 }
 
 /* Footer */
 .homepage-footer {
-  background: #2c3e50;
+  background: #2c2c2c;
   color: white;
   text-align: center;
   padding: 20px;
@@ -208,7 +214,7 @@
 .auth-tabs {
   display: flex;
   margin-bottom: 25px;
-  border-bottom: 2px solid #e1e8ed;
+  border-bottom: 2px solid #666666;
 }
 
 .tab {
@@ -218,38 +224,38 @@
   padding: 12px 20px;
   font-size: 1rem;
   font-weight: 600;
-  color: #666;
+  color: #cccccc;
   cursor: pointer;
   transition: all 0.3s ease;
   border-bottom: 2px solid transparent;
 }
 
 .tab.active {
-  color: #667eea;
-  border-bottom-color: #667eea;
+  color: #ffffff;
+  border-bottom-color: #4caf50;
 }
 
 .tab:hover {
-  color: #667eea;
+  color: #ffffff;
 }
 
 /* Messages */
 .error-message {
-  background: #fee;
-  color: #c33;
+  background: rgba(244, 67, 54, 0.2);
+  color: #ffffff;
   padding: 12px 15px;
   border-radius: 8px;
   margin-bottom: 20px;
-  border-left: 4px solid #c33;
+  border-left: 4px solid #f44336;
 }
 
 .success-message {
-  background: #efe;
-  color: #363;
+  background: rgba(76, 175, 80, 0.2);
+  color: #ffffff;
   padding: 12px 15px;
   border-radius: 8px;
   margin-bottom: 20px;
-  border-left: 4px solid #363;
+  border-left: 4px solid #4caf50;
 }
 
 /* User Info */
@@ -258,12 +264,12 @@
 }
 
 .user-info h2 {
-  color: #2c3e50;
+  color: #ffffff;
   margin-bottom: 10px;
 }
 
 .user-info p {
-  color: #666;
+  color: #cccccc;
   margin-bottom: 25px;
 }
 
@@ -290,7 +296,7 @@
 
 .register-btn {
   width: 100%;
-  background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+  background: #4caf50;
   color: white;
   border: none;
   padding: 15px;
@@ -303,7 +309,8 @@
 
 .register-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(39, 174, 96, 0.4);
+  box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+  background: #45a049;
 }
 
 .register-btn:disabled {
@@ -327,14 +334,14 @@
 }
 
 .guest-info p {
-  color: #666;
+  color: #cccccc;
   margin: 0 0 15px 0;
   font-size: 0.9rem;
 }
 
 .guest-btn {
   display: inline-block;
-  background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+  background: #4caf50;
   color: white;
   border: none;
   padding: 12px 25px;
@@ -346,7 +353,8 @@
 
 .guest-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(243, 156, 18, 0.4);
+  box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+  background: #45a049;
 }
 @media (max-width: 768px) {
   .homepage-content {

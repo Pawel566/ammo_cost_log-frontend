@@ -9,3 +9,5 @@ cp src/App.deploy.jsx src/App.jsx
 cp src/pages/HomePage.deploy.jsx src/pages/HomePage.jsx
 
 echo "Switched to deployment version (no authentication)"
+
+
