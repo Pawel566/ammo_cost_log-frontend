@@ -148,8 +148,9 @@ const GunsPage = () => {
                 onChange={(e) => setFormData({ ...formData, type: e.target.value })}
               >
                 <option value="">Wybierz rodzaj</option>
-                <option value="Pistolet">Pistolet</option>
+                <option value="Pistolet maszynowy">Pistolet maszynowy</option>
                 <option value="Karabin">Karabin</option>
+                <option value="Karabinek">Karabinek</option>
                 <option value="Strzelba">Strzelba</option>
                 <option value="Broń krótka">Broń krótka</option>
                 <option value="Inna">Inna</option>
