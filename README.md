@@ -40,6 +40,10 @@ Szary motyw (#545454) z białym tekstem i zielonymi akcentami (#4caf50). Profesj
 
 Automatyczny deployment na Vercel przez GitHub.
 
+## 📜 Changelog
+
+Zobacz pełną historię zmian → [CHANGELOG.md](CHANGELOG.md)
+
 ## 🔮 Plany na przyszłość
 
 - Konta użytkowników z prywatnymi kolekcjami
