@@ -11,7 +11,7 @@ React frontend do aplikacji zarządzania strzelectwem z inteligentnym asystentem
 
 ## 🛠️ Technologie
 
-- React, Vite, React Router, CSS3
+React, Vite, React Router, CSS3
 
 ## 🚀 Instalacja
 
@@ -26,7 +26,7 @@ npm run dev
 ## 📱 Strony aplikacji
 
 - **Strona główna** (`/`) - opis aplikacji i nawigacja
-- **Broń** (`/guns`) - zarządzanie bronią (dodaj, edytuj, usuń)
+- **Broń** (`/guns`) - zarządzanie bronią
 - **Amunicja** (`/ammo`) - zarządzanie amunicją
 - **Sesje kosztowe** (`/cost-sessions`) - historia sesji z filtrowaniem
 - **Sesje celnościowe** (`/accuracy-sessions`) - analiza celności z AI
@@ -34,7 +34,7 @@ npm run dev
 
 ## 🎨 Design
 
-Szary motyw (#545454) z białym tekstem i zielonymi akcentami (#4caf50). Profesjonalne ikony SVG, responsywny layout, filtr wyszukiwania dla sesji.
+Szary motyw (#545454) z białym tekstem i zielonymi akcentami (#4caf50). Responsywny layout.
 
 ## 🚀 Deployment
 

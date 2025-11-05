@@ -1,9 +1,9 @@
 # Changelog
 
-## [0.2.0] – 2025-11-04
+## [0.2.0] – 2025-11-05
 ### Zmieniono
-- Dodano warstwę serwisową (`app/services/`) – logika przeniesiona z routerów.
-- Wprowadzono obslugę wyjątków.
-- Poprawiono strukturę projektu (routery = routing, serwisy = logika).
+- Dodano warstwę serwisową (`app/services/`) – logika przeniesiona z routerów
+- Ulepszona obsługa błędów z backendu
+- Poprawiono strukturę projektu (routery = routing, serwisy = logika)
 
 
