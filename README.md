@@ -50,3 +50,5 @@ Zobacz pełną historię zmian → [CHANGELOG.md](CHANGELOG.md)
 - Widoki akcesoriów i dodatków do broni
 - Panel serwisowy z harmonogramem konserwacji
 - Rozszerzona personalizacja komentarzy AI
+- System poziomów doświadczenia strzelca
+- Komentarze AI zależne od poziomu umiejętności użytkownika
