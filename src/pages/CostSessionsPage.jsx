@@ -59,7 +59,7 @@ const CostSessionsPage = () => {
     e.preventDefault();
     
     // Walidacja po stronie frontendu
-    const shots = parseInt(formData.shots);
+    const shots = parseInt(formData.shots, 10);
     const selectedDate = new Date(formData.date);
     const today = new Date();
     today.setHours(23, 59, 59, 999); // Ustaw na koniec dnia
@@ -76,10 +76,10 @@ const CostSessionsPage = () => {
     
     try {
       const sessionData = {
-        gun_id: parseInt(formData.gun_id),
-        ammo_id: parseInt(formData.ammo_id),
+        gun_id: formData.gun_id,
+        ammo_id: formData.ammo_id,
         date: formData.date,
-        shots: shots
+        shots
       };
       
       const response = await sessionsAPI.createCost(sessionData);

@@ -68,8 +68,8 @@ const AccuracySessionsPage = () => {
     e.preventDefault();
     
     // Walidacja po stronie frontendu
-    const shots = parseInt(formData.shots);
-    const hits = parseInt(formData.hits);
+    const shots = parseInt(formData.shots, 10);
+    const hits = parseInt(formData.hits, 10);
     const selectedDate = new Date(formData.date);
     const today = new Date();
     today.setHours(23, 59, 59, 999); // Ustaw na koniec dnia
@@ -89,19 +89,19 @@ const AccuracySessionsPage = () => {
       return;
     }
     
-    if (!formData.distance_m || parseInt(formData.distance_m) <= 0) {
+    if (!formData.distance_m || parseInt(formData.distance_m, 10) <= 0) {
       setError('Dystans musi być większy od 0');
       return;
     }
     
     try {
       const sessionData = {
-        gun_id: parseInt(formData.gun_id),
-        ammo_id: parseInt(formData.ammo_id),
+        gun_id: formData.gun_id,
+        ammo_id: formData.ammo_id,
         date: formData.date,
-        shots: shots,
-        distance_m: parseInt(formData.distance_m),
-        hits: parseInt(formData.hits),
+        shots,
+        distance_m: parseInt(formData.distance_m, 10),
+        hits,
         openai_api_key: apiKey
       };
       
