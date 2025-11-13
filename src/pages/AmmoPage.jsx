@@ -21,7 +21,9 @@ const AmmoPage = () => {
     try {
       setLoading(true);
       const response = await ammoAPI.getAll();
-      setAmmo(response.data);
+      const data = response.data;
+      const items = Array.isArray(data) ? data : data?.items ?? [];
+      setAmmo(items);
       setError(null);
     } catch (err) {
       setError('Błąd podczas pobierania listy amunicji');
@@ -180,29 +182,32 @@ const AmmoPage = () => {
               </tr>
             </thead>
             <tbody>
-              {ammo.map((item) => (
-                <tr key={item.id}>
-                  <td>{item.name}</td>
-                  <td>{item.caliber || '-'}</td>
-                  <td>{item.price_per_unit.toFixed(2)} zł</td>
-                  <td>{item.units_in_package || 0} szt.</td>
-                  <td>
-                    <button
-                      className="btn btn-primary"
-                      onClick={() => handleAddQuantity(item.id)}
-                      style={{ marginRight: '8px' }}
-                    >
-                      Dodaj ilość
-                    </button>
-                    <button
-                      className="btn btn-danger"
-                      onClick={() => handleDelete(item.id)}
-                    >
-                      Usuń
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {ammo.map((item) => {
+                const price = Number(item.price_per_unit || 0);
+                return (
+                  <tr key={item.id}>
+                    <td>{item.name}</td>
+                    <td>{item.caliber || '-'}</td>
+                    <td>{price.toFixed(2)} zł</td>
+                    <td>{item.units_in_package || 0} szt.</td>
+                    <td>
+                      <button
+                        className="btn btn-primary"
+                        onClick={() => handleAddQuantity(item.id)}
+                        style={{ marginRight: '8px' }}
+                      >
+                        Dodaj ilość
+                      </button>
+                      <button
+                        className="btn btn-danger"
+                        onClick={() => handleDelete(item.id)}
+                      >
+                        Usuń
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}

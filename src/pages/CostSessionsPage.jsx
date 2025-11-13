@@ -35,12 +35,17 @@ const CostSessionsPage = () => {
         gunsAPI.getAll(),
         ammoAPI.getAll()
       ]);
-      
-      const allSessions = sessionsRes.data.cost_sessions || [];
+      const sessionsData = sessionsRes.data || {};
+      const costPayload = sessionsData.cost_sessions;
+      const allSessions = Array.isArray(costPayload) ? costPayload : costPayload?.items ?? [];
+      const gunsData = gunsRes.data;
+      const ammoData = ammoRes.data;
+      const gunItems = Array.isArray(gunsData) ? gunsData : gunsData?.items ?? [];
+      const ammoItems = Array.isArray(ammoData) ? ammoData : ammoData?.items ?? [];
       setSessions(allSessions);
       setFilteredSessions(allSessions);
-      setGuns(gunsRes.data);
-      setAmmo(ammoRes.data);
+      setGuns(gunItems);
+      setAmmo(ammoItems);
       setError(null);
     } catch (err) {
       setError('Błąd podczas pobierania danych');

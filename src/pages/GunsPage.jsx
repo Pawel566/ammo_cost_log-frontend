@@ -22,7 +22,9 @@ const GunsPage = () => {
     try {
       setLoading(true);
       const response = await gunsAPI.getAll();
-      setGuns(response.data);
+      const data = response.data;
+      const items = Array.isArray(data) ? data : data?.items ?? [];
+      setGuns(items);
       setError(null);
     } catch (err) {
       setError('Błąd podczas pobierania listy broni');
