@@ -18,9 +18,15 @@ const SummaryPage = () => {
         sessionsAPI.getSummary(),
         sessionsAPI.getAll()
       ]);
-      
-      setSummary(summaryRes.data);
-      setSessions(sessionsRes.data);
+      const summaryData = summaryRes.data;
+      const summaryItems = Array.isArray(summaryData) ? summaryData : summaryData?.items ?? [];
+      const sessionsData = sessionsRes.data || {};
+      const costPayload = sessionsData.cost_sessions;
+      const accuracyPayload = sessionsData.accuracy_sessions;
+      const costItems = Array.isArray(costPayload) ? costPayload : costPayload?.items ?? [];
+      const accuracyItems = Array.isArray(accuracyPayload) ? accuracyPayload : accuracyPayload?.items ?? [];
+      setSummary(summaryItems);
+      setSessions({ cost_sessions: costItems, accuracy_sessions: accuracyItems });
       setError(null);
     } catch (err) {
       setError('Błąd podczas pobierania danych');

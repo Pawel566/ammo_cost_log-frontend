@@ -44,12 +44,17 @@ const AccuracySessionsPage = () => {
         gunsAPI.getAll(),
         ammoAPI.getAll()
       ]);
-      
-      const allSessions = sessionsRes.data.accuracy_sessions || [];
+      const sessionsData = sessionsRes.data || {};
+      const accuracyPayload = sessionsData.accuracy_sessions;
+      const allSessions = Array.isArray(accuracyPayload) ? accuracyPayload : accuracyPayload?.items ?? [];
+      const gunsData = gunsRes.data;
+      const ammoData = ammoRes.data;
+      const gunItems = Array.isArray(gunsData) ? gunsData : gunsData?.items ?? [];
+      const ammoItems = Array.isArray(ammoData) ? ammoData : ammoData?.items ?? [];
       setSessions(allSessions);
       setFilteredSessions(allSessions);
-      setGuns(gunsRes.data);
-      setAmmo(ammoRes.data);
+      setGuns(gunItems);
+      setAmmo(ammoItems);
       setError(null);
     } catch (err) {
       setError('Błąd podczas pobierania danych');
@@ -227,7 +232,7 @@ const AccuracySessionsPage = () => {
               <label className="form-label">
                 Klucz API OpenAI 
                 <span 
-                  title="Komentarz wygenerowany automatycznie przez GPT-5-mini (OpenAI). Klucz API jest przechowywany lokalnie i używany wyłącznie do tworzenia podsumowań celności."
+                  title="Komentarz wygenerowany automatycznie przez gpt-4o-mini (OpenAI). Klucz API jest przechowywany lokalnie i używany wyłącznie do tworzenia podsumowań celności."
                   style={{ 
                     cursor: 'help', 
                     color: '#007bff', 
@@ -433,7 +438,7 @@ const AccuracySessionsPage = () => {
         ) : (
           <>
             <div className="alert alert-info" style={{ marginBottom: '20px' }}>
-              💡 Komentarze AI są generowane automatycznie przez GPT-5-mini (OpenAI). Klucz API jest przechowywany lokalnie i używany wyłącznie do tworzenia podsumowań celności.
+              💡 Komentarze AI są generowane automatycznie przez gpt-4o-mini (OpenAI). Klucz API jest przechowywany lokalnie i używany wyłącznie do tworzenia podsumowań celności.
             </div>
             <table className="table">
               <thead>
