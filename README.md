@@ -6,8 +6,9 @@ React frontend do aplikacji zarządzania strzelectwem z inteligentnym asystentem
 
 - **Zarządzanie sprzętem** - katalog broni i amunicji z cenami
 - **Śledzenie kosztów** - sesje strzeleckie z automatycznym obliczaniem wydatków
-- **Analiza celności** - pomiar wyników z komentarzami AI (GPT-5-mini)
+- **Analiza celności** - pomiar wyników z komentarzami AI (`gpt-4o-mini`)
 - **Statystyki** - miesięczne podsumowania i wykresy
+- **Tryb gościa i logowanie** - obsługa sesji sandboxowych i użytkowników Supabase
 
 ## 🛠️ Technologie
 
@@ -44,8 +45,8 @@ Automatyczny deployment na Vercel przez GitHub.
 
 Zobacz pełną historię zmian → [CHANGELOG.md](CHANGELOG.md)
 
-## 🔮 Plany na przyszłość
+## 🔮 Plany
 
-- Konta użytkowników z prywatnymi kolekcjami
-- Poziomy zaawansowania
-- Personalizacja AI komentarzy
+- Widoki akcesoriów i dodatków do broni
+- Panel serwisowy z harmonogramem konserwacji
+- Rozszerzona personalizacja komentarzy AI
