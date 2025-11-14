@@ -42,11 +42,19 @@ const Login = () => {
       <div className="homepage-container">
         <header className="homepage-header">
           <h1 className="app-title">Ammo Cost Log</h1>
-          <p className="app-subtitle">Zaloguj się do swojego konta</p>
+          <p className="app-subtitle">Track your ammunition usage and costs with Ammo Cost Log.</p>
         </header>
         <div className="homepage-content" style={{ gridTemplateColumns: '1fr', maxWidth: '500px', margin: '0 auto' }}>
           <section className="login-section">
             <div className="login-card">
+              <div className="auth-buttons-large">
+                <Link to="/login" className="auth-btn-large login-btn-large active">
+                  Log in
+                </Link>
+                <Link to="/register" className="auth-btn-large register-btn-large">
+                  Register
+                </Link>
+              </div>
               {error && <div className="error-message">{error}</div>}
               {success && <div className="success-message">{success}</div>}
               <form onSubmit={handleSubmit} className="login-form">
@@ -78,14 +86,8 @@ const Login = () => {
                   {loading ? 'Logowanie...' : 'Zaloguj się'}
                 </button>
               </form>
-              <div className="register-link">
-                <p>Nie masz konta?</p>
-                <Link to="/register" className="register-btn" style={{ display: 'inline-block' }}>
-                  Zarejestruj się
-                </Link>
-              </div>
               <div className="guest-info">
-                <p>💡 <strong>Tryb gościa:</strong> Możesz korzystać z aplikacji bez logowania!</p>
+                <p>Continue as guest</p>
                 <Link to="/guns" className="guest-btn">
                   Przejdź do aplikacji
                 </Link>

@@ -67,16 +67,7 @@ const NavbarUser = () => {
             </div>
           )}
         </div>
-      ) : (
-        <div className="auth-buttons">
-          <button className="register-btn-navbar" onClick={() => navigate('/register')}>
-            Rejestracja
-          </button>
-          <button className="login-btn-navbar" onClick={() => navigate('/login')}>
-            Zaloguj
-          </button>
-        </div>
-      )}
+      ) : null}
     </div>
   );
 };

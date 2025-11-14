@@ -325,11 +325,56 @@
   transform: none;
 }
 
+/* Auth Buttons Large */
+.auth-buttons-large {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.auth-btn-large {
+  flex: 1;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: none;
+  display: block;
+}
+
+.login-btn-large {
+  background-color: #4caf50;
+  color: white;
+}
+
+.login-btn-large:hover,
+.login-btn-large.active {
+  background-color: #45a049;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.register-btn-large {
+  background-color: #52b757;
+  color: white;
+}
+
+.register-btn-large:hover,
+.register-btn-large.active {
+  background-color: #4caf50;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(82, 183, 87, 0.3);
+}
+
 /* Guest Info */
 .guest-info {
   text-align: center;
   padding-top: 20px;
-  border-top: 1px solid #e1e8ed;
+  border-top: 1px solid #666666;
   margin-top: 20px;
 }
 
@@ -337,6 +382,7 @@
   color: #cccccc;
   margin: 0 0 15px 0;
   font-size: 0.9rem;
+  cursor: pointer;
 }
 
 .guest-btn {

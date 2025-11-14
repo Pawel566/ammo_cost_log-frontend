@@ -90,42 +90,6 @@
   margin: 0.25rem 0;
 }
 
-.auth-buttons {
-  display: flex;
-  gap: 0.75rem;
-  align-items: center;
-}
-
-.register-btn-navbar {
-  background-color: transparent;
-  color: #ecf0f1;
-  border: 2px solid #4caf50;
-  padding: 0.5rem 1.5rem;
-  border-radius: 4px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.register-btn-navbar:hover {
-  background-color: #4caf50;
-  color: white;
-}
-
-.login-btn-navbar {
-  background-color: #4caf50;
-  color: white;
-  border: none;
-  padding: 0.5rem 1.5rem;
-  border-radius: 4px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.login-btn-navbar:hover {
-  background-color: #45a049;
-}
 
 .container {
   max-width: 1200px;
