@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth.jsx';
+import { useAuth } from '../context/AuthContext';
 import './HomePage.css';
 
 const HomePage = () => {
@@ -38,16 +38,12 @@ const HomePage = () => {
     e.preventDefault();
     setError('');
     setSuccess('');
-    
-    try {
-      const { error } = await signIn(loginData.email, loginData.password);
-      if (error) {
-        setError('Błąd logowania: ' + error.message);
-      } else {
-        setSuccess('Zalogowano pomyślnie!');
-      }
-    } catch (err) {
-      setError('Wystąpił błąd podczas logowania');
+    const { error } = await signIn(loginData.email, loginData.password);
+    if (error) {
+      setError('Błąd logowania: ' + error);
+    } else {
+      setSuccess('Zalogowano pomyślnie!');
+      setLoginData({ email: '', password: '' });
     }
   };
 
@@ -55,26 +51,18 @@ const HomePage = () => {
     e.preventDefault();
     setError('');
     setSuccess('');
-    
-    try {
-      const { error } = await signUp(registerData.email, registerData.password, registerData.username);
-      if (error) {
-        setError('Błąd rejestracji: ' + error.message);
-      } else {
-        setSuccess('Konto zostało utworzone! Sprawdź email w celu potwierdzenia.');
-      }
-    } catch (err) {
-      setError('Wystąpił błąd podczas rejestracji');
+    const { error } = await signUp(registerData.email, registerData.password, registerData.username);
+    if (error) {
+      setError('Błąd rejestracji: ' + error);
+    } else {
+      setSuccess('Konto zostało utworzone!');
+      setRegisterData({ email: '', password: '', username: '' });
     }
   };
 
   const handleLogout = async () => {
-    try {
-      await signOut();
-      setSuccess('Wylogowano pomyślnie!');
-    } catch (err) {
-      setError('Wystąpił błąd podczas wylogowania');
-    }
+    await signOut();
+    setSuccess('Wylogowano pomyślnie!');
   };
 
   return (
@@ -120,7 +108,7 @@ const HomePage = () => {
             <div className="login-card">
               {user ? (
                 <div className="user-info">
-                  <h2>Witaj, {user.user_metadata?.username || user.email}!</h2>
+                  <h2>Witaj, {user.username || user.email}!</h2>
                   <p>Jesteś zalogowany jako: {user.email}</p>
                   <button onClick={handleLogout} className="logout-btn">
                     Wyloguj się

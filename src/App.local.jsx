@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import { AuthProvider } from './hooks/useAuth.jsx';
+import { AuthProvider } from './context/AuthContext';
 import HomePage from './pages/HomePage';
 import GunsPage from './pages/GunsPage';
 import AmmoPage from './pages/AmmoPage';

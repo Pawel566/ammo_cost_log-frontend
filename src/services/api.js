@@ -21,27 +21,33 @@ function isGuestExpired() {
 }
 
 api.interceptors.request.use((config) => {
-  let guestId = localStorage.getItem(GUEST_ID_KEY);
-  let guestExpires = localStorage.getItem(GUEST_EXPIRES_KEY);
-  if (!guestId || !guestExpires || isGuestExpired()) {
-    localStorage.removeItem(GUEST_ID_KEY);
-    localStorage.removeItem(GUEST_EXPIRES_KEY);
-    guestId = null;
-    guestExpires = null;
+  const accessToken = localStorage.getItem('access_token');
+  if (!accessToken) {
+    let guestId = localStorage.getItem(GUEST_ID_KEY);
+    let guestExpires = localStorage.getItem(GUEST_EXPIRES_KEY);
+    if (!guestId || !guestExpires || isGuestExpired()) {
+      localStorage.removeItem(GUEST_ID_KEY);
+      localStorage.removeItem(GUEST_EXPIRES_KEY);
+      guestId = null;
+      guestExpires = null;
+    }
+    if (guestId) config.headers["X-Guest-Id"] = guestId;
+    if (guestExpires) config.headers["X-Guest-Id-Expires-At"] = guestExpires;
   }
-  if (guestId) config.headers["X-Guest-Id"] = guestId;
-  if (guestExpires) config.headers["X-Guest-Id-Expires-At"] = guestExpires;
   return config;
 }, (error) => Promise.reject(error));
 
 api.interceptors.response.use((response) => {
-  const guestId = response.headers["x-guest-id"];
-  const guestExpires = response.headers["x-guest-id-expires-at"];
-  if (guestId) {
-    localStorage.setItem(GUEST_ID_KEY, guestId);
-  }
-  if (guestExpires) {
-    localStorage.setItem(GUEST_EXPIRES_KEY, guestExpires);
+  const accessToken = localStorage.getItem('access_token');
+  if (!accessToken) {
+    const guestId = response.headers["x-guest-id"];
+    const guestExpires = response.headers["x-guest-id-expires-at"];
+    if (guestId) {
+      localStorage.setItem(GUEST_ID_KEY, guestId);
+    }
+    if (guestExpires) {
+      localStorage.setItem(GUEST_EXPIRES_KEY, guestExpires);
+    }
   }
   return response;
 }, (error) => Promise.reject(error));
