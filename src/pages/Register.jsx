@@ -27,9 +27,13 @@ const Register = () => {
     e.preventDefault();
     setError('');
     setSuccess('');
-    const { error } = await signUp(formData.email, formData.password, formData.username);
+    const { error, status } = await signUp(formData.email, formData.password, formData.username);
     if (error) {
-      setError('Błąd rejestracji: ' + error);
+      if (status === 409) {
+        setError('Użytkownik o tym e-mailu już istnieje.');
+      } else {
+        setError('Błąd rejestracji: ' + error);
+      }
     } else {
       setSuccess('Konto zostało utworzone pomyślnie! Możesz się teraz zalogować.');
       setFormData({ email: '', password: '', username: '' });
@@ -41,17 +45,17 @@ const Register = () => {
       <div className="homepage-container">
         <header className="homepage-header">
           <h1 className="app-title">Ammo Cost Log</h1>
-          <p className="app-subtitle">Track your ammunition usage and costs with Ammo Cost Log.</p>
+          <p className="app-subtitle">Śledź użycie i koszty amunicji z Ammo Cost Log.</p>
         </header>
         <div className="homepage-content" style={{ gridTemplateColumns: '1fr', maxWidth: '500px', margin: '0 auto' }}>
           <section className="login-section">
             <div className="login-card">
               <div className="auth-buttons-large">
                 <Link to="/login" className="auth-btn-large login-btn-large">
-                  Log in
+                  Zaloguj się
                 </Link>
                 <Link to="/register" className="auth-btn-large register-btn-large active">
-                  Register
+                  Zarejestruj się
                 </Link>
               </div>
               {error && <div className="error-message">{error}</div>}
@@ -110,7 +114,7 @@ const Register = () => {
               )}
               {!success && (
               <div className="guest-info">
-                <p>Continue as guest</p>
+                <p>Kontynuuj jako gość</p>
                 <Link to="/guns" className="guest-btn">
                   Przejdź do aplikacji
                 </Link>
