@@ -1,27 +1,15 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import { AuthProvider } from './hooks/useAuth.jsx';
+import { AuthProvider } from './context/AuthContext';
 import HomePage from './pages/HomePage';
 import GunsPage from './pages/GunsPage';
 import AmmoPage from './pages/AmmoPage';
 import CostSessionsPage from './pages/CostSessionsPage';
 import AccuracySessionsPage from './pages/AccuracySessionsPage';
 import SummaryPage from './pages/SummaryPage';
-import { api } from './services/api';
 import './App.css';
 
 function App() {
-  useEffect(() => {
-    const guestId = localStorage.getItem("guest_id");
-    const expiresAt = localStorage.getItem("guest_id_expires_at");
-    const isExpired = () => {
-      if (!expiresAt) return true;
-      return new Date(expiresAt) < new Date();
-    };
-    if (!guestId || !expiresAt || isExpired()) {
-      api.get("/guns?limit=1").catch(() => {});
-    }
-  }, []);
 
   return (
     <AuthProvider>

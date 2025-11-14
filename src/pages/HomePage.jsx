@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth.jsx';
+import { useAuth } from '../context/AuthContext';
 import './HomePage.css';
 
 const HomePage = () => {
   const { user, signIn, signUp, signOut, loading } = useAuth();
-  const [localUser, setLocalUser] = useState(null);
   const [loginData, setLoginData] = useState({
     email: '',
     password: ''
@@ -39,18 +38,12 @@ const HomePage = () => {
     e.preventDefault();
     setError('');
     setSuccess('');
-    
-    try {
-      const { error } = await signIn(loginData.email, loginData.password);
-      if (error) {
-        setError('Błąd logowania: ' + error.message);
-      } else {
-        setSuccess('Zalogowano pomyślnie! (Tryb demo)');
-        // Set user state for demo
-        setLocalUser({ email: loginData.email, user_metadata: { username: loginData.email.split('@')[0] } });
-      }
-    } catch (err) {
-      setError('Wystąpił błąd podczas logowania');
+    const { error } = await signIn(loginData.email, loginData.password);
+    if (error) {
+      setError('Błąd logowania: ' + error);
+    } else {
+      setSuccess('Zalogowano pomyślnie!');
+      setLoginData({ email: '', password: '' });
     }
   };
 
@@ -58,28 +51,18 @@ const HomePage = () => {
     e.preventDefault();
     setError('');
     setSuccess('');
-    
-    try {
-      const { error } = await signUp(registerData.email, registerData.password, registerData.username);
-      if (error) {
-        setError('Błąd rejestracji: ' + error.message);
-      } else {
-        setSuccess('Konto zostało utworzone! (Tryb demo)');
-        setLocalUser({ email: registerData.email, user_metadata: { username: registerData.username } });
-      }
-    } catch (err) {
-      setError('Wystąpił błąd podczas rejestracji');
+    const { error } = await signUp(registerData.email, registerData.password, registerData.username);
+    if (error) {
+      setError('Błąd rejestracji: ' + error);
+    } else {
+      setSuccess('Konto zostało utworzone!');
+      setRegisterData({ email: '', password: '', username: '' });
     }
   };
 
   const handleLogout = async () => {
-    try {
-      await signOut();
-      setLocalUser(null);
-      setSuccess('Wylogowano pomyślnie!');
-    } catch (err) {
-      setError('Wystąpił błąd podczas wylogowania');
-    }
+    await signOut();
+    setSuccess('Wylogowano pomyślnie!');
   };
 
   return (
@@ -144,10 +127,10 @@ const HomePage = () => {
           {/* Login Form */}
           <section className="login-section">
             <div className="login-card">
-                   {localUser ? (
+              {user ? (
                 <div className="user-info">
-                  <h2>Witaj, {localUser.user_metadata?.username || localUser.email}!</h2>
-                  <p>Jesteś zalogowany jako: {localUser.email}</p>
+                  <h2>Witaj, {user.username || user.email}!</h2>
+                  <p>Jesteś zalogowany jako: {user.email}</p>
                   <button onClick={handleLogout} className="logout-btn">
                     Wyloguj się
                   </button>
