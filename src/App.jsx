@@ -2,6 +2,8 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import HomePage from './pages/HomePage';
+import Login from './pages/Login';
+import Register from './pages/Register';
 import GunsPage from './pages/GunsPage';
 import AmmoPage from './pages/AmmoPage';
 import CostSessionsPage from './pages/CostSessionsPage';
@@ -45,6 +47,8 @@ function App() {
           <main className="container">
             <Routes>
               <Route path="/" element={<HomePage />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
               <Route path="/guns" element={<GunsPage />} />
               <Route path="/ammo" element={<AmmoPage />} />
               <Route path="/cost-sessions" element={<CostSessionsPage />} />
