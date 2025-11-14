@@ -74,11 +74,12 @@ export const AuthProvider = ({ children }) => {
         password,
         username
       });
-      return { data: response.data, error: null };
+      return { data: response.data, error: null, status: null };
     } catch (error) {
       return {
         data: null,
-        error: error.response?.data?.detail || error.message || 'Błąd rejestracji'
+        error: error.response?.data?.detail || error.message || 'Błąd rejestracji',
+        status: error.response?.status
       };
     }
   };

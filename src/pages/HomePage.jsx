@@ -84,14 +84,14 @@ const HomePage = () => {
                 <>
                   <div className="auth-buttons-large">
                     <Link to="/login" className="auth-btn-large login-btn-large">
-                      Log in
+                      Zaloguj się
                     </Link>
                     <Link to="/register" className="auth-btn-large register-btn-large">
-                      Register
+                      Zarejestruj się
                     </Link>
                   </div>
                   <div className="guest-info">
-                    <p>Continue as guest</p>
+                    <p>Kontynuuj jako gość</p>
                     <Link to="/guns" className="guest-btn">
                       Przejdź do aplikacji
                     </Link>
