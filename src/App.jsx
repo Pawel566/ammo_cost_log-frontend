@@ -12,9 +12,15 @@ import './App.css';
 
 function App() {
   useEffect(() => {
-    const guestId = localStorage.getItem('guest_id');
-    if (!guestId && typeof window !== 'undefined') {
-      api.get('/guns?limit=1').catch(() => {});
+    if (typeof window !== 'undefined') {
+      const guestId = localStorage.getItem('guest_id');
+      const expiresAt = localStorage.getItem('guest_id_expires_at');
+      const expired = !expiresAt || new Date(expiresAt) <= new Date();
+      if (!guestId || expired) {
+        localStorage.removeItem('guest_id');
+        localStorage.removeItem('guest_id_expires_at');
+        api.get('/guns?limit=1').catch(() => {});
+      }
     }
   }, []);
 

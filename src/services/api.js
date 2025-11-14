@@ -17,12 +17,14 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
     const guestId = localStorage.getItem(GUEST_ID_KEY);
-    const guestIdExpiresAt = localStorage.getItem(GUEST_ID_EXPIRES_KEY);
-    if (guestId && !config.headers['X-Guest-Id']) {
+    const expiresAt = localStorage.getItem(GUEST_ID_EXPIRES_KEY);
+    const expired = !expiresAt || new Date(expiresAt) <= new Date();
+    if (guestId && !expired) {
       config.headers['X-Guest-Id'] = guestId;
-    }
-    if (guestIdExpiresAt && !config.headers['X-Guest-Id-Expires-At']) {
-      config.headers['X-Guest-Id-Expires-At'] = guestIdExpiresAt;
+      config.headers['X-Guest-Id-Expires-At'] = expiresAt;
+    } else {
+      localStorage.removeItem(GUEST_ID_KEY);
+      localStorage.removeItem(GUEST_ID_EXPIRES_KEY);
     }
   }
   return config;
@@ -31,26 +33,28 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => {
     if (typeof window !== 'undefined') {
-      const guestId = response.headers['x-guest-id'];
-      const guestIdExpiresAt = response.headers['x-guest-id-expires-at'];
-      if (guestId) {
-        localStorage.setItem(GUEST_ID_KEY, guestId);
-      }
-      if (guestIdExpiresAt) {
-        localStorage.setItem(GUEST_ID_EXPIRES_KEY, guestIdExpiresAt);
+      const newId = response.headers['x-guest-id'];
+      const newExp = response.headers['x-guest-id-expires-at'];
+      if (newId) {
+        const oldExp = localStorage.getItem(GUEST_ID_EXPIRES_KEY);
+        if (!oldExp || new Date(newExp) > new Date(oldExp)) {
+          localStorage.setItem(GUEST_ID_KEY, newId);
+          localStorage.setItem(GUEST_ID_EXPIRES_KEY, newExp);
+        }
       }
     }
     return response;
   },
   (error) => {
     if (error.response && typeof window !== 'undefined') {
-      const guestId = error.response.headers?.['x-guest-id'];
-      const guestIdExpiresAt = error.response.headers?.['x-guest-id-expires-at'];
-      if (guestId) {
-        localStorage.setItem(GUEST_ID_KEY, guestId);
-      }
-      if (guestIdExpiresAt) {
-        localStorage.setItem(GUEST_ID_EXPIRES_KEY, guestIdExpiresAt);
+      const newId = error.response.headers?.['x-guest-id'];
+      const newExp = error.response.headers?.['x-guest-id-expires-at'];
+      if (newId) {
+        const oldExp = localStorage.getItem(GUEST_ID_EXPIRES_KEY);
+        if (!oldExp || new Date(newExp) > new Date(oldExp)) {
+          localStorage.setItem(GUEST_ID_KEY, newId);
+          localStorage.setItem(GUEST_ID_EXPIRES_KEY, newExp);
+        }
       }
     }
     return Promise.reject(error);
