@@ -74,16 +74,6 @@ export const AuthProvider = ({ children }) => {
         password,
         username
       });
-      const { access_token, refresh_token, user_id, email: userEmail, username: userName, role } = response.data;
-      localStorage.setItem(ACCESS_TOKEN_KEY, access_token);
-      localStorage.setItem(REFRESH_TOKEN_KEY, refresh_token);
-      setAuthHeader(access_token);
-      setUser({
-        user_id,
-        email: userEmail,
-        username: userName,
-        role
-      });
       return { data: response.data, error: null };
     } catch (error) {
       return {

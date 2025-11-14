@@ -31,10 +31,8 @@ const Register = () => {
     if (error) {
       setError('Błąd rejestracji: ' + error);
     } else {
-      setSuccess('Konto zostało utworzone!');
-      setTimeout(() => {
-        navigate('/guns');
-      }, 1000);
+      setSuccess('Konto zostało utworzone pomyślnie! Możesz się teraz zalogować.');
+      setFormData({ email: '', password: '', username: '' });
     }
   };
 
@@ -49,7 +47,17 @@ const Register = () => {
           <section className="login-section">
             <div className="login-card">
               {error && <div className="error-message">{error}</div>}
-              {success && <div className="success-message">{success}</div>}
+              {success && (
+                <div className="success-message">
+                  {success}
+                  <div style={{ marginTop: '15px' }}>
+                    <Link to="/login" className="register-btn" style={{ display: 'inline-block' }}>
+                      Przejdź do logowania
+                    </Link>
+                  </div>
+                </div>
+              )}
+              {!success && (
               <form onSubmit={handleSubmit} className="register-form">
                 <div className="form-group">
                   <label htmlFor="username">Nazwa użytkownika</label>
@@ -91,18 +99,23 @@ const Register = () => {
                   {loading ? 'Rejestracja...' : 'Zarejestruj się'}
                 </button>
               </form>
+              )}
+              {!success && (
               <div className="register-link">
                 <p>Masz już konto?</p>
                 <Link to="/login" className="register-btn" style={{ display: 'inline-block' }}>
                   Zaloguj się
                 </Link>
               </div>
+              )}
+              {!success && (
               <div className="guest-info">
                 <p>💡 <strong>Tryb gościa:</strong> Możesz korzystać z aplikacji bez logowania!</p>
                 <Link to="/guns" className="guest-btn">
                   Przejdź do aplikacji
                 </Link>
               </div>
+              )}
             </div>
           </section>
         </div>
