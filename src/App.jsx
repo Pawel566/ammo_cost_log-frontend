@@ -7,20 +7,19 @@ import AmmoPage from './pages/AmmoPage';
 import CostSessionsPage from './pages/CostSessionsPage';
 import AccuracySessionsPage from './pages/AccuracySessionsPage';
 import SummaryPage from './pages/SummaryPage';
-import api from './services/api';
+import { api } from './services/api';
 import './App.css';
 
 function App() {
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const guestId = localStorage.getItem('guest_id');
-      const expiresAt = localStorage.getItem('guest_id_expires_at');
-      const expired = !expiresAt || new Date(expiresAt) <= new Date();
-      if (!guestId || expired) {
-        localStorage.removeItem('guest_id');
-        localStorage.removeItem('guest_id_expires_at');
-        api.get('/guns?limit=1').catch(() => {});
-      }
+    const guestId = localStorage.getItem("guest_id");
+    const expiresAt = localStorage.getItem("guest_id_expires_at");
+    const isExpired = () => {
+      if (!expiresAt) return true;
+      return new Date(expiresAt) < new Date();
+    };
+    if (!guestId || !expiresAt || isExpired()) {
+      api.get("/guns?limit=1").catch(() => {});
     }
   }, []);
 

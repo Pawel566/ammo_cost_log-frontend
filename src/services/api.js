@@ -4,62 +4,47 @@ const API_BASE_URL = process.env.NODE_ENV === 'production'
   ? 'https://ammo-cost-log-backend.onrender.com/api'
   : '/api';
 
-const GUEST_ID_KEY = 'guest_id';
-const GUEST_ID_EXPIRES_KEY = 'guest_id_expires_at';
-
-const api = axios.create({
+export const api = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  withCredentials: false,
 });
+
+const GUEST_ID_KEY = "guest_id";
+const GUEST_EXPIRES_KEY = "guest_id_expires_at";
+
+function isGuestExpired() {
+  const expiresAt = localStorage.getItem(GUEST_EXPIRES_KEY);
+  if (!expiresAt) return true;
+  const now = new Date();
+  const exp = new Date(expiresAt);
+  return exp < now;
+}
 
 api.interceptors.request.use((config) => {
-  if (typeof window !== 'undefined') {
-    const guestId = localStorage.getItem(GUEST_ID_KEY);
-    const expiresAt = localStorage.getItem(GUEST_ID_EXPIRES_KEY);
-    const expired = !expiresAt || new Date(expiresAt) <= new Date();
-    if (guestId && !expired) {
-      config.headers['X-Guest-Id'] = guestId;
-      config.headers['X-Guest-Id-Expires-At'] = expiresAt;
-    } else {
-      localStorage.removeItem(GUEST_ID_KEY);
-      localStorage.removeItem(GUEST_ID_EXPIRES_KEY);
-    }
+  let guestId = localStorage.getItem(GUEST_ID_KEY);
+  let guestExpires = localStorage.getItem(GUEST_EXPIRES_KEY);
+  if (!guestId || !guestExpires || isGuestExpired()) {
+    localStorage.removeItem(GUEST_ID_KEY);
+    localStorage.removeItem(GUEST_EXPIRES_KEY);
+    guestId = null;
+    guestExpires = null;
   }
+  if (guestId) config.headers["X-Guest-Id"] = guestId;
+  if (guestExpires) config.headers["X-Guest-Id-Expires-At"] = guestExpires;
   return config;
-});
+}, (error) => Promise.reject(error));
 
-api.interceptors.response.use(
-  (response) => {
-    if (typeof window !== 'undefined') {
-      const newId = response.headers['x-guest-id'];
-      const newExp = response.headers['x-guest-id-expires-at'];
-      if (newId) {
-        const oldExp = localStorage.getItem(GUEST_ID_EXPIRES_KEY);
-        if (!oldExp || new Date(newExp) > new Date(oldExp)) {
-          localStorage.setItem(GUEST_ID_KEY, newId);
-          localStorage.setItem(GUEST_ID_EXPIRES_KEY, newExp);
-        }
-      }
-    }
-    return response;
-  },
-  (error) => {
-    if (error.response && typeof window !== 'undefined') {
-      const newId = error.response.headers?.['x-guest-id'];
-      const newExp = error.response.headers?.['x-guest-id-expires-at'];
-      if (newId) {
-        const oldExp = localStorage.getItem(GUEST_ID_EXPIRES_KEY);
-        if (!oldExp || new Date(newExp) > new Date(oldExp)) {
-          localStorage.setItem(GUEST_ID_KEY, newId);
-          localStorage.setItem(GUEST_ID_EXPIRES_KEY, newExp);
-        }
-      }
-    }
-    return Promise.reject(error);
+api.interceptors.response.use((response) => {
+  const guestId = response.headers["x-guest-id"];
+  const guestExpires = response.headers["x-guest-id-expires-at"];
+  if (guestId) {
+    localStorage.setItem(GUEST_ID_KEY, guestId);
   }
-);
+  if (guestExpires) {
+    localStorage.setItem(GUEST_EXPIRES_KEY, guestExpires);
+  }
+  return response;
+}, (error) => Promise.reject(error));
 
 // Guns API
 export const gunsAPI = {
