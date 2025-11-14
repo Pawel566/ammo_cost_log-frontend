@@ -31,10 +31,8 @@ const Register = () => {
     if (error) {
       setError('Błąd rejestracji: ' + error);
     } else {
-      setSuccess('Konto zostało utworzone!');
-      setTimeout(() => {
-        navigate('/guns');
-      }, 1000);
+      setSuccess('Konto zostało utworzone pomyślnie! Możesz się teraz zalogować.');
+      setFormData({ email: '', password: '', username: '' });
     }
   };
 
@@ -43,13 +41,31 @@ const Register = () => {
       <div className="homepage-container">
         <header className="homepage-header">
           <h1 className="app-title">Ammo Cost Log</h1>
-          <p className="app-subtitle">Utwórz nowe konto</p>
+          <p className="app-subtitle">Track your ammunition usage and costs with Ammo Cost Log.</p>
         </header>
         <div className="homepage-content" style={{ gridTemplateColumns: '1fr', maxWidth: '500px', margin: '0 auto' }}>
           <section className="login-section">
             <div className="login-card">
+              <div className="auth-buttons-large">
+                <Link to="/login" className="auth-btn-large login-btn-large">
+                  Log in
+                </Link>
+                <Link to="/register" className="auth-btn-large register-btn-large active">
+                  Register
+                </Link>
+              </div>
               {error && <div className="error-message">{error}</div>}
-              {success && <div className="success-message">{success}</div>}
+              {success && (
+                <div className="success-message">
+                  {success}
+                  <div style={{ marginTop: '15px' }}>
+                    <Link to="/login" className="register-btn" style={{ display: 'inline-block' }}>
+                      Przejdź do logowania
+                    </Link>
+                  </div>
+                </div>
+              )}
+              {!success && (
               <form onSubmit={handleSubmit} className="register-form">
                 <div className="form-group">
                   <label htmlFor="username">Nazwa użytkownika</label>
@@ -91,18 +107,15 @@ const Register = () => {
                   {loading ? 'Rejestracja...' : 'Zarejestruj się'}
                 </button>
               </form>
-              <div className="register-link">
-                <p>Masz już konto?</p>
-                <Link to="/login" className="register-btn" style={{ display: 'inline-block' }}>
-                  Zaloguj się
-                </Link>
-              </div>
+              )}
+              {!success && (
               <div className="guest-info">
-                <p>💡 <strong>Tryb gościa:</strong> Możesz korzystać z aplikacji bez logowania!</p>
+                <p>Continue as guest</p>
                 <Link to="/guns" className="guest-btn">
                   Przejdź do aplikacji
                 </Link>
               </div>
+              )}
             </div>
           </section>
         </div>

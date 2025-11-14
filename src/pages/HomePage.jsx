@@ -1,68 +1,13 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './HomePage.css';
 
 const HomePage = () => {
-  const { user, signIn, signUp, signOut, loading } = useAuth();
-  const [loginData, setLoginData] = useState({
-    email: '',
-    password: ''
-  });
-  const [registerData, setRegisterData] = useState({
-    email: '',
-    password: '',
-    username: ''
-  });
-  const [isLoginMode, setIsLoginMode] = useState(true);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    if (isLoginMode) {
-      setLoginData(prev => ({
-        ...prev,
-        [name]: value
-      }));
-    } else {
-      setRegisterData(prev => ({
-        ...prev,
-        [name]: value
-      }));
-    }
-    setError('');
-  };
-
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setError('');
-    setSuccess('');
-    const { error } = await signIn(loginData.email, loginData.password);
-    if (error) {
-      setError('Błąd logowania: ' + error);
-    } else {
-      setSuccess('Zalogowano pomyślnie!');
-      setLoginData({ email: '', password: '' });
-    }
-  };
-
-  const handleRegister = async (e) => {
-    e.preventDefault();
-    setError('');
-    setSuccess('');
-    const { error } = await signUp(registerData.email, registerData.password, registerData.username);
-    if (error) {
-      setError('Błąd rejestracji: ' + error);
-    } else {
-      setSuccess('Konto zostało utworzone!');
-      setRegisterData({ email: '', password: '', username: '' });
-    }
-  };
+  const { user, signOut } = useAuth();
 
   const handleLogout = async () => {
     await signOut();
-    setSuccess('Wylogowano pomyślnie!');
   };
 
   return (
@@ -124,7 +69,7 @@ const HomePage = () => {
             </div>
           </section>
 
-          {/* Login Form */}
+          {/* Auth Section */}
           <section className="login-section">
             <div className="login-card">
               {user ? (
@@ -137,106 +82,22 @@ const HomePage = () => {
                 </div>
               ) : (
                 <>
-                  <div className="auth-tabs">
-                    <button 
-                      className={`tab ${isLoginMode ? 'active' : ''}`}
-                      onClick={() => setIsLoginMode(true)}
-                    >
-                      Logowanie
-                    </button>
-                    <button 
-                      className={`tab ${!isLoginMode ? 'active' : ''}`}
-                      onClick={() => setIsLoginMode(false)}
-                    >
-                      Rejestracja
-                    </button>
+                  <div className="auth-buttons-large">
+                    <Link to="/login" className="auth-btn-large login-btn-large">
+                      Log in
+                    </Link>
+                    <Link to="/register" className="auth-btn-large register-btn-large">
+                      Register
+                    </Link>
                   </div>
-
-                  {error && <div className="error-message">{error}</div>}
-                  {success && <div className="success-message">{success}</div>}
-
-                  {isLoginMode ? (
-                    <form onSubmit={handleLogin} className="login-form">
-                      <div className="form-group">
-                        <label htmlFor="email">Email</label>
-                        <input
-                          type="email"
-                          id="email"
-                          name="email"
-                          value={loginData.email}
-                          onChange={handleInputChange}
-                          placeholder="Wprowadź email"
-                          required
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label htmlFor="password">Hasło</label>
-                        <input
-                          type="password"
-                          id="password"
-                          name="password"
-                          value={loginData.password}
-                          onChange={handleInputChange}
-                          placeholder="Wprowadź hasło"
-                          required
-                        />
-                      </div>
-                      <button type="submit" className="login-btn" disabled={loading}>
-                        {loading ? 'Logowanie...' : 'Zaloguj się'}
-                      </button>
-                    </form>
-                  ) : (
-                    <form onSubmit={handleRegister} className="register-form">
-                      <div className="form-group">
-                        <label htmlFor="reg-username">Nazwa użytkownika</label>
-                        <input
-                          type="text"
-                          id="reg-username"
-                          name="username"
-                          value={registerData.username}
-                          onChange={handleInputChange}
-                          placeholder="Wprowadź nazwę użytkownika"
-                          required
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label htmlFor="reg-email">Email</label>
-                        <input
-                          type="email"
-                          id="reg-email"
-                          name="email"
-                          value={registerData.email}
-                          onChange={handleInputChange}
-                          placeholder="Wprowadź email"
-                          required
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label htmlFor="reg-password">Hasło</label>
-                        <input
-                          type="password"
-                          id="reg-password"
-                          name="password"
-                          value={registerData.password}
-                          onChange={handleInputChange}
-                          placeholder="Wprowadź hasło"
-                          required
-                        />
-                      </div>
-                      <button type="submit" className="register-btn" disabled={loading}>
-                        {loading ? 'Rejestracja...' : 'Zarejestruj się'}
-                      </button>
-                    </form>
-                  )}
+                  <div className="guest-info">
+                    <p>Continue as guest</p>
+                    <Link to="/guns" className="guest-btn">
+                      Przejdź do aplikacji
+                    </Link>
+                  </div>
                 </>
               )}
-              
-              <div className="guest-info">
-                <p>💡 <strong>Tryb gościa:</strong> Możesz korzystać z aplikacji bez logowania!</p>
-                <Link to="/guns" className="guest-btn">
-                  Przejdź do aplikacji
-                </Link>
-              </div>
             </div>
           </section>
         </div>
