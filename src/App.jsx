@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { AuthProvider } from './hooks/useAuth.jsx';
 import HomePage from './pages/HomePage';
@@ -7,9 +7,17 @@ import AmmoPage from './pages/AmmoPage';
 import CostSessionsPage from './pages/CostSessionsPage';
 import AccuracySessionsPage from './pages/AccuracySessionsPage';
 import SummaryPage from './pages/SummaryPage';
+import api from './services/api';
 import './App.css';
 
 function App() {
+  useEffect(() => {
+    const guestId = localStorage.getItem('guest_id');
+    if (!guestId && typeof window !== 'undefined') {
+      api.get('/guns?limit=1').catch(() => {});
+    }
+  }, []);
+
   return (
     <AuthProvider>
       <Router>

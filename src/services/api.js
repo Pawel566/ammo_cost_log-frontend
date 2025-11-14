@@ -1,11 +1,11 @@
 import axios from 'axios';
 
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://ammo-cost-log-backend.onrender.com/api'  // zastąp rzeczywistym URL
+  ? 'https://ammo-cost-log-backend.onrender.com/api'
   : '/api';
 
-const GUEST_SESSION_KEY = 'guest_session_id';
-const GUEST_SESSION_EXPIRES_KEY = 'guest_session_expires_at';
+const GUEST_ID_KEY = 'guest_id';
+const GUEST_ID_EXPIRES_KEY = 'guest_id_expires_at';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -16,9 +16,13 @@ const api = axios.create({
 
 api.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
-    const guestSession = localStorage.getItem(GUEST_SESSION_KEY);
-    if (guestSession && !config.headers['X-Guest-Session']) {
-      config.headers['X-Guest-Session'] = guestSession;
+    const guestId = localStorage.getItem(GUEST_ID_KEY);
+    const guestIdExpiresAt = localStorage.getItem(GUEST_ID_EXPIRES_KEY);
+    if (guestId && !config.headers['X-Guest-Id']) {
+      config.headers['X-Guest-Id'] = guestId;
+    }
+    if (guestIdExpiresAt && !config.headers['X-Guest-Id-Expires-At']) {
+      config.headers['X-Guest-Id-Expires-At'] = guestIdExpiresAt;
     }
   }
   return config;
@@ -27,26 +31,26 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => {
     if (typeof window !== 'undefined') {
-      const guestSession = response.headers['x-guest-session'];
-      const guestSessionExpires = response.headers['x-guest-session-expires-at'];
-      if (guestSession) {
-        localStorage.setItem(GUEST_SESSION_KEY, guestSession);
+      const guestId = response.headers['x-guest-id'];
+      const guestIdExpiresAt = response.headers['x-guest-id-expires-at'];
+      if (guestId) {
+        localStorage.setItem(GUEST_ID_KEY, guestId);
       }
-      if (guestSessionExpires) {
-        localStorage.setItem(GUEST_SESSION_EXPIRES_KEY, guestSessionExpires);
+      if (guestIdExpiresAt) {
+        localStorage.setItem(GUEST_ID_EXPIRES_KEY, guestIdExpiresAt);
       }
     }
     return response;
   },
   (error) => {
     if (error.response && typeof window !== 'undefined') {
-      const guestSession = error.response.headers?.['x-guest-session'];
-      const guestSessionExpires = error.response.headers?.['x-guest-session-expires-at'];
-      if (guestSession) {
-        localStorage.setItem(GUEST_SESSION_KEY, guestSession);
+      const guestId = error.response.headers?.['x-guest-id'];
+      const guestIdExpiresAt = error.response.headers?.['x-guest-id-expires-at'];
+      if (guestId) {
+        localStorage.setItem(GUEST_ID_KEY, guestId);
       }
-      if (guestSessionExpires) {
-        localStorage.setItem(GUEST_SESSION_EXPIRES_KEY, guestSessionExpires);
+      if (guestIdExpiresAt) {
+        localStorage.setItem(GUEST_ID_EXPIRES_KEY, guestIdExpiresAt);
       }
     }
     return Promise.reject(error);
