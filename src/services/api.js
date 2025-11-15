@@ -94,9 +94,21 @@ export const attachmentsAPI = {
 
 // Maintenance API
 export const maintenanceAPI = {
+  getAll: (params) => api.get('/maintenance', { params }),
   getForGun: (gunId) => api.get(`/guns/${gunId}/maintenance`),
   create: (gunId, data) => api.post(`/guns/${gunId}/maintenance`, data),
   delete: (gunId, maintenanceId) => api.delete(`/guns/${gunId}/maintenance/${maintenanceId}`),
+};
+
+// Settings API
+export const settingsAPI = {
+  get: () => api.get('/settings'),
+  update: (data) => api.post('/settings', data),
+};
+
+// AI API
+export const aiAPI = {
+  analyze: (gunId, openaiApiKey) => api.post('/ai/analyze', { gun_id: gunId, openai_api_key: openaiApiKey || null }),
 };
 
 export default api;

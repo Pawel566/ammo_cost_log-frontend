@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { gunsAPI, attachmentsAPI, maintenanceAPI, sessionsAPI } from '../services/api';
+import { gunsAPI, attachmentsAPI, maintenanceAPI, sessionsAPI, aiAPI } from '../services/api';
 
 const MyWeaponsPage = () => {
   const [guns, setGuns] = useState([]);
@@ -12,6 +12,10 @@ const MyWeaponsPage = () => {
   const [sessions, setSessions] = useState({});
   const [showAttachmentModal, setShowAttachmentModal] = useState(false);
   const [showMaintenanceModal, setShowMaintenanceModal] = useState(false);
+  const [showAIModal, setShowAIModal] = useState(false);
+  const [aiAnalysis, setAiAnalysis] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
+  const [openaiApiKey, setOpenaiApiKey] = useState('');
   const [attachmentForm, setAttachmentForm] = useState({ type: 'optic', name: '', notes: '' });
   const [maintenanceForm, setMaintenanceForm] = useState({ 
     date: new Date().toISOString().split('T')[0], 
@@ -159,6 +163,21 @@ const MyWeaponsPage = () => {
     return attachments[gunId]?.length || 0;
   };
 
+  const handleAnalyzeAI = async () => {
+    if (!expandedGun) return;
+    setAiLoading(true);
+    setError('');
+    try {
+      const response = await aiAPI.analyze(expandedGun, openaiApiKey || null);
+      setAiAnalysis(response.data.analysis);
+      setShowAIModal(true);
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Błąd podczas generowania analizy AI');
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   if (loading) {
     return <div className="text-center">Ładowanie...</div>;
   }
@@ -231,27 +250,39 @@ const MyWeaponsPage = () => {
 
                   {isExpanded && (
                     <div style={{ marginTop: '1rem', borderTop: '1px solid #404040', paddingTop: '1rem' }}>
-                      <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', borderBottom: '1px solid #404040' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                        <div style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid #404040', flex: 1 }}>
+                          <button
+                            className={`btn ${activeTab === 'equipment' ? 'btn-primary' : 'btn-secondary'}`}
+                            onClick={() => setActiveTab('equipment')}
+                            style={{ border: 'none', background: activeTab === 'equipment' ? '#007bff' : '#555' }}
+                          >
+                            Wyposażenie
+                          </button>
+                          <button
+                            className={`btn ${activeTab === 'maintenance' ? 'btn-primary' : 'btn-secondary'}`}
+                            onClick={() => setActiveTab('maintenance')}
+                            style={{ border: 'none', background: activeTab === 'maintenance' ? '#007bff' : '#555' }}
+                          >
+                            Konserwacja
+                          </button>
+                          <button
+                            className={`btn ${activeTab === 'history' ? 'btn-primary' : 'btn-secondary'}`}
+                            onClick={() => setActiveTab('history')}
+                            style={{ border: 'none', background: activeTab === 'history' ? '#007bff' : '#555' }}
+                          >
+                            Historia
+                          </button>
+                        </div>
                         <button
-                          className={`btn ${activeTab === 'equipment' ? 'btn-primary' : 'btn-secondary'}`}
-                          onClick={() => setActiveTab('equipment')}
-                          style={{ border: 'none', background: activeTab === 'equipment' ? '#007bff' : '#555' }}
+                          className="btn btn-primary"
+                          onClick={() => {
+                            setShowAIModal(true);
+                            setAiAnalysis('');
+                          }}
+                          style={{ marginLeft: '1rem' }}
                         >
-                          Wyposażenie
-                        </button>
-                        <button
-                          className={`btn ${activeTab === 'maintenance' ? 'btn-primary' : 'btn-secondary'}`}
-                          onClick={() => setActiveTab('maintenance')}
-                          style={{ border: 'none', background: activeTab === 'maintenance' ? '#007bff' : '#555' }}
-                        >
-                          Konserwacja
-                        </button>
-                        <button
-                          className={`btn ${activeTab === 'history' ? 'btn-primary' : 'btn-secondary'}`}
-                          onClick={() => setActiveTab('history')}
-                          style={{ border: 'none', background: activeTab === 'history' ? '#007bff' : '#555' }}
-                        >
-                          Historia
+                          Przeprowadź analizę AI
                         </button>
                       </div>
 
@@ -526,6 +557,80 @@ const MyWeaponsPage = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {showAIModal && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000
+          }}
+          onClick={() => {
+            setShowAIModal(false);
+            setAiAnalysis('');
+            setOpenaiApiKey('');
+          }}
+        >
+          <div
+            className="card"
+            style={{
+              maxWidth: '700px',
+              width: '90%',
+              maxHeight: '80vh',
+              overflowY: 'auto',
+              margin: '0 auto'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h3>Analiza AI</h3>
+              <button
+                className="btn btn-secondary"
+                onClick={() => {
+                  setShowAIModal(false);
+                  setAiAnalysis('');
+                  setOpenaiApiKey('');
+                }}
+              >
+                Zamknij
+              </button>
+            </div>
+            {!aiAnalysis && (
+              <div>
+                <div className="form-group">
+                  <label className="form-label">Klucz API OpenAI (opcjonalnie)</label>
+                  <input
+                    type="password"
+                    className="form-input"
+                    value={openaiApiKey}
+                    onChange={(e) => setOpenaiApiKey(e.target.value)}
+                    placeholder="Jeśli nie podasz, użyty zostanie klucz z ustawień serwera"
+                  />
+                </div>
+                <button
+                  className="btn btn-primary"
+                  onClick={handleAnalyzeAI}
+                  disabled={aiLoading}
+                >
+                  {aiLoading ? 'Analizowanie...' : 'Przeprowadź analizę'}
+                </button>
+              </div>
+            )}
+            {aiAnalysis && (
+              <div style={{ whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>
+                {aiAnalysis}
+              </div>
+            )}
           </div>
         </div>
       )}
