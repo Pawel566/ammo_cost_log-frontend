@@ -105,8 +105,8 @@ const MaintenancePage = () => {
 
   return (
     <div>
-      <div className="card">
-        <h2>Konserwacja</h2>
+      <div style={{ marginBottom: '2rem' }}>
+        <h2 style={{ marginBottom: '1.5rem' }}>Konserwacja</h2>
         {error && (
           <div className="alert alert-danger" style={{ marginBottom: '1rem' }}>
             {error}
@@ -114,76 +114,101 @@ const MaintenancePage = () => {
         )}
 
         {stats.longestWithoutMaintenance && (
-          <div className="card" style={{ marginBottom: '1rem', backgroundColor: '#2c2c2c' }}>
-            <h3>Statystyki</h3>
+          <div className="card" style={{ marginBottom: '1.5rem', backgroundColor: '#2c2c2c' }}>
+            <h3 style={{ marginBottom: '1rem' }}>Statystyki</h3>
             <div style={{ marginBottom: '1rem' }}>
-              <strong>Broń najdłużej bez konserwacji:</strong>{' '}
-              {stats.longestWithoutMaintenance.gunName} (
-              {stats.longestWithoutMaintenance.daysSince} dni)
+              <div style={{ fontSize: '0.9rem', color: '#aaa', marginBottom: '0.5rem' }}>
+                Broń najdłużej bez konserwacji:
+              </div>
+              <div style={{ fontSize: '1.1rem', fontWeight: '500' }}>
+                {stats.longestWithoutMaintenance.gunName}
+              </div>
+              <div style={{ fontSize: '0.9rem', color: '#888', marginTop: '0.25rem' }}>
+                {stats.longestWithoutMaintenance.daysSince} dni
+              </div>
             </div>
-            <div>
-              <strong>Dni od ostatniej konserwacji:</strong>
-              <ul style={{ marginTop: '0.5rem', paddingLeft: '1.5rem' }}>
+            <div style={{ borderTop: '1px solid #404040', paddingTop: '1rem' }}>
+              <div style={{ fontSize: '0.9rem', color: '#aaa', marginBottom: '0.75rem' }}>
+                Dni od ostatniej konserwacji:
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 {stats.allGunsStats.map(stat => (
-                  <li key={stat.gunId}>
-                    {stat.gunName}:{' '}
-                    {stat.daysSince !== null ? (
-                      <span>{stat.daysSince} dni</span>
-                    ) : (
-                      <span style={{ color: '#888' }}>Brak konserwacji</span>
-                    )}
-                  </li>
+                  <div
+                    key={stat.gunId}
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '0.5rem',
+                      backgroundColor: '#1a1a1a',
+                      borderRadius: '4px'
+                    }}
+                  >
+                    <span>{stat.gunName}</span>
+                    <span style={{ color: stat.daysSince !== null ? '#fff' : '#888' }}>
+                      {stat.daysSince !== null ? `${stat.daysSince} dni` : 'Brak konserwacji'}
+                    </span>
+                  </div>
                 ))}
-              </ul>
+              </div>
             </div>
           </div>
         )}
 
-        <div style={{ marginBottom: '1rem' }}>
-          <label className="form-label" style={{ marginRight: '1rem' }}>
-            Filtruj po broni:
-          </label>
-          <select
-            className="form-input"
-            value={selectedGunId}
-            onChange={(e) => setSelectedGunId(e.target.value)}
-            style={{ display: 'inline-block', width: 'auto', minWidth: '200px' }}
-          >
-            <option value="">Wszystkie</option>
-            {guns.map(gun => (
-              <option key={gun.id} value={gun.id}>
-                {gun.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {maintenance.length === 0 ? (
-          <p className="text-center">Brak konserwacji</p>
-        ) : (
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Broń</th>
-                <th>Data</th>
-                <th>Strzałów od poprzedniej</th>
-                <th>Notatki</th>
-              </tr>
-            </thead>
-            <tbody>
-              {maintenance
-                .sort((a, b) => new Date(b.date) - new Date(a.date))
-                .map((maint) => (
-                  <tr key={maint.id}>
-                    <td>{getGunName(maint.gun_id)}</td>
-                    <td>{new Date(maint.date).toLocaleDateString('pl-PL')}</td>
-                    <td>{maint.rounds_since_last}</td>
-                    <td>{maint.notes || '-'}</td>
-                  </tr>
+        <div className="card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <h3 style={{ margin: 0 }}>Historia konserwacji</h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <label className="form-label" style={{ margin: 0, fontSize: '0.9rem' }}>
+                Filtruj:
+              </label>
+              <select
+                className="form-input"
+                value={selectedGunId}
+                onChange={(e) => setSelectedGunId(e.target.value)}
+                style={{ width: 'auto', minWidth: '200px', padding: '0.5rem' }}
+              >
+                <option value="">Wszystkie</option>
+                {guns.map(gun => (
+                  <option key={gun.id} value={gun.id}>
+                    {gun.name}
+                  </option>
                 ))}
-            </tbody>
-          </table>
-        )}
+              </select>
+            </div>
+          </div>
+
+          {maintenance.length === 0 ? (
+            <p className="text-center" style={{ color: '#888', padding: '2rem' }}>
+              Brak konserwacji
+            </p>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Broń</th>
+                    <th>Data</th>
+                    <th>Strzałów od poprzedniej</th>
+                    <th>Notatki</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {maintenance
+                    .sort((a, b) => new Date(b.date) - new Date(a.date))
+                    .map((maint) => (
+                      <tr key={maint.id}>
+                        <td style={{ fontWeight: '500' }}>{getGunName(maint.gun_id)}</td>
+                        <td>{new Date(maint.date).toLocaleDateString('pl-PL')}</td>
+                        <td>{maint.rounds_since_last}</td>
+                        <td style={{ color: '#aaa' }}>{maint.notes || '-'}</td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

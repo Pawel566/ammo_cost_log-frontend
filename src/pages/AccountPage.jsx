@@ -114,30 +114,46 @@ const AccountPage = () => {
 
   return (
     <div>
-      <div className="card">
-        <h2>Moje konto</h2>
-        {user && (
-          <div style={{ marginBottom: '2rem' }}>
-            <p><strong>Email:</strong> {user.email}</p>
-            <p><strong>Nazwa użytkownika:</strong> {user.username || '-'}</p>
-          </div>
-        )}
-
+      <div style={{ marginBottom: '2rem' }}>
+        <h2 style={{ marginBottom: '1.5rem' }}>Moje konto</h2>
         {error && (
           <div className="alert alert-danger" style={{ marginBottom: '1rem' }}>
             {error}
           </div>
         )}
-
         {success && (
           <div className="alert alert-success" style={{ marginBottom: '1rem' }}>
             {success}
           </div>
         )}
 
-        <div style={{ marginBottom: '2rem', paddingBottom: '2rem', borderBottom: '1px solid #404040' }}>
-          <h3>Poziom zaawansowania</h3>
-          <div className="form-group">
+        {user && (
+          <div className="card" style={{ marginBottom: '1.5rem' }}>
+            <h3 style={{ marginBottom: '1rem' }}>Informacje o koncie</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div>
+                <div style={{ fontSize: '0.9rem', color: '#aaa', marginBottom: '0.25rem' }}>
+                  Email
+                </div>
+                <div style={{ fontSize: '1rem', fontWeight: '500' }}>
+                  {user.email}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: '0.9rem', color: '#aaa', marginBottom: '0.25rem' }}>
+                  Nazwa użytkownika
+                </div>
+                <div style={{ fontSize: '1rem', fontWeight: '500' }}>
+                  {user.username || '-'}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="card" style={{ marginBottom: '1.5rem' }}>
+          <h3 style={{ marginBottom: '1rem' }}>Poziom zaawansowania</h3>
+          <div className="form-group" style={{ marginBottom: 0 }}>
             <label className="form-label">Wybierz swój poziom zaawansowania</label>
             <select
               className="form-input"
@@ -153,11 +169,11 @@ const AccountPage = () => {
           </div>
         </div>
 
-        <div style={{ marginBottom: '2rem', paddingBottom: '2rem', borderBottom: '1px solid #404040' }}>
-          <h3>Bezpieczeństwo</h3>
+        <div className="card" style={{ marginBottom: '1.5rem' }}>
+          <h3 style={{ marginBottom: '1.5rem' }}>Bezpieczeństwo</h3>
           
-          <div style={{ marginBottom: '2rem' }}>
-            <h4>Zmiana hasła</h4>
+          <div style={{ marginBottom: '2rem', paddingBottom: '2rem', borderBottom: '1px solid #404040' }}>
+            <h4 style={{ marginBottom: '1rem', fontSize: '1.1rem' }}>Zmiana hasła</h4>
             <form onSubmit={handlePasswordSubmit}>
               <div className="form-group">
                 <label className="form-label">Stare hasło</label>
@@ -198,7 +214,7 @@ const AccountPage = () => {
           </div>
 
           <div>
-            <h4>Zmiana emaila</h4>
+            <h4 style={{ marginBottom: '1rem', fontSize: '1.1rem' }}>Zmiana emaila</h4>
             <form onSubmit={handleEmailSubmit}>
               <div className="form-group">
                 <label className="form-label">Nowy email</label>
@@ -217,9 +233,9 @@ const AccountPage = () => {
           </div>
         </div>
 
-        <div>
-          <h3 style={{ color: '#f44336' }}>Usuń konto</h3>
-          <p style={{ marginBottom: '1rem' }}>
+        <div className="card" style={{ borderColor: '#f44336', border: '1px solid #f44336' }}>
+          <h3 style={{ marginBottom: '1rem', color: '#f44336' }}>Usuń konto</h3>
+          <p style={{ marginBottom: '1rem', color: '#aaa', fontSize: '0.9rem' }}>
             Usunięcie konta jest nieodwracalne. Wszystkie Twoje dane zostaną trwale usunięte.
           </p>
           <button
@@ -257,7 +273,7 @@ const AccountPage = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <h3 style={{ color: '#f44336', marginBottom: '1rem' }}>Potwierdź usunięcie konta</h3>
-            <p style={{ marginBottom: '1rem' }}>
+            <p style={{ marginBottom: '1rem', color: '#aaa' }}>
               To działanie jest nieodwracalne. Wprowadź hasło aby potwierdzić usunięcie konta.
             </p>
             <div className="form-group">
