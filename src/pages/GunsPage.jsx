@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { gunsAPI } from '../services/api';
+import { gunsAPI, maintenanceAPI } from '../services/api';
 
 const GunsPage = () => {
   const [guns, setGuns] = useState([]);
+  const [maintenanceStatus, setMaintenanceStatus] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
@@ -25,6 +26,17 @@ const GunsPage = () => {
       const data = response.data;
       const items = Array.isArray(data) ? data : data?.items ?? [];
       setGuns(items);
+      const statusPromises = items.map(gun => 
+        maintenanceAPI.getStatus(gun.id)
+          .then(res => ({ gunId: gun.id, status: res.data }))
+          .catch(() => ({ gunId: gun.id, status: null }))
+      );
+      const statuses = await Promise.all(statusPromises);
+      const statusMap = {};
+      statuses.forEach(({ gunId, status }) => {
+        statusMap[gunId] = status;
+      });
+      setMaintenanceStatus(statusMap);
       setError(null);
     } catch (err) {
       setError('Błąd podczas pobierania listy broni');
@@ -197,9 +209,18 @@ const GunsPage = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {guns.map((gun) => (
+                  {guns.map((gun) => {
+                    const maintStatus = maintenanceStatus[gun.id];
+                    const showStatus = maintStatus && (maintStatus.status === 'yellow' || maintStatus.status === 'red');
+                    const statusIcon = maintStatus?.status === 'red' ? '🔴' : maintStatus?.status === 'yellow' ? '🟡' : null;
+                    return (
                     <tr key={gun.id}>
-                      <td style={{ fontWeight: '500' }}>{gun.name}</td>
+                      <td style={{ fontWeight: '500' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          {showStatus && <span style={{ fontSize: '1rem' }}>{statusIcon}</span>}
+                          <span>{gun.name}</span>
+                        </div>
+                      </td>
                       <td>{gun.type || '-'}</td>
                       <td>{gun.caliber || '-'}</td>
                       <td style={{ color: '#aaa' }}>{gun.notes || '-'}</td>
@@ -220,7 +241,8 @@ const GunsPage = () => {
                         </button>
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

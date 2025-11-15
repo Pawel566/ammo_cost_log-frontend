@@ -126,15 +126,26 @@ const MyWeaponsPage = () => {
       }
       setShowMaintenanceModal(false);
       setMaintenanceForm({ date: new Date().toISOString().split('T')[0], notes: '' });
-      await fetchGuns();
+      try {
+        await fetchGuns();
+      } catch (err) {
+        console.error('Błąd podczas odświeżania listy broni:', err);
+      }
       if (expandedGun) {
-        await fetchGunDetails(expandedGun);
-        const statusRes = await maintenanceAPI.getStatus(expandedGun).catch(() => ({ data: null }));
-        setMaintenanceStatus(prev => ({ ...prev, [expandedGun]: statusRes.data }));
+        try {
+          await fetchGunDetails(expandedGun);
+          const statusRes = await maintenanceAPI.getStatus(expandedGun).catch(() => ({ data: null }));
+          setMaintenanceStatus(prev => ({ ...prev, [expandedGun]: statusRes.data }));
+        } catch (err) {
+          console.error('Błąd podczas odświeżania szczegółów broni:', err);
+        }
       }
     } catch (err) {
       console.error('Błąd podczas zapisywania konserwacji:', err);
       setError(err.response?.data?.detail || 'Błąd podczas zapisywania konserwacji');
+      setShowMaintenanceModal(false);
+      setEditingMaintenance(null);
+      setMaintenanceForm({ date: new Date().toISOString().split('T')[0], notes: '' });
     }
   };
 
@@ -287,25 +298,7 @@ const MyWeaponsPage = () => {
                         <span style={{ fontSize: '2rem' }}>🔫</span>
                       </div>
                       <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                          <h3 style={{ margin: 0 }}>{gun.name}</h3>
-                          {maintStatus && (
-                            <div style={{ 
-                              display: 'flex', 
-                              alignItems: 'center', 
-                              gap: '0.25rem',
-                              padding: '0.25rem 0.5rem',
-                              backgroundColor: '#2c2c2c',
-                              borderRadius: '12px',
-                              fontSize: '0.85rem'
-                            }}>
-                              <span>{getMaintenanceStatusIcon(maintStatus)}</span>
-                              <span style={{ color: getMaintenanceStatusColor(maintStatus) }}>
-                                {getMaintenanceStatusText(maintStatus)}
-                              </span>
-                            </div>
-                          )}
-                        </div>
+                        <h3 style={{ margin: 0, marginBottom: '0.25rem' }}>{gun.name}</h3>
                         <p style={{ margin: '0.25rem 0', color: '#aaa', fontSize: '0.9rem' }}>
                           {gun.caliber && gun.caliber}
                         </p>
@@ -434,7 +427,12 @@ const MyWeaponsPage = () => {
 
                         <div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                            <h4 style={{ margin: 0 }}>Konserwacja</h4>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <h4 style={{ margin: 0 }}>Konserwacja</h4>
+                              {maintStatus && (maintStatus.status === 'yellow' || maintStatus.status === 'red') && (
+                                <span style={{ fontSize: '1.2rem' }}>{getMaintenanceStatusIcon(maintStatus)}</span>
+                              )}
+                            </div>
                           </div>
                           {maintenance[gun.id]?.length > 0 ? (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1rem' }}>

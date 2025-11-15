@@ -70,10 +70,17 @@ const MaintenancePage = () => {
       setShowEditModal(false);
       setEditingMaintenance(null);
       setMaintenanceForm({ date: '', notes: '' });
-      await fetchMaintenance();
+      try {
+        await fetchMaintenance();
+      } catch (err) {
+        console.error('Błąd podczas odświeżania konserwacji:', err);
+      }
     } catch (err) {
       console.error('Błąd podczas aktualizacji konserwacji:', err);
       setError(err.response?.data?.detail || 'Błąd podczas aktualizacji konserwacji');
+      setShowEditModal(false);
+      setEditingMaintenance(null);
+      setMaintenanceForm({ date: '', notes: '' });
     }
   };
 
