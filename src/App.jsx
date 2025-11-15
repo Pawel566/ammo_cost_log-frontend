@@ -9,6 +9,10 @@ import AmmoPage from './pages/AmmoPage';
 import CostSessionsPage from './pages/CostSessionsPage';
 import AccuracySessionsPage from './pages/AccuracySessionsPage';
 import SummaryPage from './pages/SummaryPage';
+import AccountPage from './pages/AccountPage';
+import MyWeaponsPage from './pages/MyWeaponsPage';
+import MaintenancePage from './pages/MaintenancePage';
+import SettingsPage from './pages/SettingsPage';
 import './App.css';
 
 const NavbarUser = () => {
@@ -54,11 +58,14 @@ const NavbarUser = () => {
               <div className="user-menu-item" onClick={() => { setIsMenuOpen(false); navigate('/account'); }}>
                 Moje konto
               </div>
-              <div className="user-menu-item" onClick={() => { setIsMenuOpen(false); navigate('/my-stats'); }}>
-                Moje statystyki
+              <div className="user-menu-item" onClick={() => { setIsMenuOpen(false); navigate('/my-weapons'); }}>
+                Moja broń i wyposażenie
               </div>
-              <div className="user-menu-item disabled">
-                Moja broń i wyposażenie (0.4.0)
+              <div className="user-menu-item" onClick={() => { setIsMenuOpen(false); navigate('/maintenance'); }}>
+                Konserwacja (globalna)
+              </div>
+              <div className="user-menu-item" onClick={() => { setIsMenuOpen(false); navigate('/settings'); }}>
+                Ustawienia
               </div>
               <div className="user-menu-divider"></div>
               <div className="user-menu-item" onClick={handleLogout}>
@@ -115,6 +122,10 @@ function AppContent() {
           <Route path="/cost-sessions" element={<CostSessionsPage />} />
           <Route path="/accuracy-sessions" element={<AccuracySessionsPage />} />
           <Route path="/summary" element={<SummaryPage />} />
+          <Route path="/account" element={<AccountPage />} />
+          <Route path="/my-weapons" element={<MyWeaponsPage />} />
+          <Route path="/maintenance" element={<MaintenancePage />} />
+          <Route path="/settings" element={<SettingsPage />} />
         </Routes>
       </main>
     </div>
