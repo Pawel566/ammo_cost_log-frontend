@@ -70,15 +70,15 @@ const SettingsPage = () => {
         )}
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label className="form-label">AI Mode</label>
+            <label className="form-label">Motyw</label>
             <select
               className="form-input"
-              value={settings.ai_mode}
-              onChange={(e) => handleChange('ai_mode', e.target.value)}
+              value={settings.theme}
+              onChange={(e) => handleChange('theme', e.target.value)}
             >
-              <option value="off">Off</option>
-              <option value="basic">Basic</option>
-              <option value="pro">Pro</option>
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+              <option value="auto">Auto</option>
             </select>
           </div>
           <div className="form-group">
@@ -90,18 +90,6 @@ const SettingsPage = () => {
             >
               <option value="m">Metry</option>
               <option value="yd">Jardy</option>
-            </select>
-          </div>
-          <div className="form-group">
-            <label className="form-label">Motyw</label>
-            <select
-              className="form-input"
-              value={settings.theme}
-              onChange={(e) => handleChange('theme', e.target.value)}
-            >
-              <option value="light">Light</option>
-              <option value="dark">Dark</option>
-              <option value="auto">Auto</option>
             </select>
           </div>
           <button type="submit" className="btn btn-primary">

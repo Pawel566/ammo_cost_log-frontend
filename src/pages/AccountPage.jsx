@@ -92,7 +92,7 @@ const AccountPage = () => {
       return;
     }
     try {
-      await accountAPI.deleteAccount();
+      await accountAPI.deleteAccount(deletePassword);
       await signOut();
       navigate('/');
     } catch (err) {

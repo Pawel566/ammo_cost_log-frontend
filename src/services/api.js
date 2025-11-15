@@ -76,39 +76,39 @@ export const sessionsAPI = {
   getSummary: () => api.get('/sessions/summary'),
 };
 
+
+// Attachments API
+export const attachmentsAPI = {
+  getForGun: (gunId) => api.get(`/guns/${gunId}/attachments`),
+  create: (gunId, data) => api.post(`/guns/${gunId}/attachments`, data),
+  delete: (attachmentId) => api.delete(`/attachments/${attachmentId}`),
+};
+
+// Maintenance API
+export const maintenanceAPI = {
+  getAll: (params) => api.get('/maintenance', { params }),
+  getForGun: (gunId) => api.get(`/maintenance/guns/${gunId}/maintenance`),
+  create: (gunId, data) => api.post(`/maintenance/guns/${gunId}/maintenance`, data),
+  delete: (maintenanceId) => api.delete(`/maintenance/maintenance/${maintenanceId}`),
+};
+
+// Settings API
+export const settingsAPI = {
+  get: () => api.get('/settings'),
+  update: (data) => api.put('/settings', data),
+};
+
 // Account API
 export const accountAPI = {
   getSkillLevel: () => api.get('/account/skill-level'),
   updateSkillLevel: (skillLevel) => api.post('/account/skill-level', { skill_level: skillLevel }),
   changePassword: (oldPassword, newPassword) => api.post('/account/change-password', { old_password: oldPassword, new_password: newPassword }),
   changeEmail: (newEmail) => api.post('/account/change-email', { new_email: newEmail }),
-  deleteAccount: () => api.post('/account/delete'),
-};
-
-// Attachments API
-export const attachmentsAPI = {
-  getForGun: (gunId) => api.get(`/guns/${gunId}/attachments`),
-  create: (gunId, data) => api.post(`/guns/${gunId}/attachments`, data),
-  delete: (gunId, attachmentId) => api.delete(`/guns/${gunId}/attachments/${attachmentId}`),
-};
-
-// Maintenance API
-export const maintenanceAPI = {
-  getAll: (params) => api.get('/maintenance', { params }),
-  getForGun: (gunId) => api.get(`/guns/${gunId}/maintenance`),
-  create: (gunId, data) => api.post(`/guns/${gunId}/maintenance`, data),
-  delete: (gunId, maintenanceId) => api.delete(`/guns/${gunId}/maintenance/${maintenanceId}`),
-};
-
-// Settings API
-export const settingsAPI = {
-  get: () => api.get('/settings'),
-  update: (data) => api.post('/settings', data),
-};
-
-// AI API
-export const aiAPI = {
-  analyze: (gunId, openaiApiKey) => api.post('/ai/analyze', { gun_id: gunId, openai_api_key: openaiApiKey || null }),
+  deleteAccount: (password) => api.request({
+    method: 'DELETE',
+    url: '/account',
+    data: { password }
+  }),
 };
 
 export default api;

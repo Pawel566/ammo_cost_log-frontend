@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { gunsAPI, attachmentsAPI, maintenanceAPI, sessionsAPI, aiAPI, ammoAPI } from '../services/api';
+import { useNavigate } from 'react-router-dom';
+import { gunsAPI, attachmentsAPI, maintenanceAPI, sessionsAPI, ammoAPI } from '../services/api';
 
 const MyWeaponsPage = () => {
+  const navigate = useNavigate();
   const [guns, setGuns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -13,10 +15,6 @@ const MyWeaponsPage = () => {
   const [ammo, setAmmo] = useState([]);
   const [showAttachmentModal, setShowAttachmentModal] = useState(false);
   const [showMaintenanceModal, setShowMaintenanceModal] = useState(false);
-  const [showAIModal, setShowAIModal] = useState(false);
-  const [aiAnalysis, setAiAnalysis] = useState('');
-  const [aiLoading, setAiLoading] = useState(false);
-  const [openaiApiKey, setOpenaiApiKey] = useState('');
   const [attachmentForm, setAttachmentForm] = useState({ type: 'optic', name: '', notes: '' });
   const [maintenanceForm, setMaintenanceForm] = useState({ 
     date: new Date().toISOString().split('T')[0], 
@@ -103,7 +101,7 @@ const MyWeaponsPage = () => {
   const handleDeleteAttachment = async (attachmentId) => {
     if (window.confirm('Czy na pewno chcesz usunąć to wyposażenie?')) {
       try {
-        await attachmentsAPI.delete(expandedGun, attachmentId);
+        await attachmentsAPI.delete(attachmentId);
         fetchGunDetails(expandedGun);
       } catch (err) {
         setError(err.response?.data?.detail || 'Błąd podczas usuwania wyposażenia');
@@ -127,7 +125,7 @@ const MyWeaponsPage = () => {
   const handleDeleteMaintenance = async (maintenanceId) => {
     if (window.confirm('Czy na pewno chcesz usunąć tę konserwację?')) {
       try {
-        await maintenanceAPI.delete(expandedGun, maintenanceId);
+        await maintenanceAPI.delete(maintenanceId);
         fetchGunDetails(expandedGun);
         fetchGuns();
       } catch (err) {
@@ -174,21 +172,6 @@ const MyWeaponsPage = () => {
 
   const getAttachmentsCount = (gunId) => {
     return attachments[gunId]?.length || 0;
-  };
-
-  const handleAnalyzeAI = async () => {
-    if (!expandedGun) return;
-    setAiLoading(true);
-    setError('');
-    try {
-      const response = await aiAPI.analyze(expandedGun, openaiApiKey || null);
-      setAiAnalysis(response.data.analysis);
-      setShowAIModal(true);
-    } catch (err) {
-      setError(err.response?.data?.detail || 'Błąd podczas generowania analizy AI');
-    } finally {
-      setAiLoading(false);
-    }
   };
 
   if (loading) {
@@ -287,16 +270,6 @@ const MyWeaponsPage = () => {
                             Historia
                           </button>
                         </div>
-                        <button
-                          className="btn btn-primary"
-                          onClick={() => {
-                            setShowAIModal(true);
-                            setAiAnalysis('');
-                          }}
-                          style={{ marginLeft: '1rem' }}
-                        >
-                          Przeprowadź analizę AI
-                        </button>
                       </div>
 
                       {activeTab === 'equipment' && (
@@ -478,6 +451,21 @@ const MyWeaponsPage = () => {
                 </div>
               );
             })}
+            <div 
+              className="card" 
+              style={{ 
+                marginTop: '1rem', 
+                cursor: 'pointer',
+                textAlign: 'center',
+                padding: '2rem',
+                border: '2px dashed #555',
+                backgroundColor: '#2c2c2c'
+              }}
+              onClick={() => navigate('/guns')}
+            >
+              <h3 style={{ margin: 0, color: '#007bff' }}>+ Dodaj nową broń</h3>
+              <p style={{ margin: '0.5rem 0 0 0', color: '#aaa' }}>Kliknij aby dodać nową broń do kolekcji</p>
+            </div>
           </div>
         )}
       </div>
@@ -619,79 +607,6 @@ const MyWeaponsPage = () => {
         </div>
       )}
 
-      {showAIModal && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000
-          }}
-          onClick={() => {
-            setShowAIModal(false);
-            setAiAnalysis('');
-            setOpenaiApiKey('');
-          }}
-        >
-          <div
-            className="card"
-            style={{
-              maxWidth: '700px',
-              width: '90%',
-              maxHeight: '80vh',
-              overflowY: 'auto',
-              margin: '0 auto'
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h3>Analiza AI</h3>
-              <button
-                className="btn btn-secondary"
-                onClick={() => {
-                  setShowAIModal(false);
-                  setAiAnalysis('');
-                  setOpenaiApiKey('');
-                }}
-              >
-                Zamknij
-              </button>
-            </div>
-            {!aiAnalysis && (
-              <div>
-                <div className="form-group">
-                  <label className="form-label">Klucz API OpenAI (opcjonalnie)</label>
-                  <input
-                    type="password"
-                    className="form-input"
-                    value={openaiApiKey}
-                    onChange={(e) => setOpenaiApiKey(e.target.value)}
-                    placeholder="Jeśli nie podasz, użyty zostanie klucz z ustawień serwera"
-                  />
-                </div>
-                <button
-                  className="btn btn-primary"
-                  onClick={handleAnalyzeAI}
-                  disabled={aiLoading}
-                >
-                  {aiLoading ? 'Analizowanie...' : 'Przeprowadź analizę'}
-                </button>
-              </div>
-            )}
-            {aiAnalysis && (
-              <div style={{ whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>
-                {aiAnalysis}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 };
