@@ -62,7 +62,7 @@ const NavbarUser = () => {
                 Moja broń i wyposażenie
               </div>
               <div className="user-menu-item" onClick={() => { setIsMenuOpen(false); navigate('/maintenance'); }}>
-                Konserwacja (globalna)
+                Konserwacja
               </div>
               <div className="user-menu-item" onClick={() => { setIsMenuOpen(false); navigate('/settings'); }}>
                 Ustawienia
