@@ -53,8 +53,11 @@ const MaintenancePage = () => {
 
   const handleEditMaintenance = (maint) => {
     setEditingMaintenance(maint);
+    const dateValue = maint.date instanceof Date 
+      ? maint.date.toISOString().split('T')[0]
+      : maint.date.split('T')[0];
     setMaintenanceForm({
-      date: maint.date,
+      date: dateValue,
       notes: maint.notes || ''
     });
     setShowEditModal(true);
@@ -67,8 +70,9 @@ const MaintenancePage = () => {
       setShowEditModal(false);
       setEditingMaintenance(null);
       setMaintenanceForm({ date: '', notes: '' });
-      fetchMaintenance();
+      await fetchMaintenance();
     } catch (err) {
+      console.error('Błąd podczas aktualizacji konserwacji:', err);
       setError(err.response?.data?.detail || 'Błąd podczas aktualizacji konserwacji');
     }
   };

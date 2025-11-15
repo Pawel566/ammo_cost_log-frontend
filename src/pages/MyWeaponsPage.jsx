@@ -114,17 +114,23 @@ const MyWeaponsPage = () => {
       }
       setShowMaintenanceModal(false);
       setMaintenanceForm({ date: new Date().toISOString().split('T')[0], notes: '' });
-      fetchGunDetails(expandedGun);
-      fetchGuns();
+      if (expandedGun) {
+        await fetchGunDetails(expandedGun);
+      }
+      await fetchGuns();
     } catch (err) {
+      console.error('Błąd podczas zapisywania konserwacji:', err);
       setError(err.response?.data?.detail || 'Błąd podczas zapisywania konserwacji');
     }
   };
 
   const handleEditMaintenance = (maint) => {
     setEditingMaintenance(maint);
+    const dateValue = maint.date instanceof Date 
+      ? maint.date.toISOString().split('T')[0]
+      : maint.date.split('T')[0];
     setMaintenanceForm({
-      date: maint.date,
+      date: dateValue,
       notes: maint.notes || ''
     });
     setShowMaintenanceModal(true);
