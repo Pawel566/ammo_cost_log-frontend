@@ -10,6 +10,7 @@ const MyWeaponsPage = () => {
   const [expandedGun, setExpandedGun] = useState(null);
   const [attachments, setAttachments] = useState({});
   const [maintenance, setMaintenance] = useState({});
+  const [maintenanceStatus, setMaintenanceStatus] = useState({});
   const [sessions, setSessions] = useState({});
   const [ammo, setAmmo] = useState([]);
   const [showAttachmentModal, setShowAttachmentModal] = useState(false);
@@ -39,6 +40,17 @@ const MyWeaponsPage = () => {
       const data = response.data;
       const items = Array.isArray(data) ? data : data?.items ?? [];
       setGuns(items);
+      const statusPromises = items.map(gun => 
+        maintenanceAPI.getStatus(gun.id)
+          .then(res => ({ gunId: gun.id, status: res.data }))
+          .catch(() => ({ gunId: gun.id, status: null }))
+      );
+      const statuses = await Promise.all(statusPromises);
+      const statusMap = {};
+      statuses.forEach(({ gunId, status }) => {
+        statusMap[gunId] = status;
+      });
+      setMaintenanceStatus(statusMap);
       setError('');
     } catch (err) {
       setError('Błąd podczas pobierania listy broni');
@@ -114,10 +126,12 @@ const MyWeaponsPage = () => {
       }
       setShowMaintenanceModal(false);
       setMaintenanceForm({ date: new Date().toISOString().split('T')[0], notes: '' });
+      await fetchGuns();
       if (expandedGun) {
         await fetchGunDetails(expandedGun);
+        const statusRes = await maintenanceAPI.getStatus(expandedGun).catch(() => ({ data: null }));
+        setMaintenanceStatus(prev => ({ ...prev, [expandedGun]: statusRes.data }));
       }
-      await fetchGuns();
     } catch (err) {
       console.error('Błąd podczas zapisywania konserwacji:', err);
       setError(err.response?.data?.detail || 'Błąd podczas zapisywania konserwacji');
@@ -140,8 +154,12 @@ const MyWeaponsPage = () => {
     if (window.confirm('Czy na pewno chcesz usunąć tę konserwację?')) {
       try {
         await maintenanceAPI.delete(maintenanceId);
-        fetchGunDetails(expandedGun);
-        fetchGuns();
+        await fetchGunDetails(expandedGun);
+        await fetchGuns();
+        if (expandedGun) {
+          const statusRes = await maintenanceAPI.getStatus(expandedGun).catch(() => ({ data: null }));
+          setMaintenanceStatus(prev => ({ ...prev, [expandedGun]: statusRes.data }));
+        }
       } catch (err) {
         setError(err.response?.data?.detail || 'Błąd podczas usuwania konserwacji');
       }
@@ -184,6 +202,36 @@ const MyWeaponsPage = () => {
     return labels[type?.toLowerCase()] || type || 'Inne';
   };
 
+  const getMaintenanceStatusIcon = (status) => {
+    if (!status) return null;
+    const icons = {
+      green: '🟢',
+      yellow: '🟡',
+      red: '🔴'
+    };
+    return icons[status.status] || null;
+  };
+
+  const getMaintenanceStatusText = (status) => {
+    if (!status) return '';
+    const texts = {
+      green: 'OK',
+      yellow: 'Zbliża się',
+      red: 'Wymaga konserwacji'
+    };
+    return texts[status.status] || '';
+  };
+
+  const getMaintenanceStatusColor = (status) => {
+    if (!status) return '#888';
+    const colors = {
+      green: '#4caf50',
+      yellow: '#ff9800',
+      red: '#f44336'
+    };
+    return colors[status.status] || '#888';
+  };
+
   if (loading) {
     return <div className="text-center">Ładowanie...</div>;
   }
@@ -205,6 +253,7 @@ const MyWeaponsPage = () => {
               const isExpanded = expandedGun === gun.id;
               const lastMaint = getLastMaintenance(gun.id);
               const attCount = getAttachmentsCount(gun.id);
+              const maintStatus = maintenanceStatus[gun.id];
               return (
                 <div key={gun.id}>
                   <div 
@@ -238,7 +287,25 @@ const MyWeaponsPage = () => {
                         <span style={{ fontSize: '2rem' }}>🔫</span>
                       </div>
                       <div style={{ flex: 1 }}>
-                        <h3 style={{ margin: 0, marginBottom: '0.25rem' }}>{gun.name}</h3>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                          <h3 style={{ margin: 0 }}>{gun.name}</h3>
+                          {maintStatus && (
+                            <div style={{ 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              gap: '0.25rem',
+                              padding: '0.25rem 0.5rem',
+                              backgroundColor: '#2c2c2c',
+                              borderRadius: '12px',
+                              fontSize: '0.85rem'
+                            }}>
+                              <span>{getMaintenanceStatusIcon(maintStatus)}</span>
+                              <span style={{ color: getMaintenanceStatusColor(maintStatus) }}>
+                                {getMaintenanceStatusText(maintStatus)}
+                              </span>
+                            </div>
+                          )}
+                        </div>
                         <p style={{ margin: '0.25rem 0', color: '#aaa', fontSize: '0.9rem' }}>
                           {gun.caliber && gun.caliber}
                         </p>
@@ -246,9 +313,26 @@ const MyWeaponsPage = () => {
                           {getGunTypeLabel(gun.type)}
                         </p>
                         <div style={{ fontSize: '0.85rem', color: '#888', marginTop: '0.5rem' }}>
-                          {lastMaint ? (
+                          {maintStatus && (
+                            <>
+                              {maintStatus.rounds_since_last !== undefined && (
+                                <span>{maintStatus.rounds_since_last} strzałów od ostatniej konserwacji</span>
+                              )}
+                              {maintStatus.days_since_last !== null && maintStatus.days_since_last !== undefined && (
+                                <>
+                                  <span style={{ margin: '0 0.5rem' }}>•</span>
+                                  <span>{maintStatus.days_since_last} dni</span>
+                                </>
+                              )}
+                              {(!maintStatus.rounds_since_last && maintStatus.days_since_last === null) && (
+                                <span>{maintStatus.message || 'Brak konserwacji'}</span>
+                              )}
+                            </>
+                          )}
+                          {!maintStatus && lastMaint && (
                             <span>Ostatnia konserwacja: {new Date(lastMaint.date).toLocaleDateString('pl-PL')}</span>
-                          ) : (
+                          )}
+                          {!maintStatus && !lastMaint && (
                             <span>Brak konserwacji</span>
                           )}
                           {attCount > 0 && (
