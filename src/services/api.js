@@ -89,6 +89,7 @@ export const maintenanceAPI = {
   getAll: (params) => api.get('/maintenance', { params }),
   getForGun: (gunId) => api.get(`/maintenance/guns/${gunId}/maintenance`),
   create: (gunId, data) => api.post(`/maintenance/guns/${gunId}/maintenance`, data),
+  update: (maintenanceId, data) => api.put(`/maintenance/maintenance/${maintenanceId}`, data),
   delete: (maintenanceId) => api.delete(`/maintenance/maintenance/${maintenanceId}`),
 };
 

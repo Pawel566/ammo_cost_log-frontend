@@ -14,6 +14,7 @@ const MyWeaponsPage = () => {
   const [ammo, setAmmo] = useState([]);
   const [showAttachmentModal, setShowAttachmentModal] = useState(false);
   const [showMaintenanceModal, setShowMaintenanceModal] = useState(false);
+  const [editingMaintenance, setEditingMaintenance] = useState(null);
   const [attachmentForm, setAttachmentForm] = useState({ type: 'optic', name: '', notes: '' });
   const [maintenanceForm, setMaintenanceForm] = useState({ 
     date: new Date().toISOString().split('T')[0], 
@@ -105,14 +106,28 @@ const MyWeaponsPage = () => {
   const handleAddMaintenance = async (e) => {
     e.preventDefault();
     try {
-      await maintenanceAPI.create(expandedGun, maintenanceForm);
+      if (editingMaintenance) {
+        await maintenanceAPI.update(editingMaintenance.id, maintenanceForm);
+        setEditingMaintenance(null);
+      } else {
+        await maintenanceAPI.create(expandedGun, maintenanceForm);
+      }
       setShowMaintenanceModal(false);
       setMaintenanceForm({ date: new Date().toISOString().split('T')[0], notes: '' });
       fetchGunDetails(expandedGun);
       fetchGuns();
     } catch (err) {
-      setError(err.response?.data?.detail || 'Błąd podczas dodawania konserwacji');
+      setError(err.response?.data?.detail || 'Błąd podczas zapisywania konserwacji');
     }
+  };
+
+  const handleEditMaintenance = (maint) => {
+    setEditingMaintenance(maint);
+    setMaintenanceForm({
+      date: maint.date,
+      notes: maint.notes || ''
+    });
+    setShowMaintenanceModal(true);
   };
 
   const handleDeleteMaintenance = async (maintenanceId) => {
@@ -127,20 +142,6 @@ const MyWeaponsPage = () => {
     }
   };
 
-  const getAttachmentIcon = (type) => {
-    const icons = {
-      optic: '🔭',
-      light: '💡',
-      laser: '🔴',
-      suppressor: '🔇',
-      bipod: '🦵',
-      compensator: '⚡',
-      grip: '✋',
-      trigger: '👆',
-      other: '📦'
-    };
-    return icons[type] || '📦';
-  };
 
   const getAttachmentTypeLabel = (type) => {
     const labels = {
@@ -292,8 +293,7 @@ const MyWeaponsPage = () => {
                                     position: 'relative'
                                   }}
                                 >
-                                  <span>{getAttachmentIcon(att.type)}</span>
-                                  <span>{att.name}</span>
+                                  <span>{getAttachmentTypeLabel(att.type)} - {att.name}</span>
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
@@ -375,22 +375,40 @@ const MyWeaponsPage = () => {
                                         </div>
                                       )}
                                     </div>
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDeleteMaintenance(maint.id);
-                                      }}
-                                      style={{
-                                        background: 'none',
-                                        border: 'none',
-                                        color: '#f44336',
-                                        cursor: 'pointer',
-                                        fontSize: '1.2rem',
-                                        padding: '0.25rem 0.5rem'
-                                      }}
-                                    >
-                                      ×
-                                    </button>
+                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleEditMaintenance(maint);
+                                        }}
+                                        style={{
+                                          background: 'none',
+                                          border: 'none',
+                                          color: '#007bff',
+                                          cursor: 'pointer',
+                                          fontSize: '0.9rem',
+                                          padding: '0.25rem 0.5rem'
+                                        }}
+                                      >
+                                        Edytuj
+                                      </button>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleDeleteMaintenance(maint.id);
+                                        }}
+                                        style={{
+                                          background: 'none',
+                                          border: 'none',
+                                          color: '#f44336',
+                                          cursor: 'pointer',
+                                          fontSize: '1.2rem',
+                                          padding: '0.25rem 0.5rem'
+                                        }}
+                                      >
+                                        ×
+                                      </button>
+                                    </div>
                                   </div>
                                 ))}
                             </div>
@@ -601,7 +619,7 @@ const MyWeaponsPage = () => {
             style={{ maxWidth: '500px', width: '90%' }}
             onClick={(e) => e.stopPropagation()}
           >
-            <h3>Dodaj konserwację</h3>
+            <h3>{editingMaintenance ? 'Edytuj konserwację' : 'Dodaj konserwację'}</h3>
             <form onSubmit={handleAddMaintenance}>
               <div className="form-group">
                 <label className="form-label">Data</label>
@@ -624,12 +642,16 @@ const MyWeaponsPage = () => {
               </div>
               <div style={{ display: 'flex', gap: '1rem' }}>
                 <button type="submit" className="btn btn-primary">
-                  Dodaj
+                  {editingMaintenance ? 'Zapisz' : 'Dodaj'}
                 </button>
                 <button
                   type="button"
                   className="btn btn-secondary"
-                  onClick={() => setShowMaintenanceModal(false)}
+                  onClick={() => {
+                    setShowMaintenanceModal(false);
+                    setEditingMaintenance(null);
+                    setMaintenanceForm({ date: new Date().toISOString().split('T')[0], notes: '' });
+                  }}
                 >
                   Anuluj
                 </button>

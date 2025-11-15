@@ -7,6 +7,9 @@ const MaintenancePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedGunId, setSelectedGunId] = useState('');
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingMaintenance, setEditingMaintenance] = useState(null);
+  const [maintenanceForm, setMaintenanceForm] = useState({ date: '', notes: '' });
 
   useEffect(() => {
     fetchGuns();
@@ -46,6 +49,39 @@ const MaintenancePage = () => {
   const getGunName = (gunId) => {
     const gun = guns.find(g => g.id === gunId);
     return gun ? gun.name : gunId;
+  };
+
+  const handleEditMaintenance = (maint) => {
+    setEditingMaintenance(maint);
+    setMaintenanceForm({
+      date: maint.date,
+      notes: maint.notes || ''
+    });
+    setShowEditModal(true);
+  };
+
+  const handleUpdateMaintenance = async (e) => {
+    e.preventDefault();
+    try {
+      await maintenanceAPI.update(editingMaintenance.id, maintenanceForm);
+      setShowEditModal(false);
+      setEditingMaintenance(null);
+      setMaintenanceForm({ date: '', notes: '' });
+      fetchMaintenance();
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Błąd podczas aktualizacji konserwacji');
+    }
+  };
+
+  const handleDeleteMaintenance = async (maintenanceId) => {
+    if (window.confirm('Czy na pewno chcesz usunąć tę konserwację?')) {
+      try {
+        await maintenanceAPI.delete(maintenanceId);
+        fetchMaintenance();
+      } catch (err) {
+        setError(err.response?.data?.detail || 'Błąd podczas usuwania konserwacji');
+      }
+    }
   };
 
   const getMaintenanceStats = () => {
@@ -191,6 +227,7 @@ const MaintenancePage = () => {
                     <th>Data</th>
                     <th>Strzałów od poprzedniej</th>
                     <th>Notatki</th>
+                    <th style={{ width: '120px' }}>Akcje</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -202,6 +239,36 @@ const MaintenancePage = () => {
                         <td>{new Date(maint.date).toLocaleDateString('pl-PL')}</td>
                         <td>{maint.rounds_since_last}</td>
                         <td style={{ color: '#aaa' }}>{maint.notes || '-'}</td>
+                        <td>
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button
+                              onClick={() => handleEditMaintenance(maint)}
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                color: '#007bff',
+                                cursor: 'pointer',
+                                fontSize: '0.9rem',
+                                padding: '0.25rem 0.5rem'
+                              }}
+                            >
+                              Edytuj
+                            </button>
+                            <button
+                              onClick={() => handleDeleteMaintenance(maint.id)}
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                color: '#f44336',
+                                cursor: 'pointer',
+                                fontSize: '0.9rem',
+                                padding: '0.25rem 0.5rem'
+                              }}
+                            >
+                              Usuń
+                            </button>
+                          </div>
+                        </td>
                       </tr>
                     ))}
                 </tbody>
@@ -210,6 +277,73 @@ const MaintenancePage = () => {
           )}
         </div>
       </div>
+
+      {showEditModal && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000
+          }}
+          onClick={() => {
+            setShowEditModal(false);
+            setEditingMaintenance(null);
+            setMaintenanceForm({ date: '', notes: '' });
+          }}
+        >
+          <div
+            className="card"
+            style={{ maxWidth: '500px', width: '90%' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3>Edytuj konserwację</h3>
+            <form onSubmit={handleUpdateMaintenance}>
+              <div className="form-group">
+                <label className="form-label">Data</label>
+                <input
+                  type="date"
+                  className="form-input"
+                  value={maintenanceForm.date}
+                  onChange={(e) => setMaintenanceForm({ ...maintenanceForm, date: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Notatki</label>
+                <textarea
+                  className="form-input"
+                  value={maintenanceForm.notes}
+                  onChange={(e) => setMaintenanceForm({ ...maintenanceForm, notes: e.target.value })}
+                  rows={3}
+                />
+              </div>
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <button type="submit" className="btn btn-primary">
+                  Zapisz
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setEditingMaintenance(null);
+                    setMaintenanceForm({ date: '', notes: '' });
+                  }}
+                >
+                  Anuluj
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
