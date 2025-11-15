@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { gunsAPI, attachmentsAPI, maintenanceAPI, sessionsAPI, aiAPI } from '../services/api';
+import { gunsAPI, attachmentsAPI, maintenanceAPI, sessionsAPI, aiAPI, ammoAPI } from '../services/api';
 
 const MyWeaponsPage = () => {
   const [guns, setGuns] = useState([]);
@@ -10,6 +10,7 @@ const MyWeaponsPage = () => {
   const [attachments, setAttachments] = useState({});
   const [maintenance, setMaintenance] = useState({});
   const [sessions, setSessions] = useState({});
+  const [ammo, setAmmo] = useState([]);
   const [showAttachmentModal, setShowAttachmentModal] = useState(false);
   const [showMaintenanceModal, setShowMaintenanceModal] = useState(false);
   const [showAIModal, setShowAIModal] = useState(false);
@@ -24,6 +25,7 @@ const MyWeaponsPage = () => {
 
   useEffect(() => {
     fetchGuns();
+    fetchAmmo();
   }, []);
 
   useEffect(() => {
@@ -45,6 +47,17 @@ const MyWeaponsPage = () => {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAmmo = async () => {
+    try {
+      const response = await ammoAPI.getAll();
+      const data = response.data;
+      const items = Array.isArray(data) ? data : data?.items ?? [];
+      setAmmo(items);
+    } catch (err) {
+      console.error('Błąd pobierania amunicji:', err);
     }
   };
 
@@ -387,30 +400,75 @@ const MyWeaponsPage = () => {
                             sessions[gun.id].cost.length === 0 && sessions[gun.id].accuracy.length === 0 ? (
                               <p>Brak sesji</p>
                             ) : (
-                              <table className="table">
-                                <thead>
-                                  <tr>
-                                    <th>Data</th>
-                                    <th>Typ</th>
-                                    <th>Strzały</th>
-                                    <th>Koszt</th>
-                                    <th>Celność</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {[...sessions[gun.id].cost, ...sessions[gun.id].accuracy]
-                                    .sort((a, b) => new Date(b.date) - new Date(a.date))
-                                    .map((session) => (
-                                    <tr key={session.id}>
-                                      <td>{new Date(session.date).toLocaleDateString('pl-PL')}</td>
-                                      <td>{session.cost !== undefined ? 'Kosztowa' : 'Celnościowa'}</td>
-                                      <td>{session.shots}</td>
-                                      <td>{session.cost !== undefined ? `${session.cost.toFixed(2)} zł` : '-'}</td>
-                                      <td>{session.accuracy_percent ? `${session.accuracy_percent.toFixed(1)}%` : '-'}</td>
+                              <>
+                                <table className="table">
+                                  <thead>
+                                    <tr>
+                                      <th>Data</th>
+                                      <th>Typ</th>
+                                      <th>Strzały</th>
+                                      <th>Koszt</th>
+                                      <th>Celność</th>
                                     </tr>
-                                  ))}
-                                </tbody>
-                              </table>
+                                  </thead>
+                                  <tbody>
+                                    {[...sessions[gun.id].cost, ...sessions[gun.id].accuracy]
+                                      .sort((a, b) => new Date(b.date) - new Date(a.date))
+                                      .map((session) => {
+                                        let sessionCost = session.cost;
+                                        if (session.cost === undefined && session.ammo_id) {
+                                          const sessionAmmo = ammo.find(a => a.id === session.ammo_id);
+                                          if (sessionAmmo && sessionAmmo.price_per_unit) {
+                                            sessionCost = sessionAmmo.price_per_unit * session.shots;
+                                          }
+                                        }
+                                        return (
+                                          <tr key={session.id}>
+                                            <td>{new Date(session.date).toLocaleDateString('pl-PL')}</td>
+                                            <td>{session.cost !== undefined ? 'Kosztowa' : 'Celnościowa'}</td>
+                                            <td>{session.shots}</td>
+                                            <td>{sessionCost !== undefined ? `${sessionCost.toFixed(2)} zł` : '-'}</td>
+                                            <td>{session.accuracy_percent ? `${session.accuracy_percent.toFixed(1)}%` : '-'}</td>
+                                          </tr>
+                                        );
+                                      })}
+                                  </tbody>
+                                </table>
+                                {(() => {
+                                  const allSessions = [...sessions[gun.id].cost, ...sessions[gun.id].accuracy];
+                                  const accuracySessions = allSessions.filter(s => s.accuracy_percent !== undefined && s.accuracy_percent !== null);
+                                  const avgAccuracy = accuracySessions.length > 0
+                                    ? accuracySessions.reduce((sum, s) => sum + s.accuracy_percent, 0) / accuracySessions.length
+                                    : null;
+                                  let totalCost = 0;
+                                  allSessions.forEach(session => {
+                                    if (session.cost !== undefined) {
+                                      totalCost += session.cost;
+                                    } else if (session.ammo_id) {
+                                      const sessionAmmo = ammo.find(a => a.id === session.ammo_id);
+                                      if (sessionAmmo && sessionAmmo.price_per_unit) {
+                                        totalCost += sessionAmmo.price_per_unit * session.shots;
+                                      }
+                                    }
+                                  });
+                                  const avgCost = allSessions.length > 0 ? totalCost / allSessions.length : 0;
+                                  return (
+                                    <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#2c2c2c', borderRadius: '4px' }}>
+                                      <h5>Podsumowanie</h5>
+                                      <div style={{ display: 'flex', gap: '2rem' }}>
+                                        {avgAccuracy !== null && (
+                                          <div>
+                                            <strong>Średnia celność:</strong> {avgAccuracy.toFixed(1)}%
+                                          </div>
+                                        )}
+                                        <div>
+                                          <strong>Średni koszt:</strong> {avgCost.toFixed(2)} zł
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                })()}
+                              </>
                             )
                           )}
                         </div>
