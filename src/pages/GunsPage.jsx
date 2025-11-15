@@ -97,9 +97,9 @@ const GunsPage = () => {
 
   return (
     <div>
-      <div className="card">
-        <div className="card-header">
-          <h2 className="card-title">Zarządzanie bronią</h2>
+      <div style={{ marginBottom: '2rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+          <h2 style={{ margin: 0 }}>Broń</h2>
           <button 
             className="btn btn-primary" 
             onClick={() => {
@@ -110,112 +110,122 @@ const GunsPage = () => {
               }
             }}
           >
-            {showForm ? 'Anuluj' : 'Dodaj broń'}
+            {showForm ? 'Anuluj' : '+ Dodaj broń'}
           </button>
         </div>
 
         {error && (
-          <div className="alert alert-danger">
+          <div className="alert alert-danger" style={{ marginBottom: '1rem' }}>
             {error}
           </div>
         )}
 
         {showForm && (
-          <form onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label className="form-label">Nazwa broni *</label>
-              <input
-                type="text"
-                className="form-input"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Kaliber</label>
-              <input
-                type="text"
-                className="form-input"
-                value={formData.caliber}
-                onChange={(e) => setFormData({ ...formData, caliber: e.target.value })}
-                placeholder="np. 9mm, .45 ACP"
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Rodzaj broni</label>
-              <select
-                className="form-input"
-                value={formData.type}
-                onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-              >
-                <option value="">Wybierz rodzaj</option>
-                <option value="Pistolet maszynowy">Pistolet maszynowy</option>
-                <option value="Karabin">Karabin</option>
-                <option value="Karabinek">Karabinek</option>
-                <option value="Strzelba">Strzelba</option>
-                <option value="Broń krótka">Broń krótka</option>
-                <option value="Inna">Inna</option>
-              </select>
-            </div>
-            <div className="form-group">
-              <label className="form-label">Notatki</label>
-              <textarea
-                className="form-input"
-                rows="3"
-                value={formData.notes}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              />
-            </div>
-            <button type="submit" className="btn btn-success">
-              {editingId ? 'Zapisz zmiany' : 'Dodaj broń'}
-            </button>
-          </form>
+          <div className="card" style={{ marginBottom: '1.5rem' }}>
+            <h3 style={{ marginBottom: '1rem' }}>
+              {editingId ? 'Edytuj broń' : 'Dodaj nową broń'}
+            </h3>
+            <form onSubmit={handleSubmit}>
+              <div className="form-group">
+                <label className="form-label">Nazwa broni *</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Kaliber</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={formData.caliber}
+                  onChange={(e) => setFormData({ ...formData, caliber: e.target.value })}
+                  placeholder="np. 9mm, .45 ACP"
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Rodzaj broni</label>
+                <select
+                  className="form-input"
+                  value={formData.type}
+                  onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                >
+                  <option value="">Wybierz rodzaj</option>
+                  <option value="Pistolet maszynowy">Pistolet maszynowy</option>
+                  <option value="Karabin">Karabin</option>
+                  <option value="Karabinek">Karabinek</option>
+                  <option value="Strzelba">Strzelba</option>
+                  <option value="Broń krótka">Broń krótka</option>
+                  <option value="Inna">Inna</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Notatki</label>
+                <textarea
+                  className="form-input"
+                  rows="3"
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                />
+              </div>
+              <button type="submit" className="btn btn-success">
+                {editingId ? 'Zapisz zmiany' : 'Dodaj broń'}
+              </button>
+            </form>
+          </div>
         )}
-      </div>
 
-      <div className="card">
-        <h3 className="card-title">Lista broni</h3>
-        {guns.length === 0 ? (
-          <p className="text-center">Brak dodanej broni</p>
-        ) : (
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Nazwa</th>
-                <th>Rodzaj</th>
-                <th>Kaliber</th>
-                <th>Notatki</th>
-                <th>Akcje</th>
-              </tr>
-            </thead>
-            <tbody>
-              {guns.map((gun) => (
-                <tr key={gun.id}>
-                  <td>{gun.name}</td>
-                  <td>{gun.type || '-'}</td>
-                  <td>{gun.caliber || '-'}</td>
-                  <td>{gun.notes || '-'}</td>
-                  <td>
-                    <button
-                      className="btn btn-primary"
-                      onClick={() => handleEdit(gun)}
-                      style={{ marginRight: '10px' }}
-                    >
-                      Edytuj
-                    </button>
-                    <button
-                      className="btn btn-danger"
-                      onClick={() => handleDelete(gun.id)}
-                    >
-                      Usuń
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+        <div className="card">
+          <h3 style={{ marginBottom: '1rem' }}>Lista broni</h3>
+          {guns.length === 0 ? (
+            <p className="text-center" style={{ color: '#888', padding: '2rem' }}>
+              Brak dodanej broni
+            </p>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Nazwa</th>
+                    <th>Rodzaj</th>
+                    <th>Kaliber</th>
+                    <th>Notatki</th>
+                    <th>Akcje</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {guns.map((gun) => (
+                    <tr key={gun.id}>
+                      <td style={{ fontWeight: '500' }}>{gun.name}</td>
+                      <td>{gun.type || '-'}</td>
+                      <td>{gun.caliber || '-'}</td>
+                      <td style={{ color: '#aaa' }}>{gun.notes || '-'}</td>
+                      <td>
+                        <button
+                          className="btn btn-primary"
+                          onClick={() => handleEdit(gun)}
+                          style={{ marginRight: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.9rem' }}
+                        >
+                          Edytuj
+                        </button>
+                        <button
+                          className="btn btn-danger"
+                          onClick={() => handleDelete(gun.id)}
+                          style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}
+                        >
+                          Usuń
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

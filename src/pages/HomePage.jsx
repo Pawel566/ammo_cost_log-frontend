@@ -53,7 +53,7 @@ const HomePage = () => {
                   </svg>
                 </div>
                 <h3>Analiza celności</h3>
-                <p>Pomiar i ocena wyników strzeleckich z inteligentnymi komentarzami AI</p>
+                <p>Pomiar i ocena wyników strzeleckich</p>
               </div>
               <div className="feature-card">
                 <div className="feature-icon">
