@@ -70,10 +70,46 @@ export const ammoAPI = {
 
 // Sessions API
 export const sessionsAPI = {
-  getAll: () => api.get('/sessions'),
+  getAll: (params) => api.get('/sessions', { params }),
   createCost: (sessionData) => api.post('/sessions/cost', sessionData),
   createAccuracy: (sessionData) => api.post('/sessions/accuracy', sessionData),
   getSummary: () => api.get('/sessions/summary'),
+};
+
+
+// Attachments API
+export const attachmentsAPI = {
+  getForGun: (gunId) => api.get(`/guns/${gunId}/attachments`),
+  create: (gunId, data) => api.post(`/guns/${gunId}/attachments`, data),
+  delete: (attachmentId) => api.delete(`/attachments/${attachmentId}`),
+};
+
+// Maintenance API
+export const maintenanceAPI = {
+  getAll: (params) => api.get('/maintenance', { params }),
+  getForGun: (gunId) => api.get(`/maintenance/guns/${gunId}/maintenance`),
+  create: (gunId, data) => api.post(`/maintenance/guns/${gunId}/maintenance`, data),
+  update: (maintenanceId, data) => api.put(`/maintenance/maintenance/${maintenanceId}`, data),
+  delete: (maintenanceId) => api.delete(`/maintenance/maintenance/${maintenanceId}`),
+};
+
+// Settings API
+export const settingsAPI = {
+  get: () => api.get('/settings'),
+  update: (data) => api.put('/settings', data),
+};
+
+// Account API
+export const accountAPI = {
+  getSkillLevel: () => api.get('/account/skill-level'),
+  updateSkillLevel: (skillLevel) => api.post('/account/skill-level', { skill_level: skillLevel }),
+  changePassword: (oldPassword, newPassword) => api.post('/account/change-password', { old_password: oldPassword, new_password: newPassword }),
+  changeEmail: (newEmail) => api.post('/account/change-email', { new_email: newEmail }),
+  deleteAccount: (password) => api.request({
+    method: 'DELETE',
+    url: '/account',
+    data: { password }
+  }),
 };
 
 export default api;
