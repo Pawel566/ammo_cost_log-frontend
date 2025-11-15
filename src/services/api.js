@@ -70,10 +70,33 @@ export const ammoAPI = {
 
 // Sessions API
 export const sessionsAPI = {
-  getAll: () => api.get('/sessions'),
+  getAll: (params) => api.get('/sessions', { params }),
   createCost: (sessionData) => api.post('/sessions/cost', sessionData),
   createAccuracy: (sessionData) => api.post('/sessions/accuracy', sessionData),
   getSummary: () => api.get('/sessions/summary'),
+};
+
+// Account API
+export const accountAPI = {
+  getSkillLevel: () => api.get('/account/skill-level'),
+  updateSkillLevel: (skillLevel) => api.post('/account/skill-level', { skill_level: skillLevel }),
+  changePassword: (oldPassword, newPassword) => api.post('/account/change-password', { old_password: oldPassword, new_password: newPassword }),
+  changeEmail: (newEmail) => api.post('/account/change-email', { new_email: newEmail }),
+  deleteAccount: () => api.post('/account/delete'),
+};
+
+// Attachments API
+export const attachmentsAPI = {
+  getForGun: (gunId) => api.get(`/guns/${gunId}/attachments`),
+  create: (gunId, data) => api.post(`/guns/${gunId}/attachments`, data),
+  delete: (gunId, attachmentId) => api.delete(`/guns/${gunId}/attachments/${attachmentId}`),
+};
+
+// Maintenance API
+export const maintenanceAPI = {
+  getForGun: (gunId) => api.get(`/guns/${gunId}/maintenance`),
+  create: (gunId, data) => api.post(`/guns/${gunId}/maintenance`, data),
+  delete: (gunId, maintenanceId) => api.delete(`/guns/${gunId}/maintenance/${maintenanceId}`),
 };
 
 export default api;
