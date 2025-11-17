@@ -25,6 +25,7 @@ const MyWeaponsPage = () => {
     fetchGuns();
     fetchAmmo();
     fetchAllMaintenance();
+    fetchAllSessions();
   }, []);
 
   useEffect(() => {
@@ -82,6 +83,34 @@ const MyWeaponsPage = () => {
       setMaintenance(maintenanceByGun);
     } catch (err) {
       console.error('Błąd pobierania konserwacji:', err);
+    }
+  };
+
+  const fetchAllSessions = async () => {
+    try {
+      const response = await sessionsAPI.getAll({ limit: 1000 });
+      const sessionsData = response.data || {};
+      const costSessions = sessionsData.cost_sessions?.items || [];
+      const accuracySessions = sessionsData.accuracy_sessions?.items || [];
+      
+      // Grupuj sesje według gun_id
+      const sessionsByGun = {};
+      [...costSessions, ...accuracySessions].forEach(session => {
+        if (!sessionsByGun[session.gun_id]) {
+          sessionsByGun[session.gun_id] = { cost: [], accuracy: [] };
+        }
+        if (session.shots !== undefined) {
+          // To jest cost session
+          sessionsByGun[session.gun_id].cost.push(session);
+        } else {
+          // To jest accuracy session
+          sessionsByGun[session.gun_id].accuracy.push(session);
+        }
+      });
+      
+      setSessions(sessionsByGun);
+    } catch (err) {
+      console.error('Błąd pobierania sesji:', err);
     }
   };
 
@@ -227,6 +256,86 @@ const MyWeaponsPage = () => {
     return gunMaintenance[0];
   };
 
+  const calculateRoundsSinceLastMaintenance = (gunId) => {
+    const lastMaint = getLastMaintenance(gunId);
+    if (!lastMaint) return 0;
+
+    const gunSessions = sessions[gunId];
+    if (!gunSessions) return 0;
+
+    // Używamy tylko cost sessions, bo accuracy sessions również tworzą cost sessions
+    const costSessions = gunSessions.cost || [];
+    const maintenanceDate = new Date(lastMaint.date);
+    
+    // Sumuj strzały tylko z sesji po dacie konserwacji
+    let totalRounds = 0;
+    costSessions.forEach(session => {
+      const sessionDate = new Date(session.date);
+      if (sessionDate >= maintenanceDate) {
+        totalRounds += session.shots || 0;
+      }
+    });
+
+    return totalRounds;
+  };
+
+  const calculateDaysSinceLastMaintenance = (gunId) => {
+    const lastMaint = getLastMaintenance(gunId);
+    if (!lastMaint) return null;
+
+    const maintenanceDate = new Date(lastMaint.date);
+    const today = new Date();
+    const diffTime = today - maintenanceDate;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    return diffDays;
+  };
+
+  const getMaintenanceStatus = (gunId) => {
+    const lastMaint = getLastMaintenance(gunId);
+    if (!lastMaint) {
+      return { status: 'none', color: '#888', icon: '', message: 'Brak konserwacji' };
+    }
+
+    const rounds = calculateRoundsSinceLastMaintenance(gunId);
+    const days = calculateDaysSinceLastMaintenance(gunId);
+
+    // Status według strzałów
+    let roundsStatus = 'green';
+    if (rounds >= 500) roundsStatus = 'red';
+    else if (rounds >= 300) roundsStatus = 'yellow';
+
+    // Status według dni
+    let daysStatus = 'green';
+    if (days >= 60) daysStatus = 'red';
+    else if (days >= 30) daysStatus = 'yellow';
+
+    // Najgorszy status
+    let finalStatus = roundsStatus;
+    if (daysStatus === 'red' || roundsStatus === 'red') {
+      finalStatus = 'red';
+    } else if (daysStatus === 'yellow' || roundsStatus === 'yellow') {
+      finalStatus = 'yellow';
+    }
+
+    let color, icon, message;
+    if (finalStatus === 'red') {
+      color = '#f44336';
+      icon = '🔴';
+      message = 'Wymagana konserwacja';
+    } else if (finalStatus === 'yellow') {
+      color = '#ff9800';
+      icon = '🟡';
+      message = 'Zbliża się konserwacja';
+    } else {
+      color = '#4caf50';
+      icon = '🟢';
+      message = 'OK';
+    }
+
+    return { status: finalStatus, color, icon, message, rounds, days };
+  };
+
   if (loading) {
     return <div className="text-center">Ładowanie...</div>;
   }
@@ -248,6 +357,7 @@ const MyWeaponsPage = () => {
               const isExpanded = expandedGun === gun.id;
               const attCount = getAttachmentsCount(gun.id);
               const lastMaintenance = getLastMaintenance(gun.id);
+              const maintenanceStatus = getMaintenanceStatus(gun.id);
               return (
                 <div key={gun.id}>
                   <div 
@@ -288,13 +398,18 @@ const MyWeaponsPage = () => {
                         <p style={{ margin: '0.25rem 0', color: '#888', fontSize: '0.85rem' }}>
                           {getGunTypeLabel(gun.type)}
                         </p>
-                        <div style={{ fontSize: '0.85rem', color: '#888', marginTop: '0.5rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                        <div style={{ fontSize: '0.85rem', color: '#888', marginTop: '0.5rem', display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
                           {attCount > 0 && (
                             <span>{attCount} {attCount === 1 ? 'dodatek' : attCount < 5 ? 'dodatki' : 'dodatków'}</span>
                           )}
                           {lastMaintenance && (
-                            <span style={{ color: '#007bff' }}>
-                              Ostatnia konserwacja: {new Date(lastMaintenance.date).toLocaleDateString('pl-PL')}
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <span style={{ color: '#007bff' }}>
+                                Ostatnia konserwacja: {new Date(lastMaintenance.date).toLocaleDateString('pl-PL')}
+                              </span>
+                              <span style={{ color: maintenanceStatus.color, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                {maintenanceStatus.icon} {maintenanceStatus.message}
+                              </span>
                             </span>
                           )}
                         </div>
