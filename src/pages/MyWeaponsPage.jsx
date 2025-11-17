@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { gunsAPI, attachmentsAPI, maintenanceAPI, sessionsAPI, ammoAPI } from '../services/api';
+import { gunsAPI, attachmentsAPI, sessionsAPI, ammoAPI } from '../services/api';
 
 const MyWeaponsPage = () => {
   const navigate = useNavigate();
@@ -9,18 +9,10 @@ const MyWeaponsPage = () => {
   const [error, setError] = useState('');
   const [expandedGun, setExpandedGun] = useState(null);
   const [attachments, setAttachments] = useState({});
-  const [maintenance, setMaintenance] = useState({});
-  const [maintenanceStatus, setMaintenanceStatus] = useState({});
   const [sessions, setSessions] = useState({});
   const [ammo, setAmmo] = useState([]);
   const [showAttachmentModal, setShowAttachmentModal] = useState(false);
-  const [showMaintenanceModal, setShowMaintenanceModal] = useState(false);
-  const [editingMaintenance, setEditingMaintenance] = useState(null);
   const [attachmentForm, setAttachmentForm] = useState({ type: 'optic', name: '', notes: '' });
-  const [maintenanceForm, setMaintenanceForm] = useState({ 
-    date: new Date().toISOString().split('T')[0], 
-    notes: '' 
-  });
 
   useEffect(() => {
     fetchGuns();
@@ -40,17 +32,6 @@ const MyWeaponsPage = () => {
       const data = response.data;
       const items = Array.isArray(data) ? data : data?.items ?? [];
       setGuns(items);
-      const statusPromises = items.map(gun => 
-        maintenanceAPI.getStatus(gun.id)
-          .then(res => ({ gunId: gun.id, status: res.data }))
-          .catch(() => ({ gunId: gun.id, status: null }))
-      );
-      const statuses = await Promise.all(statusPromises);
-      const statusMap = {};
-      statuses.forEach(({ gunId, status }) => {
-        statusMap[gunId] = status;
-      });
-      setMaintenanceStatus(statusMap);
       setError('');
     } catch (err) {
       setError('Błąd podczas pobierania listy broni');
@@ -73,14 +54,12 @@ const MyWeaponsPage = () => {
 
   const fetchGunDetails = async (gunId) => {
     try {
-      const [attachmentsRes, maintenanceRes, sessionsRes] = await Promise.all([
+      const [attachmentsRes, sessionsRes] = await Promise.all([
         attachmentsAPI.getForGun(gunId).catch(() => ({ data: [] })),
-        maintenanceAPI.getForGun(gunId).catch(() => ({ data: [] })),
         sessionsAPI.getAll({ gun_id: gunId, limit: 100 }).catch(() => ({ data: { cost_sessions: { items: [] }, accuracy_sessions: { items: [] } } }))
       ]);
       
       setAttachments({ ...attachments, [gunId]: attachmentsRes.data || [] });
-      setMaintenance({ ...maintenance, [gunId]: maintenanceRes.data || [] });
       
       const costSessions = sessionsRes.data.cost_sessions?.items || [];
       const accuracySessions = sessionsRes.data.accuracy_sessions?.items || [];
@@ -115,69 +94,6 @@ const MyWeaponsPage = () => {
     }
   };
 
-  const handleAddMaintenance = async (e) => {
-    e.preventDefault();
-    try {
-      if (editingMaintenance) {
-        await maintenanceAPI.update(editingMaintenance.id, maintenanceForm);
-        setEditingMaintenance(null);
-      } else {
-        await maintenanceAPI.create(expandedGun, maintenanceForm);
-      }
-      setShowMaintenanceModal(false);
-      setMaintenanceForm({ date: new Date().toISOString().split('T')[0], notes: '' });
-      try {
-        await fetchGuns();
-      } catch (err) {
-        console.error('Błąd podczas odświeżania listy broni:', err);
-      }
-      if (expandedGun) {
-        try {
-          await fetchGunDetails(expandedGun);
-          const statusRes = await maintenanceAPI.getStatus(expandedGun).catch(() => ({ data: null }));
-          setMaintenanceStatus(prev => ({ ...prev, [expandedGun]: statusRes.data }));
-        } catch (err) {
-          console.error('Błąd podczas odświeżania szczegółów broni:', err);
-        }
-      }
-    } catch (err) {
-      console.error('Błąd podczas zapisywania konserwacji:', err);
-      setError(err.response?.data?.detail || 'Błąd podczas zapisywania konserwacji');
-      setShowMaintenanceModal(false);
-      setEditingMaintenance(null);
-      setMaintenanceForm({ date: new Date().toISOString().split('T')[0], notes: '' });
-    }
-  };
-
-  const handleEditMaintenance = (maint) => {
-    setEditingMaintenance(maint);
-    const dateValue = maint.date instanceof Date 
-      ? maint.date.toISOString().split('T')[0]
-      : maint.date.split('T')[0];
-    setMaintenanceForm({
-      date: dateValue,
-      notes: maint.notes || ''
-    });
-    setShowMaintenanceModal(true);
-  };
-
-  const handleDeleteMaintenance = async (maintenanceId) => {
-    if (window.confirm('Czy na pewno chcesz usunąć tę konserwację?')) {
-      try {
-        await maintenanceAPI.delete(maintenanceId);
-        await fetchGunDetails(expandedGun);
-        await fetchGuns();
-        if (expandedGun) {
-          const statusRes = await maintenanceAPI.getStatus(expandedGun).catch(() => ({ data: null }));
-          setMaintenanceStatus(prev => ({ ...prev, [expandedGun]: statusRes.data }));
-        }
-      } catch (err) {
-        setError(err.response?.data?.detail || 'Błąd podczas usuwania konserwacji');
-      }
-    }
-  };
-
-
   const getAttachmentTypeLabel = (type) => {
     const labels = {
       optic: 'Celownik',
@@ -193,12 +109,6 @@ const MyWeaponsPage = () => {
     return labels[type] || type;
   };
 
-  const getLastMaintenance = (gunId) => {
-    const maint = maintenance[gunId];
-    if (!maint || maint.length === 0) return null;
-    return maint.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
-  };
-
   const getAttachmentsCount = (gunId) => {
     return attachments[gunId]?.length || 0;
   };
@@ -211,36 +121,6 @@ const MyWeaponsPage = () => {
       other: 'Inne'
     };
     return labels[type?.toLowerCase()] || type || 'Inne';
-  };
-
-  const getMaintenanceStatusIcon = (status) => {
-    if (!status) return null;
-    const icons = {
-      green: '🟢',
-      yellow: '🟡',
-      red: '🔴'
-    };
-    return icons[status.status] || null;
-  };
-
-  const getMaintenanceStatusText = (status) => {
-    if (!status) return '';
-    const texts = {
-      green: 'OK',
-      yellow: 'Zbliża się',
-      red: 'Wymaga konserwacji'
-    };
-    return texts[status.status] || '';
-  };
-
-  const getMaintenanceStatusColor = (status) => {
-    if (!status) return '#888';
-    const colors = {
-      green: '#4caf50',
-      yellow: '#ff9800',
-      red: '#f44336'
-    };
-    return colors[status.status] || '#888';
   };
 
   if (loading) {
@@ -262,9 +142,7 @@ const MyWeaponsPage = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {guns.map((gun) => {
               const isExpanded = expandedGun === gun.id;
-              const lastMaint = getLastMaintenance(gun.id);
               const attCount = getAttachmentsCount(gun.id);
-              const maintStatus = maintenanceStatus[gun.id];
               return (
                 <div key={gun.id}>
                   <div 
@@ -306,25 +184,8 @@ const MyWeaponsPage = () => {
                           {getGunTypeLabel(gun.type)}
                         </p>
                         <div style={{ fontSize: '0.85rem', color: '#888', marginTop: '0.5rem' }}>
-                          {maintStatus && (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                              {getMaintenanceStatusIcon(maintStatus) && (
-                                <span style={{ fontSize: '1rem' }}>{getMaintenanceStatusIcon(maintStatus)}</span>
-                              )}
-                              <span>{getMaintenanceStatusText(maintStatus)}</span>
-                            </div>
-                          )}
-                          {!maintStatus && lastMaint && (
-                            <span>Ostatnia konserwacja: {new Date(lastMaint.date).toLocaleDateString('pl-PL')}</span>
-                          )}
-                          {!maintStatus && !lastMaint && (
-                            <span>Brak konserwacji</span>
-                          )}
                           {attCount > 0 && (
-                            <>
-                              <span style={{ margin: '0 0.5rem' }}>•</span>
-                              <span>{attCount} {attCount === 1 ? 'dodatek' : attCount < 5 ? 'dodatki' : 'dodatków'}</span>
-                            </>
+                            <span>{attCount} {attCount === 1 ? 'dodatek' : attCount < 5 ? 'dodatki' : 'dodatków'}</span>
                           )}
                         </div>
                       </div>
@@ -414,120 +275,6 @@ const MyWeaponsPage = () => {
                             }}
                           >
                             + Dodaj dodatek
-                          </button>
-                        </div>
-
-                        <div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                              <h4 style={{ margin: 0 }}>Konserwacja</h4>
-                              {maintStatus && (
-                                <span style={{ fontSize: '1.2rem' }}>{getMaintenanceStatusIcon(maintStatus)}</span>
-                              )}
-                            </div>
-                          </div>
-                          {maintStatus && (
-                            <div style={{ 
-                              padding: '1rem', 
-                              backgroundColor: '#2c2c2c', 
-                              borderRadius: '8px', 
-                              marginBottom: '1rem',
-                              border: `2px solid ${getMaintenanceStatusColor(maintStatus)}`
-                            }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <span style={{ fontSize: '1.2rem' }}>{getMaintenanceStatusIcon(maintStatus)}</span>
-                                <span style={{ fontWeight: '500', color: getMaintenanceStatusColor(maintStatus) }}>
-                                  {getMaintenanceStatusText(maintStatus)}
-                                </span>
-                              </div>
-                            </div>
-                          )}
-                          {maintenance[gun.id]?.length > 0 ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1rem' }}>
-                              {maintenance[gun.id]
-                                .sort((a, b) => new Date(b.date) - new Date(a.date))
-                                .map((maint) => (
-                                  <div
-                                    key={maint.id}
-                                    style={{
-                                      padding: '0.75rem',
-                                      backgroundColor: '#2c2c2c',
-                                      borderRadius: '8px',
-                                      display: 'flex',
-                                      justifyContent: 'space-between',
-                                      alignItems: 'center'
-                                    }}
-                                  >
-                                    <div>
-                                      <div style={{ fontWeight: '500' }}>
-                                        {new Date(maint.date).toLocaleDateString('pl-PL')}
-                                      </div>
-                                      <div style={{ fontSize: '0.9rem', color: '#aaa', marginTop: '0.25rem' }}>
-                                        {maint.rounds_since_last} strzałów od ostatniej konserwacji
-                                      </div>
-                                      {maint.notes && (
-                                        <div style={{ fontSize: '0.85rem', color: '#888', marginTop: '0.25rem' }}>
-                                          {maint.notes}
-                                        </div>
-                                      )}
-                                    </div>
-                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleEditMaintenance(maint);
-                                        }}
-                                        style={{
-                                          background: 'none',
-                                          border: 'none',
-                                          color: '#007bff',
-                                          cursor: 'pointer',
-                                          fontSize: '0.9rem',
-                                          padding: '0.25rem 0.5rem'
-                                        }}
-                                      >
-                                        Edytuj
-                                      </button>
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleDeleteMaintenance(maint.id);
-                                        }}
-                                        style={{
-                                          background: 'none',
-                                          border: 'none',
-                                          color: '#f44336',
-                                          cursor: 'pointer',
-                                          fontSize: '1.2rem',
-                                          padding: '0.25rem 0.5rem'
-                                        }}
-                                      >
-                                        ×
-                                      </button>
-                                    </div>
-                                  </div>
-                                ))}
-                            </div>
-                          ) : (
-                            <p style={{ color: '#888', marginBottom: '1rem' }}>Brak konserwacji</p>
-                          )}
-                          <button
-                            className="btn btn-link"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setShowMaintenanceModal(true);
-                            }}
-                            style={{ 
-                              color: '#007bff', 
-                              textDecoration: 'none',
-                              padding: 0,
-                              background: 'none',
-                              border: 'none',
-                              cursor: 'pointer',
-                              fontSize: '0.9rem'
-                            }}
-                          >
-                            + Dodaj konserwację
                           </button>
                         </div>
 
@@ -685,69 +432,6 @@ const MyWeaponsPage = () => {
                   type="button"
                   className="btn btn-secondary"
                   onClick={() => setShowAttachmentModal(false)}
-                >
-                  Anuluj
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {showMaintenanceModal && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000
-          }}
-          onClick={() => setShowMaintenanceModal(false)}
-        >
-          <div
-            className="card"
-            style={{ maxWidth: '500px', width: '90%' }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3>{editingMaintenance ? 'Edytuj konserwację' : 'Dodaj konserwację'}</h3>
-            <form onSubmit={handleAddMaintenance}>
-              <div className="form-group">
-                <label className="form-label">Data</label>
-                <input
-                  type="date"
-                  className="form-input"
-                  value={maintenanceForm.date}
-                  onChange={(e) => setMaintenanceForm({ ...maintenanceForm, date: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Notatki</label>
-                <textarea
-                  className="form-input"
-                  value={maintenanceForm.notes}
-                  onChange={(e) => setMaintenanceForm({ ...maintenanceForm, notes: e.target.value })}
-                  rows={3}
-                />
-              </div>
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <button type="submit" className="btn btn-primary">
-                  {editingMaintenance ? 'Zapisz' : 'Dodaj'}
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => {
-                    setShowMaintenanceModal(false);
-                    setEditingMaintenance(null);
-                    setMaintenanceForm({ date: new Date().toISOString().split('T')[0], notes: '' });
-                  }}
                 >
                   Anuluj
                 </button>

@@ -61,9 +61,6 @@ const NavbarUser = () => {
               <div className="user-menu-item" onClick={() => { setIsMenuOpen(false); navigate('/my-weapons'); }}>
                 Moja broń i wyposażenie
               </div>
-              <div className="user-menu-item" onClick={() => { setIsMenuOpen(false); navigate('/maintenance'); }}>
-                Konserwacja
-              </div>
               <div className="user-menu-item" onClick={() => { setIsMenuOpen(false); navigate('/settings'); }}>
                 Ustawienia
               </div>
