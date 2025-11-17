@@ -308,14 +308,23 @@ const MyWeaponsPage = () => {
                         <div style={{ fontSize: '0.85rem', color: '#888', marginTop: '0.5rem' }}>
                           {maintStatus && (
                             <>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                                {getMaintenanceStatusIcon(maintStatus) && (
+                                  <span style={{ fontSize: '1rem' }}>{getMaintenanceStatusIcon(maintStatus)}</span>
+                                )}
+                                <span>{getMaintenanceStatusText(maintStatus)}</span>
+                              </div>
                               {maintStatus.rounds_since_last !== undefined && (
-                                <span>{maintStatus.rounds_since_last} strzałów od ostatniej konserwacji</span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                  <span style={{ fontSize: '0.9rem' }}>{getMaintenanceStatusIcon({ status: maintStatus.rounds_status })}</span>
+                                  <span>{maintStatus.rounds_since_last} strzałów</span>
+                                </div>
                               )}
                               {maintStatus.days_since_last !== null && maintStatus.days_since_last !== undefined && (
-                                <>
-                                  <span style={{ margin: '0 0.5rem' }}>•</span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                  <span style={{ fontSize: '0.9rem' }}>{getMaintenanceStatusIcon({ status: maintStatus.days_status })}</span>
                                   <span>{maintStatus.days_since_last} dni</span>
-                                </>
+                                </div>
                               )}
                               {(!maintStatus.rounds_since_last && maintStatus.days_since_last === null) && (
                                 <span>{maintStatus.message || 'Brak konserwacji'}</span>
@@ -429,11 +438,53 @@ const MyWeaponsPage = () => {
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                               <h4 style={{ margin: 0 }}>Konserwacja</h4>
-                              {maintStatus && (maintStatus.status === 'yellow' || maintStatus.status === 'red') && (
+                              {maintStatus && (
                                 <span style={{ fontSize: '1.2rem' }}>{getMaintenanceStatusIcon(maintStatus)}</span>
                               )}
                             </div>
                           </div>
+                          {maintStatus && (
+                            <div style={{ 
+                              padding: '1rem', 
+                              backgroundColor: '#2c2c2c', 
+                              borderRadius: '8px', 
+                              marginBottom: '1rem',
+                              border: `2px solid ${getMaintenanceStatusColor(maintStatus)}`
+                            }}>
+                              <div style={{ marginBottom: '0.75rem' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                                  <span style={{ fontSize: '1.2rem' }}>{getMaintenanceStatusIcon(maintStatus)}</span>
+                                  <span style={{ fontWeight: '500', color: getMaintenanceStatusColor(maintStatus) }}>
+                                    Status ogólny: {getMaintenanceStatusText(maintStatus)}
+                                  </span>
+                                </div>
+                              </div>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                {maintStatus.rounds_since_last !== undefined && (
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    <span style={{ fontSize: '1rem' }}>{getMaintenanceStatusIcon({ status: maintStatus.rounds_status })}</span>
+                                    <span>
+                                      <strong>Strzały:</strong> {maintStatus.rounds_since_last} 
+                                      {maintStatus.rounds_status === 'green' && ' (0-300 - OK)'}
+                                      {maintStatus.rounds_status === 'yellow' && ' (300-500 - Zbliża się konserwacja)'}
+                                      {maintStatus.rounds_status === 'red' && ' (500+ - Wymagana konserwacja)'}
+                                    </span>
+                                  </div>
+                                )}
+                                {maintStatus.days_since_last !== null && maintStatus.days_since_last !== undefined && (
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    <span style={{ fontSize: '1rem' }}>{getMaintenanceStatusIcon({ status: maintStatus.days_status })}</span>
+                                    <span>
+                                      <strong>Czas:</strong> {maintStatus.days_since_last} dni
+                                      {maintStatus.days_status === 'green' && ' (0-30 dni - OK)'}
+                                      {maintStatus.days_status === 'yellow' && ' (30-60 dni - Warto zaplanować czyszczenie)'}
+                                      {maintStatus.days_status === 'red' && ' (60+ dni - Wymagana konserwacja)'}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
                           {maintenance[gun.id]?.length > 0 ? (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1rem' }}>
                               {maintenance[gun.id]
