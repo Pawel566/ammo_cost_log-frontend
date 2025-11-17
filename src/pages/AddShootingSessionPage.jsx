@@ -12,7 +12,6 @@ const AddShootingSessionPage = () => {
     gun_id: '',
     ammo_id: '',
     date: new Date().toISOString().split('T')[0],
-    shots: '',
     notes: '',
     include_cost: false,
     cost: '',
@@ -20,6 +19,7 @@ const AddShootingSessionPage = () => {
     price_per_unit: '',
     include_accuracy: false,
     distance_m: '',
+    shots: '',
     hits: ''
   });
 
@@ -43,14 +43,13 @@ const AddShootingSessionPage = () => {
     if (formData.include_cost && formData.quantity && formData.price_per_unit) {
       const quantity = parseFloat(formData.quantity) || 0;
       const price = parseFloat(formData.price_per_unit.replace(',', '.').replace(' zł', '').trim()) || 0;
-      const cost = (quantity * price).toFixed(2).replace('.', ',');
-      setFormData(prev => ({ ...prev, cost: cost }));
-    } else if (formData.include_cost && formData.cost) {
-      // Jeśli koszt jest podany ręcznie, nie nadpisuj
+      const costValue = parseFloat(formData.cost.replace(',', '.').replace(' zł', '').trim()) || 0;
+      const totalCost = (costValue + (quantity * price)).toFixed(2).replace('.', ',');
+      setFormData(prev => ({ ...prev, totalCost: totalCost }));
     } else if (!formData.include_cost) {
-      setFormData(prev => ({ ...prev, cost: '' }));
+      setFormData(prev => ({ ...prev, totalCost: '0,00' }));
     }
-  }, [formData.quantity, formData.price_per_unit, formData.include_cost]);
+  }, [formData.quantity, formData.price_per_unit, formData.cost, formData.include_cost]);
 
   const fetchData = async () => {
     try {
@@ -87,16 +86,10 @@ const AddShootingSessionPage = () => {
 
   const calculateTotalCost = () => {
     if (formData.include_cost) {
-      if (formData.cost) {
-        const costValue = parseFloat(formData.cost.replace(',', '.').replace(' zł', '').trim()) || 0;
-        const quantity = parseFloat(formData.quantity) || 0;
-        const price = parseFloat(formData.price_per_unit.replace(',', '.').replace(' zł', '').trim()) || 0;
-        return (costValue + (quantity * price)).toFixed(2).replace('.', ',');
-      } else if (formData.quantity && formData.price_per_unit) {
-        const quantity = parseFloat(formData.quantity) || 0;
-        const price = parseFloat(formData.price_per_unit.replace(',', '.').replace(' zł', '').trim()) || 0;
-        return (quantity * price).toFixed(2).replace('.', ',');
-      }
+      const costValue = parseFloat(formData.cost.replace(',', '.').replace(' zł', '').trim()) || 0;
+      const quantity = parseFloat(formData.quantity) || 0;
+      const price = parseFloat(formData.price_per_unit.replace(',', '.').replace(' zł', '').trim()) || 0;
+      return (costValue + (quantity * price)).toFixed(2).replace('.', ',');
     }
     return '0,00';
   };
@@ -114,16 +107,16 @@ const AddShootingSessionPage = () => {
       return;
     }
 
-    let shots = parseInt(formData.shots, 10);
+    let shots = 0;
+    if (formData.include_accuracy && formData.shots) {
+      shots = parseInt(formData.shots, 10);
+    } else if (formData.include_cost && formData.quantity) {
+      shots = parseInt(formData.quantity, 10);
+    }
+    
     if (!shots || shots <= 0) {
-      if (formData.include_cost && formData.quantity) {
-        shots = parseInt(formData.quantity, 10);
-      } else if (formData.include_accuracy && formData.shots) {
-        shots = parseInt(formData.shots, 10);
-      } else {
-        setError('Liczba strzałów musi być większa od 0');
-        return;
-      }
+      setError('Liczba strzałów musi być większa od 0');
+      return;
     }
 
     const selectedDate = new Date(formData.date);
@@ -154,7 +147,7 @@ const AddShootingSessionPage = () => {
         gun_id: formData.gun_id,
         ammo_id: formData.ammo_id,
         date: formData.date,
-        shots: shots || (formData.include_cost ? parseInt(formData.quantity, 10) : (formData.include_accuracy ? parseInt(formData.shots, 10) : 0)),
+        shots: shots,
         notes: formData.notes || null
       };
 
@@ -215,9 +208,10 @@ const AddShootingSessionPage = () => {
         <div className="card" style={{ marginBottom: '1.5rem' }}>
           <form onSubmit={handleSubmit}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-              {/* Lewa kolumna - Sesja i Koszty */}
+              {/* Lewa kolumna */}
               <div>
-                <h4 style={{ marginBottom: '1rem', fontSize: '1.1rem' }}>Sesja</h4>
+                {/* Sekcja Sesja */}
+                <h4 style={{ marginBottom: '1rem', fontSize: '1.1rem', fontWeight: 'bold' }}>Sesja</h4>
                 <div className="form-group">
                   <label className="form-label">Broń *</label>
                   <select
@@ -225,6 +219,7 @@ const AddShootingSessionPage = () => {
                     value={formData.gun_id}
                     onChange={(e) => setFormData({ ...formData, gun_id: e.target.value })}
                     required
+                    style={{ appearance: 'none', backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'%3E%3Cpath fill=\'%23fff\' d=\'M6 9L1 4h10z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', paddingRight: '2.5rem' }}
                   >
                     <option value="">Wybierz broń</option>
                     {guns.map((gun) => (
@@ -241,6 +236,7 @@ const AddShootingSessionPage = () => {
                     value={formData.ammo_id}
                     onChange={(e) => setFormData({ ...formData, ammo_id: e.target.value })}
                     required
+                    style={{ appearance: 'none', backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'%3E%3Cpath fill=\'%23fff\' d=\'M6 9L1 4h10z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', paddingRight: '2.5rem' }}
                   >
                     <option value="">Wybierz amunicję</option>
                     {ammo.map((item) => (
@@ -259,20 +255,11 @@ const AddShootingSessionPage = () => {
                     onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                     max={new Date().toISOString().split('T')[0]}
                     required
+                    style={{ 
+                      position: 'relative'
+                    }}
                   />
                 </div>
-                {formData.include_cost && (
-                  <div className="form-group">
-                    <label className="form-label">Koszty</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      value={`${calculateTotalCost()} zł`}
-                      readOnly
-                      style={{ backgroundColor: '#2c2c2c' }}
-                    />
-                  </div>
-                )}
                 <div className="form-group">
                   <label className="form-label">Notatki</label>
                   <textarea
@@ -280,23 +267,14 @@ const AddShootingSessionPage = () => {
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     rows={4}
+                    style={{ resize: 'vertical' }}
                   />
                 </div>
 
-                <h4 style={{ marginTop: '1.5rem', marginBottom: '1rem', fontSize: '1.1rem' }}>Koszty</h4>
-                <div className="form-group">
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                    <input
-                      type="checkbox"
-                      checked={formData.include_cost}
-                      onChange={(e) => setFormData({ ...formData, include_cost: e.target.checked })}
-                    />
-                    <span>Dodaj koszty</span>
-                  </label>
-                </div>
-                
+                {/* Sekcja Koszty - na dole lewej kolumny - pojawia się gdy checkbox w prawej kolumnie jest zaznaczony */}
                 {formData.include_cost && (
                   <>
+                    <h4 style={{ marginTop: '1.5rem', marginBottom: '1rem', fontSize: '1.1rem', fontWeight: 'bold' }}>Koszty</h4>
                     <div className="form-group">
                       <label className="form-label">Koszt stały (np. opłata za tor)</label>
                       <input
@@ -312,19 +290,17 @@ const AddShootingSessionPage = () => {
                     </div>
                     <div className="form-group">
                       <label className="form-label">Użyta amunicja *</label>
-                      <select
+                      <input
+                        type="text"
                         className="form-input"
-                        value={formData.ammo_id}
-                        onChange={(e) => setFormData({ ...formData, ammo_id: e.target.value })}
-                        required
-                      >
-                        <option value="">Wybierz amunicję</option>
-                        {ammo.map((item) => (
-                          <option key={item.id} value={item.id}>
-                            {item.name} {item.caliber ? `(${item.caliber})` : ''}
-                          </option>
-                        ))}
-                      </select>
+                        value={formData.ammo_id ? (() => {
+                          const selectedAmmo = ammo.find(a => a.id === formData.ammo_id);
+                          return selectedAmmo ? `${selectedAmmo.name} ${selectedAmmo.caliber ? `(${selectedAmmo.caliber})` : ''}` : '';
+                        })() : ''}
+                        readOnly
+                        style={{ backgroundColor: '#2c2c2c', cursor: 'not-allowed' }}
+                        placeholder={formData.ammo_id ? '' : 'Wybierz amunicję w sekcji Sesja'}
+                      />
                     </div>
                     <div className="form-group">
                       <label className="form-label">Ilość sztuk</label>
@@ -335,7 +311,7 @@ const AddShootingSessionPage = () => {
                         value={formData.quantity}
                         onChange={(e) => {
                           const qty = e.target.value;
-                          setFormData({ ...formData, quantity: qty, shots: qty });
+                          setFormData({ ...formData, quantity: qty });
                         }}
                       />
                     </div>
@@ -362,15 +338,17 @@ const AddShootingSessionPage = () => {
                 )}
               </div>
 
-              {/* Prawa kolumna - Celność */}
+              {/* Prawa kolumna */}
               <div>
-                <h4 style={{ marginBottom: '1rem', fontSize: '1.1rem' }}>Celność</h4>
+                {/* Sekcja Celność - na górze prawej kolumny */}
+                <h4 style={{ marginBottom: '1rem', fontSize: '1.1rem', fontWeight: 'bold' }}>Celność</h4>
                 <div className="form-group">
                   <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
                     <input
                       type="checkbox"
                       checked={formData.include_accuracy}
                       onChange={(e) => setFormData({ ...formData, include_accuracy: e.target.checked })}
+                      style={{ width: '18px', height: '18px', cursor: 'pointer' }}
                     />
                     <span>Dodaj dane celności</span>
                   </label>
@@ -421,26 +399,60 @@ const AddShootingSessionPage = () => {
                         readOnly
                         style={{ 
                           backgroundColor: '#2c2c2c',
-                          color: parseFloat(calculateAccuracy()) >= 80 ? '#4caf50' : parseFloat(calculateAccuracy()) >= 60 ? '#ffc107' : '#dc3545',
+                          color: parseFloat(calculateAccuracy()) >= 80 ? '#4caf50' : parseFloat(calculateAccuracy()) >= 60 ? '#ffc107' : parseFloat(calculateAccuracy()) > 0 ? '#dc3545' : '#4caf50',
                           fontWeight: 'bold'
                         }}
                       />
                     </div>
                   </>
                 )}
+
+                {/* Sekcja Koszty - w środku prawej kolumny */}
+                <h4 style={{ marginTop: '1.5rem', marginBottom: '1rem', fontSize: '1.1rem', fontWeight: 'bold' }}>Koszty</h4>
+                <div className="form-group">
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={formData.include_cost}
+                      onChange={(e) => setFormData({ ...formData, include_cost: e.target.checked })}
+                      style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                    />
+                    <span>Dodaj koszty</span>
+                  </label>
+                </div>
               </div>
             </div>
 
-            <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'center', gap: '1rem' }}>
+            <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
               <button 
                 type="button" 
                 className="btn" 
-                style={{ padding: '0.75rem 2rem', fontSize: '1.1rem', backgroundColor: '#6c757d', color: 'white' }}
+                style={{ 
+                  padding: '0.75rem 2rem', 
+                  fontSize: '1.1rem', 
+                  backgroundColor: '#6c757d', 
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
                 onClick={() => navigate('/shooting-sessions')}
               >
                 Anuluj
               </button>
-              <button type="submit" className="btn btn-primary" style={{ padding: '0.75rem 2rem', fontSize: '1.1rem' }}>
+              <button 
+                type="submit" 
+                className="btn btn-primary" 
+                style={{ 
+                  padding: '0.75rem 2rem', 
+                  fontSize: '1.1rem',
+                  backgroundColor: '#007bff',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
+              >
                 Zapisz
               </button>
             </div>
@@ -452,4 +464,3 @@ const AddShootingSessionPage = () => {
 };
 
 export default AddShootingSessionPage;
-
