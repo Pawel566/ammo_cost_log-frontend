@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { maintenanceAPI, gunsAPI } from '../services/api';
 
 const MaintenancePage = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [maintenance, setMaintenance] = useState([]);
   const [guns, setGuns] = useState([]);
   const [statistics, setStatistics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [selectedGunId, setSelectedGunId] = useState('');
+  const [selectedGunId, setSelectedGunId] = useState(searchParams.get('gun_id') || '');
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingMaintenance, setEditingMaintenance] = useState(null);
-  const [maintenanceForm, setMaintenanceForm] = useState({ date: '', notes: '', rounds_since_last: '' });
+  const [maintenanceForm, setMaintenanceForm] = useState({ date: '', notes: '' });
 
   useEffect(() => {
     fetchData();
@@ -18,7 +20,19 @@ const MaintenancePage = () => {
 
   useEffect(() => {
     fetchMaintenance();
+    if (selectedGunId) {
+      setSearchParams({ gun_id: selectedGunId });
+    } else {
+      setSearchParams({});
+    }
   }, [selectedGunId]);
+
+  useEffect(() => {
+    const gunIdFromUrl = searchParams.get('gun_id');
+    if (gunIdFromUrl && gunIdFromUrl !== selectedGunId) {
+      setSelectedGunId(gunIdFromUrl);
+    }
+  }, []);
 
   const fetchData = async () => {
     try {
@@ -65,8 +79,7 @@ const MaintenancePage = () => {
       : maint.date.split('T')[0];
     setMaintenanceForm({
       date: dateValue,
-      notes: maint.notes || '',
-      rounds_since_last: maint.rounds_since_last || ''
+      notes: maint.notes || ''
     });
     setShowEditModal(true);
   };
@@ -81,13 +94,10 @@ const MaintenancePage = () => {
       if (maintenanceForm.notes !== undefined) {
         formData.notes = maintenanceForm.notes || null;
       }
-      if (maintenanceForm.rounds_since_last !== undefined && maintenanceForm.rounds_since_last !== '') {
-        formData.rounds_since_last = parseInt(maintenanceForm.rounds_since_last);
-      }
       await maintenanceAPI.update(editingMaintenance.id, formData);
       setShowEditModal(false);
       setEditingMaintenance(null);
-      setMaintenanceForm({ date: '', notes: '', rounds_since_last: '' });
+      setMaintenanceForm({ date: '', notes: '' });
       await fetchMaintenance();
       await fetchData();
     } catch (err) {
@@ -270,7 +280,7 @@ const MaintenancePage = () => {
           onClick={() => {
             setShowEditModal(false);
             setEditingMaintenance(null);
-            setMaintenanceForm({ date: '', notes: '', rounds_since_last: '' });
+            setMaintenanceForm({ date: '', notes: '' });
           }}
         >
           <div
@@ -288,16 +298,6 @@ const MaintenancePage = () => {
                   value={maintenanceForm.date}
                   onChange={(e) => setMaintenanceForm({ ...maintenanceForm, date: e.target.value })}
                   required
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Strzałów od poprzedniej</label>
-                <input
-                  type="number"
-                  className="form-input"
-                  value={maintenanceForm.rounds_since_last}
-                  onChange={(e) => setMaintenanceForm({ ...maintenanceForm, rounds_since_last: e.target.value })}
-                  min="0"
                 />
               </div>
               <div className="form-group">
@@ -319,7 +319,7 @@ const MaintenancePage = () => {
                   onClick={() => {
                     setShowEditModal(false);
                     setEditingMaintenance(null);
-                    setMaintenanceForm({ date: '', notes: '', rounds_since_last: '' });
+                    setMaintenanceForm({ date: '', notes: '' });
                   }}
                 >
                   Anuluj

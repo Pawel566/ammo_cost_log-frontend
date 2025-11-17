@@ -18,8 +18,7 @@ const MyWeaponsPage = () => {
   const [attachmentForm, setAttachmentForm] = useState({ type: 'optic', name: '', notes: '' });
   const [maintenanceForm, setMaintenanceForm] = useState({ 
     date: new Date().toISOString().split('T')[0], 
-    notes: '',
-    rounds_since_last: ''
+    notes: ''
   });
 
   useEffect(() => {
@@ -116,15 +115,11 @@ const MyWeaponsPage = () => {
         if (maintenanceForm.notes !== undefined) {
           formData.notes = maintenanceForm.notes || null;
         }
-        if (maintenanceForm.rounds_since_last !== undefined && maintenanceForm.rounds_since_last !== '') {
-          formData.rounds_since_last = parseInt(maintenanceForm.rounds_since_last);
-        }
         await maintenanceAPI.update(editingMaintenance.id, formData);
       } else {
         formData = {
           date: maintenanceForm.date,
-          notes: maintenanceForm.notes || null,
-          rounds_since_last: maintenanceForm.rounds_since_last ? parseInt(maintenanceForm.rounds_since_last) : 0
+          notes: maintenanceForm.notes || null
         };
         await maintenanceAPI.create(expandedGun, formData);
       }
@@ -132,8 +127,7 @@ const MyWeaponsPage = () => {
       setEditingMaintenance(null);
       setMaintenanceForm({ 
         date: new Date().toISOString().split('T')[0], 
-        notes: '',
-        rounds_since_last: ''
+        notes: ''
       });
       await fetchGunDetails(expandedGun);
       fetchGuns();
@@ -150,8 +144,7 @@ const MyWeaponsPage = () => {
       : maint.date.split('T')[0];
     setMaintenanceForm({
       date: dateValue,
-      notes: maint.notes || '',
-      rounds_since_last: maint.rounds_since_last || ''
+      notes: maint.notes || ''
     });
     setShowMaintenanceModal(true);
   };
@@ -376,9 +369,6 @@ const MyWeaponsPage = () => {
                                       <div style={{ fontWeight: '500' }}>
                                         {new Date(maint.date).toLocaleDateString('pl-PL')}
                                       </div>
-                                      <div style={{ fontSize: '0.9rem', color: '#aaa', marginTop: '0.25rem' }}>
-                                        {maint.rounds_since_last} strzałów od ostatniej konserwacji
-                                      </div>
                                       {maint.notes && (
                                         <div style={{ fontSize: '0.85rem', color: '#888', marginTop: '0.25rem' }}>
                                           {maint.notes}
@@ -386,6 +376,22 @@ const MyWeaponsPage = () => {
                                       )}
                                     </div>
                                     <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          navigate(`/maintenance?gun_id=${gun.id}`);
+                                        }}
+                                        style={{
+                                          background: 'none',
+                                          border: 'none',
+                                          color: '#007bff',
+                                          cursor: 'pointer',
+                                          fontSize: '0.9rem',
+                                          padding: '0.25rem 0.5rem'
+                                        }}
+                                      >
+                                        Szczegóły
+                                      </button>
                                       <button
                                         onClick={(e) => {
                                           e.stopPropagation();
@@ -432,8 +438,7 @@ const MyWeaponsPage = () => {
                               setEditingMaintenance(null);
                               setMaintenanceForm({ 
                                 date: new Date().toISOString().split('T')[0], 
-                                notes: '',
-                                rounds_since_last: ''
+                                notes: ''
                               });
                               setShowMaintenanceModal(true);
                             }}
@@ -633,8 +638,7 @@ const MyWeaponsPage = () => {
             setEditingMaintenance(null);
             setMaintenanceForm({ 
               date: new Date().toISOString().split('T')[0], 
-              notes: '',
-              rounds_since_last: ''
+              notes: ''
             });
           }}
         >
@@ -653,17 +657,6 @@ const MyWeaponsPage = () => {
                   value={maintenanceForm.date}
                   onChange={(e) => setMaintenanceForm({ ...maintenanceForm, date: e.target.value })}
                   required
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Strzałów od poprzedniej</label>
-                <input
-                  type="number"
-                  className="form-input"
-                  value={maintenanceForm.rounds_since_last}
-                  onChange={(e) => setMaintenanceForm({ ...maintenanceForm, rounds_since_last: e.target.value })}
-                  min="0"
-                  placeholder="Pozostaw puste aby obliczyć automatycznie"
                 />
               </div>
               <div className="form-group">
@@ -687,8 +680,7 @@ const MyWeaponsPage = () => {
                     setEditingMaintenance(null);
                     setMaintenanceForm({ 
                       date: new Date().toISOString().split('T')[0], 
-                      notes: '',
-                      rounds_since_last: ''
+                      notes: ''
                     });
                   }}
                 >
