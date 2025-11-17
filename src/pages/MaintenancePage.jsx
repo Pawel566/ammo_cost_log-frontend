@@ -4,36 +4,45 @@ import { maintenanceAPI, gunsAPI } from '../services/api';
 const MaintenancePage = () => {
   const [maintenance, setMaintenance] = useState([]);
   const [guns, setGuns] = useState([]);
+  const [statistics, setStatistics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedGunId, setSelectedGunId] = useState('');
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingMaintenance, setEditingMaintenance] = useState(null);
-  const [maintenanceForm, setMaintenanceForm] = useState({ date: '', notes: '' });
+  const [maintenanceForm, setMaintenanceForm] = useState({ date: '', notes: '', rounds_since_last: '' });
 
   useEffect(() => {
-    fetchGuns();
-    fetchMaintenance();
+    fetchData();
   }, []);
 
   useEffect(() => {
     fetchMaintenance();
   }, [selectedGunId]);
 
-  const fetchGuns = async () => {
+  const fetchData = async () => {
     try {
-      const response = await gunsAPI.getAll();
-      const data = response.data;
-      const items = Array.isArray(data) ? data : data?.items ?? [];
+      setLoading(true);
+      const [gunsRes, statsRes] = await Promise.all([
+        gunsAPI.getAll().catch(() => ({ data: [] })),
+        maintenanceAPI.getStatistics().catch(() => ({ data: null }))
+      ]);
+      
+      const gunsData = gunsRes.data;
+      const items = Array.isArray(gunsData) ? gunsData : gunsData?.items ?? [];
       setGuns(items);
+      setStatistics(statsRes.data);
+      await fetchMaintenance();
     } catch (err) {
-      console.error('Błąd pobierania broni:', err);
+      setError('Błąd podczas pobierania danych');
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
   const fetchMaintenance = async () => {
     try {
-      setLoading(true);
       const params = selectedGunId ? { gun_id: selectedGunId } : {};
       const response = await maintenanceAPI.getAll(params);
       setMaintenance(response.data || []);
@@ -41,8 +50,6 @@ const MaintenancePage = () => {
     } catch (err) {
       setError('Błąd podczas pobierania konserwacji');
       console.error(err);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -58,7 +65,8 @@ const MaintenancePage = () => {
       : maint.date.split('T')[0];
     setMaintenanceForm({
       date: dateValue,
-      notes: maint.notes || ''
+      notes: maint.notes || '',
+      rounds_since_last: maint.rounds_since_last || ''
     });
     setShowEditModal(true);
   };
@@ -66,21 +74,20 @@ const MaintenancePage = () => {
   const handleUpdateMaintenance = async (e) => {
     e.preventDefault();
     try {
-      await maintenanceAPI.update(editingMaintenance.id, maintenanceForm);
+      const formData = {
+        date: maintenanceForm.date,
+        notes: maintenanceForm.notes || null,
+        rounds_since_last: maintenanceForm.rounds_since_last ? parseInt(maintenanceForm.rounds_since_last) : null
+      };
+      await maintenanceAPI.update(editingMaintenance.id, formData);
       setShowEditModal(false);
       setEditingMaintenance(null);
-      setMaintenanceForm({ date: '', notes: '' });
-      try {
-        await fetchMaintenance();
-      } catch (err) {
-        console.error('Błąd podczas odświeżania konserwacji:', err);
-      }
+      setMaintenanceForm({ date: '', notes: '', rounds_since_last: '' });
+      await fetchMaintenance();
+      await fetchData();
     } catch (err) {
       console.error('Błąd podczas aktualizacji konserwacji:', err);
       setError(err.response?.data?.detail || 'Błąd podczas aktualizacji konserwacji');
-      setShowEditModal(false);
-      setEditingMaintenance(null);
-      setMaintenanceForm({ date: '', notes: '' });
     }
   };
 
@@ -88,67 +95,17 @@ const MaintenancePage = () => {
     if (window.confirm('Czy na pewno chcesz usunąć tę konserwację?')) {
       try {
         await maintenanceAPI.delete(maintenanceId);
-        fetchMaintenance();
+        await fetchMaintenance();
+        await fetchData();
       } catch (err) {
         setError(err.response?.data?.detail || 'Błąd podczas usuwania konserwacji');
       }
     }
   };
 
-  const getMaintenanceStats = () => {
-    const gunMaintenanceMap = {};
-    const now = new Date();
-
-    maintenance.forEach(maint => {
-      if (!gunMaintenanceMap[maint.gun_id]) {
-        gunMaintenanceMap[maint.gun_id] = [];
-      }
-      gunMaintenanceMap[maint.gun_id].push(new Date(maint.date));
-    });
-
-    const stats = Object.entries(gunMaintenanceMap).map(([gunId, dates]) => {
-      const lastMaintenance = new Date(Math.max(...dates));
-      const daysSince = Math.floor((now - lastMaintenance) / (1000 * 60 * 60 * 24));
-      return {
-        gunId,
-        gunName: getGunName(gunId),
-        daysSince,
-        lastMaintenance
-      };
-    });
-
-    const allGunsWithStats = guns.map(gun => {
-      const stat = stats.find(s => s.gunId === gun.id);
-      if (stat) {
-        return stat;
-      }
-      return {
-        gunId: gun.id,
-        gunName: gun.name,
-        daysSince: null,
-        lastMaintenance: null
-      };
-    });
-
-    const longestWithoutMaintenance = allGunsWithStats
-      .filter(s => s.daysSince !== null)
-      .sort((a, b) => b.daysSince - a.daysSince)[0];
-
-    return {
-      longestWithoutMaintenance,
-      allGunsStats: allGunsWithStats.sort((a, b) => {
-        if (a.daysSince === null) return 1;
-        if (b.daysSince === null) return -1;
-        return b.daysSince - a.daysSince;
-      })
-    };
-  };
-
   if (loading) {
     return <div className="text-center">Ładowanie...</div>;
   }
-
-  const stats = getMaintenanceStats();
 
   return (
     <div>
@@ -160,28 +117,30 @@ const MaintenancePage = () => {
           </div>
         )}
 
-        {stats.longestWithoutMaintenance && (
+        {statistics && (
           <div className="card" style={{ marginBottom: '1.5rem', backgroundColor: '#2c2c2c' }}>
             <h3 style={{ marginBottom: '1rem' }}>Statystyki</h3>
-            <div style={{ marginBottom: '1rem' }}>
-              <div style={{ fontSize: '0.9rem', color: '#aaa', marginBottom: '0.5rem' }}>
-                Broń najdłużej bez konserwacji:
+            {statistics.longest_without_maintenance && (
+              <div style={{ marginBottom: '1rem' }}>
+                <div style={{ fontSize: '0.9rem', color: '#aaa', marginBottom: '0.5rem' }}>
+                  Broń najdłużej bez konserwacji:
+                </div>
+                <div style={{ fontSize: '1.1rem', fontWeight: '500' }}>
+                  {statistics.longest_without_maintenance.gun_name}
+                </div>
+                <div style={{ fontSize: '0.9rem', color: '#888', marginTop: '0.25rem' }}>
+                  {statistics.longest_without_maintenance.days_since} dni
+                </div>
               </div>
-              <div style={{ fontSize: '1.1rem', fontWeight: '500' }}>
-                {stats.longestWithoutMaintenance.gunName}
-              </div>
-              <div style={{ fontSize: '0.9rem', color: '#888', marginTop: '0.25rem' }}>
-                {stats.longestWithoutMaintenance.daysSince} dni
-              </div>
-            </div>
+            )}
             <div style={{ borderTop: '1px solid #404040', paddingTop: '1rem' }}>
               <div style={{ fontSize: '0.9rem', color: '#aaa', marginBottom: '0.75rem' }}>
                 Dni od ostatniej konserwacji:
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                {stats.allGunsStats.map(stat => (
+                {statistics.guns_status && statistics.guns_status.map(stat => (
                   <div
-                    key={stat.gunId}
+                    key={stat.gun_id}
                     style={{
                       display: 'flex',
                       justifyContent: 'space-between',
@@ -191,9 +150,9 @@ const MaintenancePage = () => {
                       borderRadius: '4px'
                     }}
                   >
-                    <span>{stat.gunName}</span>
-                    <span style={{ color: stat.daysSince !== null ? '#fff' : '#888' }}>
-                      {stat.daysSince !== null ? `${stat.daysSince} dni` : 'Brak konserwacji'}
+                    <span>{stat.gun_name}</span>
+                    <span style={{ color: stat.days_since_last !== null ? '#fff' : '#888' }}>
+                      {stat.days_since_last !== null ? `${stat.days_since_last} dni` : 'Brak konserwacji'}
                     </span>
                   </div>
                 ))}
@@ -246,7 +205,7 @@ const MaintenancePage = () => {
                     .sort((a, b) => new Date(b.date) - new Date(a.date))
                     .map((maint) => (
                       <tr key={maint.id}>
-                        <td style={{ fontWeight: '500' }}>{getGunName(maint.gun_id)}</td>
+                        <td style={{ fontWeight: '500' }}>{maint.gun_name || getGunName(maint.gun_id)}</td>
                         <td>{new Date(maint.date).toLocaleDateString('pl-PL')}</td>
                         <td>{maint.rounds_since_last}</td>
                         <td style={{ color: '#aaa' }}>{maint.notes || '-'}</td>
@@ -306,7 +265,7 @@ const MaintenancePage = () => {
           onClick={() => {
             setShowEditModal(false);
             setEditingMaintenance(null);
-            setMaintenanceForm({ date: '', notes: '' });
+            setMaintenanceForm({ date: '', notes: '', rounds_since_last: '' });
           }}
         >
           <div
@@ -324,6 +283,16 @@ const MaintenancePage = () => {
                   value={maintenanceForm.date}
                   onChange={(e) => setMaintenanceForm({ ...maintenanceForm, date: e.target.value })}
                   required
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Strzałów od poprzedniej</label>
+                <input
+                  type="number"
+                  className="form-input"
+                  value={maintenanceForm.rounds_since_last}
+                  onChange={(e) => setMaintenanceForm({ ...maintenanceForm, rounds_since_last: e.target.value })}
+                  min="0"
                 />
               </div>
               <div className="form-group">
@@ -345,7 +314,7 @@ const MaintenancePage = () => {
                   onClick={() => {
                     setShowEditModal(false);
                     setEditingMaintenance(null);
-                    setMaintenanceForm({ date: '', notes: '' });
+                    setMaintenanceForm({ date: '', notes: '', rounds_since_last: '' });
                   }}
                 >
                   Anuluj
