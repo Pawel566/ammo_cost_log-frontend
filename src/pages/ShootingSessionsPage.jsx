@@ -12,6 +12,7 @@ const ShootingSessionsPage = () => {
   const [error, setError] = useState(null);
   const [filterType, setFilterType] = useState('');
   const [filterValue, setFilterValue] = useState('');
+  const [openMenuId, setOpenMenuId] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -89,6 +90,44 @@ const ShootingSessionsPage = () => {
     return ammoItem ? ammoItem.name : 'Nieznana amunicja';
   };
 
+  const handleDelete = async (sessionId) => {
+    if (!window.confirm('Czy na pewno chcesz usunąć tę sesję?')) {
+      return;
+    }
+
+    try {
+      await sessionsAPI.delete(sessionId);
+      setSessions(sessions.filter(s => s.id !== sessionId));
+      setOpenMenuId(null);
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Błąd podczas usuwania sesji');
+      console.error(err);
+    }
+  };
+
+  const handleEdit = (sessionId) => {
+    navigate(`/shooting-sessions/edit/${sessionId}`);
+    setOpenMenuId(null);
+  };
+
+  const handleMenuToggle = (sessionId) => {
+    setOpenMenuId(openMenuId === sessionId ? null : sessionId);
+  };
+
+  // Zamknij menu po kliknięciu poza nim
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('.session-menu-container')) {
+        setOpenMenuId(null);
+      }
+    };
+
+    if (openMenuId) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [openMenuId]);
+
   if (loading) {
     return <div className="text-center">Ładowanie...</div>;
   }
@@ -161,6 +200,7 @@ const ShootingSessionsPage = () => {
                     <th>Trafienia</th>
                     <th>Celność %</th>
                     <th>Notatki</th>
+                    <th style={{ width: '50px' }}></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -184,6 +224,83 @@ const ShootingSessionsPage = () => {
                         ) : '-'}
                       </td>
                       <td>{session.notes || '-'}</td>
+                      <td>
+                        <div className="session-menu-container" style={{ position: 'relative' }}>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleMenuToggle(session.id);
+                            }}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              cursor: 'pointer',
+                              fontSize: '1.2rem',
+                              color: '#fff',
+                              padding: '0.25rem 0.5rem',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center'
+                            }}
+                            title="Opcje"
+                          >
+                            ⋮
+                          </button>
+                          {openMenuId === session.id && (
+                            <div
+                              style={{
+                                position: 'absolute',
+                                right: 0,
+                                top: '100%',
+                                backgroundColor: '#2c2c2c',
+                                border: '1px solid #444',
+                                borderRadius: '4px',
+                                boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                                zIndex: 1000,
+                                minWidth: '120px',
+                                marginTop: '4px'
+                              }}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <button
+                                onClick={() => handleEdit(session.id)}
+                                style={{
+                                  width: '100%',
+                                  padding: '0.75rem 1rem',
+                                  background: 'none',
+                                  border: 'none',
+                                  color: '#fff',
+                                  textAlign: 'left',
+                                  cursor: 'pointer',
+                                  fontSize: '0.9rem'
+                                }}
+                                onMouseEnter={(e) => e.target.style.backgroundColor = '#3c3c3c'}
+                                onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                              >
+                                Edytuj
+                              </button>
+                              <button
+                                onClick={() => handleDelete(session.id)}
+                                style={{
+                                  width: '100%',
+                                  padding: '0.75rem 1rem',
+                                  background: 'none',
+                                  border: 'none',
+                                  color: '#dc3545',
+                                  textAlign: 'left',
+                                  cursor: 'pointer',
+                                  fontSize: '0.9rem',
+                                  borderTop: '1px solid #444'
+                                }}
+                                onMouseEnter={(e) => e.target.style.backgroundColor = '#3c3c3c'}
+                                onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                              >
+                                Usuń
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>

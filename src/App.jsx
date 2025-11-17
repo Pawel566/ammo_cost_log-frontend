@@ -118,6 +118,7 @@ function AppContent() {
           <Route path="/ammo" element={<AmmoPage />} />
           <Route path="/shooting-sessions" element={<ShootingSessionsPage />} />
           <Route path="/shooting-sessions/add" element={<AddShootingSessionPage />} />
+          <Route path="/shooting-sessions/edit/:id" element={<AddShootingSessionPage />} />
           <Route path="/summary" element={<SummaryPage />} />
           <Route path="/account" element={<AccountPage />} />
           <Route path="/my-weapons" element={<MyWeaponsPage />} />

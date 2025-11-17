@@ -73,6 +73,9 @@ export const sessionsAPI = {
   getAll: (params) => api.get('/sessions', { params }),
   createSession: (sessionData) => api.post('/sessions', sessionData),
   getSummary: () => api.get('/sessions/summary'),
+  update: (id, sessionData) => api.patch(`/shooting-sessions/${id}`, sessionData),
+  delete: (id) => api.delete(`/shooting-sessions/${id}`),
+  getById: (id) => api.get(`/shooting-sessions/${id}`),
 };
 
 // Shooting Sessions API

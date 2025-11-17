@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { sessionsAPI, gunsAPI, ammoAPI } from '../services/api';
 
 const AddShootingSessionPage = () => {
   const navigate = useNavigate();
+  const { id } = useParams();
+  const isEditMode = !!id;
   const [guns, setGuns] = useState([]);
   const [ammo, setAmmo] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -28,7 +30,50 @@ const AddShootingSessionPage = () => {
   }, []);
 
   useEffect(() => {
-    if (formData.include_cost && formData.ammo_id) {
+    if (isEditMode && id) {
+      loadSessionData();
+    }
+  }, [id, isEditMode]);
+
+  const loadSessionData = async () => {
+    try {
+      setLoading(true);
+      const [sessionRes, ammoRes] = await Promise.all([
+        sessionsAPI.getById(id),
+        ammoAPI.getAll()
+      ]);
+      const session = sessionRes.data;
+      const ammoData = ammoRes.data;
+      const ammoItems = Array.isArray(ammoData) ? ammoData : ammoData?.items ?? [];
+      
+      const selectedAmmo = session.ammo_id ? ammoItems.find(a => a.id === session.ammo_id) : null;
+      const pricePerUnit = selectedAmmo ? selectedAmmo.price_per_unit.toFixed(2).replace('.', ',') + ' zł' : '';
+      
+      setFormData({
+        gun_id: session.gun_id || '',
+        ammo_id: session.ammo_id || '',
+        date: session.date || new Date().toISOString().split('T')[0],
+        notes: session.notes || '',
+        include_cost: !!session.cost,
+        cost: session.cost ? parseFloat(session.cost).toFixed(2).replace('.', ',') : '',
+        quantity: session.shots ? session.shots.toString() : '',
+        price_per_unit: pricePerUnit,
+        include_accuracy: !!(session.distance_m || session.hits !== null),
+        distance_m: session.distance_m ? `${session.distance_m} m` : '',
+        shots: session.shots ? session.shots.toString() : '',
+        hits: session.hits !== null && session.hits !== undefined ? session.hits.toString() : ''
+      });
+    } catch (err) {
+      setError('Błąd podczas ładowania sesji');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    // Ustaw cenę amunicji tylko jeśli nie jest w trybie edycji lub jeśli price_per_unit jest puste
+    if (formData.include_cost && formData.ammo_id && (!isEditMode || !formData.price_per_unit)) {
       const selectedAmmo = ammo.find(a => a.id === formData.ammo_id);
       if (selectedAmmo) {
         setFormData(prev => ({ 
@@ -37,7 +82,7 @@ const AddShootingSessionPage = () => {
         }));
       }
     }
-  }, [formData.ammo_id, formData.include_cost, ammo]);
+  }, [formData.ammo_id, formData.include_cost, ammo, isEditMode]);
 
   useEffect(() => {
     if (formData.include_cost && formData.price_per_unit) {
@@ -206,13 +251,18 @@ const AddShootingSessionPage = () => {
         sessionData.hits = parseInt(formData.hits, 10);
       }
       
-      const response = await sessionsAPI.createSession(sessionData);
-      
-      if (response.data.remaining_ammo !== undefined) {
-        alert(`Pozostało ${response.data.remaining_ammo} sztuk amunicji`);
+      if (isEditMode) {
+        await sessionsAPI.update(id, sessionData);
+        navigate('/shooting-sessions');
+      } else {
+        const response = await sessionsAPI.createSession(sessionData);
+        
+        if (response.data.remaining_ammo !== undefined) {
+          alert(`Pozostało ${response.data.remaining_ammo} sztuk amunicji`);
+        }
+        
+        navigate('/shooting-sessions');
       }
-      
-      navigate('/shooting-sessions');
     } catch (err) {
       setError(err.response?.data?.detail || 'Błąd podczas dodawania sesji');
       console.error(err);
@@ -227,7 +277,9 @@ const AddShootingSessionPage = () => {
     <div>
       <div style={{ marginBottom: '2rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-          <h2 style={{ margin: 0, textAlign: 'center', width: '100%' }}>Dodaj sesję strzelecką</h2>
+          <h2 style={{ margin: 0, textAlign: 'center', width: '100%' }}>
+            {isEditMode ? 'Edytuj sesję strzelecką' : 'Dodaj sesję strzelecką'}
+          </h2>
         </div>
 
         {error && (
