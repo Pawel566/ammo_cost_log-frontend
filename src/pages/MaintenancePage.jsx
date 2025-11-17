@@ -74,11 +74,16 @@ const MaintenancePage = () => {
   const handleUpdateMaintenance = async (e) => {
     e.preventDefault();
     try {
-      const formData = {
-        date: maintenanceForm.date,
-        notes: maintenanceForm.notes || null,
-        rounds_since_last: maintenanceForm.rounds_since_last ? parseInt(maintenanceForm.rounds_since_last) : null
-      };
+      const formData = {};
+      if (maintenanceForm.date) {
+        formData.date = maintenanceForm.date;
+      }
+      if (maintenanceForm.notes !== undefined) {
+        formData.notes = maintenanceForm.notes || null;
+      }
+      if (maintenanceForm.rounds_since_last !== undefined && maintenanceForm.rounds_since_last !== '') {
+        formData.rounds_since_last = parseInt(maintenanceForm.rounds_since_last);
+      }
       await maintenanceAPI.update(editingMaintenance.id, formData);
       setShowEditModal(false);
       setEditingMaintenance(null);
