@@ -71,8 +71,7 @@ export const ammoAPI = {
 // Sessions API
 export const sessionsAPI = {
   getAll: (params) => api.get('/sessions', { params }),
-  createCost: (sessionData) => api.post('/sessions/cost', sessionData),
-  createAccuracy: (sessionData) => api.post('/sessions/accuracy', sessionData),
+  createSession: (sessionData) => api.post('/sessions', sessionData),
   getSummary: () => api.get('/sessions/summary'),
 };
 
