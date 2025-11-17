@@ -41,15 +41,18 @@ const AddShootingSessionPage = () => {
 
   useEffect(() => {
     if (formData.include_cost && formData.price_per_unit) {
-      // Użyj shots jeśli jest dostępne (z sekcji celności lub jako główna wartość), w przeciwnym razie quantity
-      const shotsValue = formData.shots ? parseFloat(formData.shots) : 0;
-      const quantityValue = parseFloat(formData.quantity) || 0;
-      // Priorytet: jeśli oba są wypełnione, użyj shots (bo to ta sama sesja)
-      const qtyForCost = shotsValue > 0 ? shotsValue : quantityValue;
+      // Zawsze używaj shots (wartość z pola "Liczba strzałów") × cena za sztukę
+      // shots ma priorytet, quantity tylko jako fallback gdy shots nie jest wypełnione
+      let shotsValue = 0;
+      if (formData.shots) {
+        shotsValue = parseFloat(formData.shots);
+      } else if (formData.quantity) {
+        shotsValue = parseFloat(formData.quantity);
+      }
       
       const price = parseFloat(formData.price_per_unit.replace(',', '.').replace(' zł', '').trim()) || 0;
       const costValue = parseFloat(formData.cost.replace(',', '.').replace(' zł', '').trim()) || 0;
-      const totalCost = (costValue + (qtyForCost * price)).toFixed(2).replace('.', ',');
+      const totalCost = (costValue + (shotsValue * price)).toFixed(2).replace('.', ',');
       setFormData(prev => ({ ...prev, totalCost: totalCost }));
     } else if (!formData.include_cost) {
       setFormData(prev => ({ ...prev, totalCost: '0,00' }));
@@ -111,13 +114,16 @@ const AddShootingSessionPage = () => {
   const calculateTotalCost = () => {
     if (formData.include_cost && formData.price_per_unit) {
       const costValue = parseFloat(formData.cost.replace(',', '.').replace(' zł', '').trim()) || 0;
-      // Użyj shots jeśli jest dostępne (z sekcji celności), w przeciwnym razie quantity
-      const shotsValue = formData.shots ? parseFloat(formData.shots) : 0;
-      const quantityValue = parseFloat(formData.quantity) || 0;
-      // Priorytet: jeśli oba są wypełnione, użyj shots (bo to ta sama sesja)
-      const qtyForCost = shotsValue > 0 ? shotsValue : quantityValue;
+      // Zawsze używaj shots (wartość z pola "Liczba strzałów") × cena za sztukę
+      // shots ma priorytet, quantity tylko jako fallback gdy shots nie jest wypełnione
+      let shotsValue = 0;
+      if (formData.shots) {
+        shotsValue = parseFloat(formData.shots);
+      } else if (formData.quantity) {
+        shotsValue = parseFloat(formData.quantity);
+      }
       const price = parseFloat(formData.price_per_unit.replace(',', '.').replace(' zł', '').trim()) || 0;
-      return (costValue + (qtyForCost * price)).toFixed(2).replace('.', ',');
+      return (costValue + (shotsValue * price)).toFixed(2).replace('.', ',');
     }
     return '0,00';
   };
@@ -179,22 +185,21 @@ const AddShootingSessionPage = () => {
         notes: formData.notes || null
       };
 
-      // Koszt jest liczony tylko raz - jeśli użytkownik wypełnił pola kosztowe, użyj ich
-      // W przeciwnym razie backend automatycznie obliczy koszt na podstawie price_per_unit i shots
+      // Koszt jest liczony tylko raz:
+      // 1. Jeśli zaznaczono "Dodaj koszty" - użyj pól kosztowych (ale zawsze używaj shots, nie quantity)
+      // 2. Jeśli NIE zaznaczono "Dodaj koszty" - nie wysyłaj cost (backend obliczy automatycznie na podstawie shots i price_per_unit)
       if (formData.include_cost) {
         const costValue = parseFloat(formData.cost.replace(',', '.').replace(' zł', '').trim()) || 0;
-        const quantity = parseFloat(formData.quantity) || 0;
         const price = parseFloat(formData.price_per_unit.replace(',', '.').replace(' zł', '').trim()) || 0;
         
+        // Zawsze używaj shots (nie quantity) - bo to ta sama sesja, płacimy tylko raz
         // Jeśli użytkownik wypełnił przynajmniej jedno pole kosztowe, oblicz koszt
-        // W przeciwnym razie nie wysyłaj cost (backend obliczy automatycznie)
-        if (costValue > 0 || quantity > 0 || price > 0) {
-          // Użyj quantity jeśli jest wypełnione, w przeciwnym razie użyj shots
-          const qtyForCost = quantity > 0 ? quantity : shots;
-          sessionData.cost = costValue + (qtyForCost * price);
+        if (costValue > 0 || price > 0) {
+          sessionData.cost = costValue + (shots * price);
         }
         // Jeśli żadne pole nie jest wypełnione, nie wysyłaj cost - backend obliczy automatycznie
       }
+      // Jeśli include_cost jest false, nie wysyłaj cost - backend automatycznie obliczy na podstawie shots i price_per_unit
 
       if (formData.include_accuracy) {
         sessionData.distance_m = parseInt(formData.distance_m.replace(' m', '').trim(), 10);
