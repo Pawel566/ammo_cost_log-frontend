@@ -24,6 +24,7 @@ const MyWeaponsPage = () => {
   useEffect(() => {
     fetchGuns();
     fetchAmmo();
+    fetchAllMaintenance();
   }, []);
 
   useEffect(() => {
@@ -56,6 +57,31 @@ const MyWeaponsPage = () => {
       setAmmo(items);
     } catch (err) {
       console.error('Błąd pobierania amunicji:', err);
+    }
+  };
+
+  const fetchAllMaintenance = async () => {
+    try {
+      const response = await maintenanceAPI.getAll();
+      const allMaintenance = response.data || [];
+      
+      // Grupuj konserwacje według gun_id
+      const maintenanceByGun = {};
+      allMaintenance.forEach(maint => {
+        if (!maintenanceByGun[maint.gun_id]) {
+          maintenanceByGun[maint.gun_id] = [];
+        }
+        maintenanceByGun[maint.gun_id].push(maint);
+      });
+      
+      // Sortuj każdą grupę według daty (najnowsza pierwsza)
+      Object.keys(maintenanceByGun).forEach(gunId => {
+        maintenanceByGun[gunId].sort((a, b) => new Date(b.date) - new Date(a.date));
+      });
+      
+      setMaintenance(maintenanceByGun);
+    } catch (err) {
+      console.error('Błąd pobierania konserwacji:', err);
     }
   };
 
@@ -130,6 +156,7 @@ const MyWeaponsPage = () => {
         notes: ''
       });
       await fetchGunDetails(expandedGun);
+      await fetchAllMaintenance();
       fetchGuns();
     } catch (err) {
       setError(err.response?.data?.detail || 'Błąd podczas zapisywania konserwacji');
@@ -154,6 +181,7 @@ const MyWeaponsPage = () => {
       try {
         await maintenanceAPI.delete(maintenanceId);
         await fetchGunDetails(expandedGun);
+        await fetchAllMaintenance();
         fetchGuns();
       } catch (err) {
         setError(err.response?.data?.detail || 'Błąd podczas usuwania konserwacji');
@@ -190,6 +218,15 @@ const MyWeaponsPage = () => {
     return labels[type?.toLowerCase()] || type || 'Inne';
   };
 
+  const getLastMaintenance = (gunId) => {
+    const gunMaintenance = maintenance[gunId];
+    if (!gunMaintenance || gunMaintenance.length === 0) {
+      return null;
+    }
+    // Konserwacje są już posortowane od najnowszej
+    return gunMaintenance[0];
+  };
+
   if (loading) {
     return <div className="text-center">Ładowanie...</div>;
   }
@@ -210,6 +247,7 @@ const MyWeaponsPage = () => {
             {guns.map((gun) => {
               const isExpanded = expandedGun === gun.id;
               const attCount = getAttachmentsCount(gun.id);
+              const lastMaintenance = getLastMaintenance(gun.id);
               return (
                 <div key={gun.id}>
                   <div 
@@ -250,9 +288,14 @@ const MyWeaponsPage = () => {
                         <p style={{ margin: '0.25rem 0', color: '#888', fontSize: '0.85rem' }}>
                           {getGunTypeLabel(gun.type)}
                         </p>
-                        <div style={{ fontSize: '0.85rem', color: '#888', marginTop: '0.5rem' }}>
+                        <div style={{ fontSize: '0.85rem', color: '#888', marginTop: '0.5rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                           {attCount > 0 && (
                             <span>{attCount} {attCount === 1 ? 'dodatek' : attCount < 5 ? 'dodatki' : 'dodatków'}</span>
+                          )}
+                          {lastMaintenance && (
+                            <span style={{ color: '#007bff' }}>
+                              Ostatnia konserwacja: {new Date(lastMaintenance.date).toLocaleDateString('pl-PL')}
+                            </span>
                           )}
                         </div>
                       </div>
