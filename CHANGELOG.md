@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.3.1] – 2025-01-XX
+## [0.3.1] – 2025-01-X
 ### Dodano
 - Pełny system autoryzacji z AuthContext (logowanie, rejestracja, wylogowanie)
 - Strony Login i Register z formularzami

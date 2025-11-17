@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { gunsAPI, maintenanceAPI } from '../services/api';
+import { gunsAPI, maintenanceAPI, sessionsAPI } from '../services/api';
 
 const GunsPage = () => {
   const [guns, setGuns] = useState([]);
-  const [maintenanceStatus, setMaintenanceStatus] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [maintenance, setMaintenance] = useState({});
+  const [sessions, setSessions] = useState({});
   const [formData, setFormData] = useState({
     name: '',
     caliber: '',
@@ -17,6 +18,8 @@ const GunsPage = () => {
 
   useEffect(() => {
     fetchGuns();
+    fetchAllMaintenance();
+    fetchAllSessions();
   }, []);
 
   const fetchGuns = async () => {
@@ -26,17 +29,6 @@ const GunsPage = () => {
       const data = response.data;
       const items = Array.isArray(data) ? data : data?.items ?? [];
       setGuns(items);
-      const statusPromises = items.map(gun => 
-        maintenanceAPI.getStatus(gun.id)
-          .then(res => ({ gunId: gun.id, status: res.data }))
-          .catch(() => ({ gunId: gun.id, status: null }))
-      );
-      const statuses = await Promise.all(statusPromises);
-      const statusMap = {};
-      statuses.forEach(({ gunId, status }) => {
-        statusMap[gunId] = status;
-      });
-      setMaintenanceStatus(statusMap);
       setError(null);
     } catch (err) {
       setError('Błąd podczas pobierania listy broni');
@@ -44,6 +36,133 @@ const GunsPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchAllMaintenance = async () => {
+    try {
+      const response = await maintenanceAPI.getAll();
+      const allMaintenance = response.data || [];
+      
+      const maintenanceByGun = {};
+      allMaintenance.forEach(maint => {
+        if (!maintenanceByGun[maint.gun_id]) {
+          maintenanceByGun[maint.gun_id] = [];
+        }
+        maintenanceByGun[maint.gun_id].push(maint);
+      });
+      
+      Object.keys(maintenanceByGun).forEach(gunId => {
+        maintenanceByGun[gunId].sort((a, b) => new Date(b.date) - new Date(a.date));
+      });
+      
+      setMaintenance(maintenanceByGun);
+    } catch (err) {
+      console.error('Błąd pobierania konserwacji:', err);
+    }
+  };
+
+  const fetchAllSessions = async () => {
+    try {
+      const response = await sessionsAPI.getAll({ limit: 1000 });
+      const sessionsData = response.data || {};
+      const costSessions = sessionsData.cost_sessions?.items || [];
+      const accuracySessions = sessionsData.accuracy_sessions?.items || [];
+      
+      const sessionsByGun = {};
+      [...costSessions, ...accuracySessions].forEach(session => {
+        if (!sessionsByGun[session.gun_id]) {
+          sessionsByGun[session.gun_id] = { cost: [], accuracy: [] };
+        }
+        if (session.shots !== undefined) {
+          sessionsByGun[session.gun_id].cost.push(session);
+        } else {
+          sessionsByGun[session.gun_id].accuracy.push(session);
+        }
+      });
+      
+      setSessions(sessionsByGun);
+    } catch (err) {
+      console.error('Błąd pobierania sesji:', err);
+    }
+  };
+
+  const getLastMaintenance = (gunId) => {
+    const gunMaintenance = maintenance[gunId];
+    if (!gunMaintenance || gunMaintenance.length === 0) {
+      return null;
+    }
+    return gunMaintenance[0];
+  };
+
+  const calculateRoundsSinceLastMaintenance = (gunId) => {
+    const lastMaint = getLastMaintenance(gunId);
+    if (!lastMaint) return 0;
+
+    const gunSessions = sessions[gunId];
+    if (!gunSessions) return 0;
+
+    // Używamy tylko cost sessions, bo accuracy sessions również tworzą cost sessions
+    const costSessions = gunSessions.cost || [];
+    const maintenanceDate = new Date(lastMaint.date);
+    
+    let totalRounds = 0;
+    costSessions.forEach(session => {
+      const sessionDate = new Date(session.date);
+      if (sessionDate >= maintenanceDate) {
+        totalRounds += session.shots || 0;
+      }
+    });
+
+    return totalRounds;
+  };
+
+  const calculateDaysSinceLastMaintenance = (gunId) => {
+    const lastMaint = getLastMaintenance(gunId);
+    if (!lastMaint) return null;
+
+    const maintenanceDate = new Date(lastMaint.date);
+    const today = new Date();
+    const diffTime = today - maintenanceDate;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    return diffDays;
+  };
+
+  const getMaintenanceStatus = (gunId) => {
+    const lastMaint = getLastMaintenance(gunId);
+    if (!lastMaint) {
+      return null; // Brak konserwacji - nie pokazujemy statusu
+    }
+
+    const rounds = calculateRoundsSinceLastMaintenance(gunId);
+    const days = calculateDaysSinceLastMaintenance(gunId);
+
+    // Status według strzałów
+    let roundsStatus = 'green';
+    if (rounds >= 500) roundsStatus = 'red';
+    else if (rounds >= 300) roundsStatus = 'yellow';
+
+    // Status według dni
+    let daysStatus = 'green';
+    if (days >= 60) daysStatus = 'red';
+    else if (days >= 30) daysStatus = 'yellow';
+
+    // Najgorszy status
+    let finalStatus = roundsStatus;
+    if (daysStatus === 'red' || roundsStatus === 'red') {
+      finalStatus = 'red';
+    } else if (daysStatus === 'yellow' || roundsStatus === 'yellow') {
+      finalStatus = 'yellow';
+    }
+
+    // Zwracamy tylko żółty lub czerwony (nie zielony)
+    if (finalStatus === 'red') {
+      return { status: 'red', color: '#f44336', icon: '🔴' };
+    } else if (finalStatus === 'yellow') {
+      return { status: 'yellow', color: '#ff9800', icon: '🟡' };
+    }
+
+    return null; // Zielony - nie pokazujemy
   };
 
   const handleSubmit = async (e) => {
@@ -205,25 +324,28 @@ const GunsPage = () => {
                     <th>Rodzaj</th>
                     <th>Kaliber</th>
                     <th>Notatki</th>
+                    <th>Status konserwacji</th>
                     <th>Akcje</th>
                   </tr>
                 </thead>
                 <tbody>
                   {guns.map((gun) => {
-                    const maintStatus = maintenanceStatus[gun.id];
-                    const showStatus = maintStatus && (maintStatus.status === 'yellow' || maintStatus.status === 'red');
-                    const statusIcon = maintStatus?.status === 'red' ? '🔴' : maintStatus?.status === 'yellow' ? '🟡' : null;
+                    const maintenanceStatus = getMaintenanceStatus(gun.id);
                     return (
                     <tr key={gun.id}>
                       <td style={{ fontWeight: '500' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          {showStatus && <span style={{ fontSize: '1rem' }}>{statusIcon}</span>}
-                          <span>{gun.name}</span>
-                        </div>
+                        <span>{gun.name}</span>
                       </td>
                       <td>{gun.type || '-'}</td>
                       <td>{gun.caliber || '-'}</td>
                       <td style={{ color: '#aaa' }}>{gun.notes || '-'}</td>
+                      <td>
+                        {maintenanceStatus && (
+                          <span style={{ color: maintenanceStatus.color, fontSize: '1.2rem' }}>
+                            {maintenanceStatus.icon}
+                          </span>
+                        )}
+                      </td>
                       <td>
                         <button
                           className="btn btn-primary"
