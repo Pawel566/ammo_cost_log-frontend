@@ -40,16 +40,21 @@ const AddShootingSessionPage = () => {
   }, [formData.ammo_id, formData.include_cost, ammo]);
 
   useEffect(() => {
-    if (formData.include_cost && formData.quantity && formData.price_per_unit) {
-      const quantity = parseFloat(formData.quantity) || 0;
+    if (formData.include_cost && formData.price_per_unit) {
+      // Użyj shots jeśli jest dostępne (z sekcji celności lub jako główna wartość), w przeciwnym razie quantity
+      const shotsValue = formData.shots ? parseFloat(formData.shots) : 0;
+      const quantityValue = parseFloat(formData.quantity) || 0;
+      // Priorytet: jeśli oba są wypełnione, użyj shots (bo to ta sama sesja)
+      const qtyForCost = shotsValue > 0 ? shotsValue : quantityValue;
+      
       const price = parseFloat(formData.price_per_unit.replace(',', '.').replace(' zł', '').trim()) || 0;
       const costValue = parseFloat(formData.cost.replace(',', '.').replace(' zł', '').trim()) || 0;
-      const totalCost = (costValue + (quantity * price)).toFixed(2).replace('.', ',');
+      const totalCost = (costValue + (qtyForCost * price)).toFixed(2).replace('.', ',');
       setFormData(prev => ({ ...prev, totalCost: totalCost }));
     } else if (!formData.include_cost) {
       setFormData(prev => ({ ...prev, totalCost: '0,00' }));
     }
-  }, [formData.quantity, formData.price_per_unit, formData.cost, formData.include_cost]);
+  }, [formData.quantity, formData.shots, formData.price_per_unit, formData.cost, formData.include_cost]);
 
   // Synchronizacja liczby strzałów między sekcjami celności i kosztów
   useEffect(() => {
@@ -104,11 +109,15 @@ const AddShootingSessionPage = () => {
   };
 
   const calculateTotalCost = () => {
-    if (formData.include_cost) {
+    if (formData.include_cost && formData.price_per_unit) {
       const costValue = parseFloat(formData.cost.replace(',', '.').replace(' zł', '').trim()) || 0;
-      const quantity = parseFloat(formData.quantity) || 0;
+      // Użyj shots jeśli jest dostępne (z sekcji celności), w przeciwnym razie quantity
+      const shotsValue = formData.shots ? parseFloat(formData.shots) : 0;
+      const quantityValue = parseFloat(formData.quantity) || 0;
+      // Priorytet: jeśli oba są wypełnione, użyj shots (bo to ta sama sesja)
+      const qtyForCost = shotsValue > 0 ? shotsValue : quantityValue;
       const price = parseFloat(formData.price_per_unit.replace(',', '.').replace(' zł', '').trim()) || 0;
-      return (costValue + (quantity * price)).toFixed(2).replace('.', ',');
+      return (costValue + (qtyForCost * price)).toFixed(2).replace('.', ',');
     }
     return '0,00';
   };
@@ -170,11 +179,21 @@ const AddShootingSessionPage = () => {
         notes: formData.notes || null
       };
 
+      // Koszt jest liczony tylko raz - jeśli użytkownik wypełnił pola kosztowe, użyj ich
+      // W przeciwnym razie backend automatycznie obliczy koszt na podstawie price_per_unit i shots
       if (formData.include_cost) {
         const costValue = parseFloat(formData.cost.replace(',', '.').replace(' zł', '').trim()) || 0;
         const quantity = parseFloat(formData.quantity) || 0;
         const price = parseFloat(formData.price_per_unit.replace(',', '.').replace(' zł', '').trim()) || 0;
-        sessionData.cost = costValue + (quantity * price);
+        
+        // Jeśli użytkownik wypełnił przynajmniej jedno pole kosztowe, oblicz koszt
+        // W przeciwnym razie nie wysyłaj cost (backend obliczy automatycznie)
+        if (costValue > 0 || quantity > 0 || price > 0) {
+          // Użyj quantity jeśli jest wypełnione, w przeciwnym razie użyj shots
+          const qtyForCost = quantity > 0 ? quantity : shots;
+          sessionData.cost = costValue + (qtyForCost * price);
+        }
+        // Jeśli żadne pole nie jest wypełnione, nie wysyłaj cost - backend obliczy automatycznie
       }
 
       if (formData.include_accuracy) {
