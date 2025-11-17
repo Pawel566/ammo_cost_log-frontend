@@ -6,8 +6,8 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import GunsPage from './pages/GunsPage';
 import AmmoPage from './pages/AmmoPage';
-import CostSessionsPage from './pages/CostSessionsPage';
-import AccuracySessionsPage from './pages/AccuracySessionsPage';
+import ShootingSessionsPage from './pages/ShootingSessionsPage';
+import AddShootingSessionPage from './pages/AddShootingSessionPage';
 import SummaryPage from './pages/SummaryPage';
 import AccountPage from './pages/AccountPage';
 import MyWeaponsPage from './pages/MyWeaponsPage';
@@ -97,10 +97,7 @@ function AppContent() {
                   <Link to="/ammo">Amunicja</Link>
                 </li>
                 <li>
-                  <Link to="/cost-sessions">Sesje kosztowe</Link>
-                </li>
-                <li>
-                  <Link to="/accuracy-sessions">Sesje celnościowe</Link>
+                  <Link to="/shooting-sessions">Sesje strzeleckie</Link>
                 </li>
                 <li>
                   <Link to="/summary">Podsumowanie</Link>
@@ -119,8 +116,9 @@ function AppContent() {
           <Route path="/register" element={<Register />} />
           <Route path="/guns" element={<GunsPage />} />
           <Route path="/ammo" element={<AmmoPage />} />
-          <Route path="/cost-sessions" element={<CostSessionsPage />} />
-          <Route path="/accuracy-sessions" element={<AccuracySessionsPage />} />
+          <Route path="/shooting-sessions" element={<ShootingSessionsPage />} />
+          <Route path="/shooting-sessions/add" element={<AddShootingSessionPage />} />
+          <Route path="/shooting-sessions/edit/:id" element={<AddShootingSessionPage />} />
           <Route path="/summary" element={<SummaryPage />} />
           <Route path="/account" element={<AccountPage />} />
           <Route path="/my-weapons" element={<MyWeaponsPage />} />

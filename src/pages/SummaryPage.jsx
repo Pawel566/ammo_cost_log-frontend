@@ -3,7 +3,7 @@ import { sessionsAPI } from '../services/api';
 
 const SummaryPage = () => {
   const [summary, setSummary] = useState([]);
-  const [sessions, setSessions] = useState({ cost_sessions: [], accuracy_sessions: [] });
+  const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -20,13 +20,10 @@ const SummaryPage = () => {
       ]);
       const summaryData = summaryRes.data;
       const summaryItems = Array.isArray(summaryData) ? summaryData : summaryData?.items ?? [];
-      const sessionsData = sessionsRes.data || {};
-      const costPayload = sessionsData.cost_sessions;
-      const accuracyPayload = sessionsData.accuracy_sessions;
-      const costItems = Array.isArray(costPayload) ? costPayload : costPayload?.items ?? [];
-      const accuracyItems = Array.isArray(accuracyPayload) ? accuracyPayload : accuracyPayload?.items ?? [];
+      const sessionsData = sessionsRes.data?.sessions || {};
+      const allSessions = Array.isArray(sessionsData) ? sessionsData : sessionsData?.items ?? [];
       setSummary(summaryItems);
-      setSessions({ cost_sessions: costItems, accuracy_sessions: accuracyItems });
+      setSessions(allSessions);
       setError(null);
     } catch (err) {
       setError('Błąd podczas pobierania danych');
@@ -37,25 +34,28 @@ const SummaryPage = () => {
   };
 
   const getTotalCost = () => {
-    return summary.reduce((total, month) => total + month.total_cost, 0);
+    return sessions.reduce((total, session) => {
+      return total + (session.cost ? parseFloat(session.cost) : 0);
+    }, 0);
   };
 
   const getTotalShots = () => {
-    return summary.reduce((total, month) => total + month.total_shots, 0);
+    return sessions.reduce((total, session) => total + (session.shots || 0), 0);
   };
 
   const getAccuracyStats = () => {
-    if (sessions.accuracy_sessions.length === 0) {
+    const accuracySessions = sessions.filter(s => s.hits !== null && s.hits !== undefined && s.distance_m);
+    if (accuracySessions.length === 0) {
       return { averageAccuracy: 0, totalSessions: 0, totalShots: 0, totalHits: 0 };
     }
     
-    const totalShots = sessions.accuracy_sessions.reduce((sum, session) => sum + session.shots, 0);
-    const totalHits = sessions.accuracy_sessions.reduce((sum, session) => sum + session.hits, 0);
+    const totalShots = accuracySessions.reduce((sum, session) => sum + (session.shots || 0), 0);
+    const totalHits = accuracySessions.reduce((sum, session) => sum + (session.hits || 0), 0);
     const averageAccuracy = totalShots > 0 ? (totalHits / totalShots) * 100 : 0;
     
     return {
       averageAccuracy,
-      totalSessions: sessions.accuracy_sessions.length,
+      totalSessions: accuracySessions.length,
       totalShots,
       totalHits
     };
@@ -64,15 +64,17 @@ const SummaryPage = () => {
   const getMonthlyAccuracy = () => {
     const monthlyData = {};
     
-    sessions.accuracy_sessions.forEach(session => {
-      const month = session.date.substring(0, 7);
-      if (!monthlyData[month]) {
-        monthlyData[month] = { shots: 0, hits: 0, sessions: 0 };
-      }
-      monthlyData[month].shots += session.shots;
-      monthlyData[month].hits += session.hits;
-      monthlyData[month].sessions += 1;
-    });
+    sessions
+      .filter(s => s.hits !== null && s.hits !== undefined && s.distance_m)
+      .forEach(session => {
+        const month = session.date.substring(0, 7);
+        if (!monthlyData[month]) {
+          monthlyData[month] = { shots: 0, hits: 0, sessions: 0 };
+        }
+        monthlyData[month].shots += session.shots || 0;
+        monthlyData[month].hits += session.hits || 0;
+        monthlyData[month].sessions += 1;
+      });
     
     return Object.entries(monthlyData).map(([month, data]) => ({
       month,
@@ -114,7 +116,7 @@ const SummaryPage = () => {
           </div>
         )}
 
-        {summary.length === 0 && sessions.accuracy_sessions.length === 0 ? (
+        {summary.length === 0 && sessions.length === 0 ? (
           <div className="card">
             <p className="text-center" style={{ color: '#888', padding: '2rem' }}>
               Brak danych do wyświetlenia
@@ -146,7 +148,7 @@ const SummaryPage = () => {
               </div>
             </div>
 
-            {sessions.accuracy_sessions.length > 0 && (
+            {sessions.filter(s => s.hits !== null && s.hits !== undefined && s.distance_m).length > 0 && (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
                 <div className="card" style={{ textAlign: 'center' }}>
                   <h3 style={{ marginBottom: '0.5rem', fontSize: '1rem', color: '#aaa' }}>Średnia celność</h3>

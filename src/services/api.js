@@ -71,9 +71,20 @@ export const ammoAPI = {
 // Sessions API
 export const sessionsAPI = {
   getAll: (params) => api.get('/sessions', { params }),
-  createCost: (sessionData) => api.post('/sessions/cost', sessionData),
-  createAccuracy: (sessionData) => api.post('/sessions/accuracy', sessionData),
+  createSession: (sessionData) => api.post('/sessions', sessionData),
   getSummary: () => api.get('/sessions/summary'),
+  update: (id, sessionData) => api.patch(`/shooting-sessions/${id}`, sessionData),
+  delete: (id) => api.delete(`/shooting-sessions/${id}`),
+  getById: (id) => api.get(`/shooting-sessions/${id}`),
+};
+
+// Shooting Sessions API
+export const shootingSessionsAPI = {
+  getAll: () => api.get('/shooting-sessions'),
+  getById: (id) => api.get(`/shooting-sessions/${id}`),
+  create: (sessionData) => api.post('/shooting-sessions', sessionData),
+  update: (id, sessionData) => api.patch(`/shooting-sessions/${id}`, sessionData),
+  delete: (id) => api.delete(`/shooting-sessions/${id}`),
 };
 
 
