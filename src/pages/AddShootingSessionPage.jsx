@@ -51,6 +51,25 @@ const AddShootingSessionPage = () => {
     }
   }, [formData.quantity, formData.price_per_unit, formData.cost, formData.include_cost]);
 
+  // Synchronizacja liczby strzałów między sekcjami celności i kosztów
+  useEffect(() => {
+    // Jeśli zaznaczono celność i wpisano strzały, a potem zaznaczono koszty, ustaw ilość sztuk
+    if (formData.include_accuracy && formData.shots && formData.include_cost) {
+      if (!formData.quantity || formData.quantity === '') {
+        setFormData(prev => ({ ...prev, quantity: prev.shots }));
+      }
+    }
+  }, [formData.include_cost, formData.shots, formData.include_accuracy]);
+
+  useEffect(() => {
+    // Jeśli zaznaczono koszty i wpisano ilość, a potem zaznaczono celność, ustaw liczbę strzałów
+    if (formData.include_cost && formData.quantity && formData.include_accuracy) {
+      if (!formData.shots || formData.shots === '') {
+        setFormData(prev => ({ ...prev, shots: prev.quantity }));
+      }
+    }
+  }, [formData.include_accuracy, formData.quantity, formData.include_cost]);
+
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -211,7 +230,29 @@ const AddShootingSessionPage = () => {
               {/* Lewa kolumna */}
               <div>
                 {/* Sekcja Sesja */}
-                <h4 style={{ marginBottom: '1rem', fontSize: '1.1rem', fontWeight: 'bold' }}>Sesja</h4>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 'bold' }}>Sesja</h4>
+                  <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={formData.include_accuracy}
+                        onChange={(e) => setFormData({ ...formData, include_accuracy: e.target.checked })}
+                        style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                      />
+                      <span>Dodaj dane celności</span>
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={formData.include_cost}
+                        onChange={(e) => setFormData({ ...formData, include_cost: e.target.checked })}
+                        style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                      />
+                      <span>Dodaj koszty</span>
+                    </label>
+                  </div>
+                </div>
                 <div className="form-group">
                   <label className="form-label">Broń *</label>
                   <select
@@ -311,7 +352,14 @@ const AddShootingSessionPage = () => {
                         value={formData.quantity}
                         onChange={(e) => {
                           const qty = e.target.value;
-                          setFormData({ ...formData, quantity: qty });
+                          setFormData(prev => {
+                            const updated = { ...prev, quantity: qty };
+                            // Synchronizuj z sekcją celności, jeśli jest aktywna
+                            if (prev.include_accuracy) {
+                              updated.shots = qty;
+                            }
+                            return updated;
+                          });
                         }}
                       />
                     </div>
@@ -341,21 +389,9 @@ const AddShootingSessionPage = () => {
               {/* Prawa kolumna */}
               <div>
                 {/* Sekcja Celność - na górze prawej kolumny */}
-                <h4 style={{ marginBottom: '1rem', fontSize: '1.1rem', fontWeight: 'bold' }}>Celność</h4>
-                <div className="form-group">
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                    <input
-                      type="checkbox"
-                      checked={formData.include_accuracy}
-                      onChange={(e) => setFormData({ ...formData, include_accuracy: e.target.checked })}
-                      style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-                    />
-                    <span>Dodaj dane celności</span>
-                  </label>
-                </div>
-                
                 {formData.include_accuracy && (
                   <>
+                    <h4 style={{ marginBottom: '1rem', fontSize: '1.1rem', fontWeight: 'bold' }}>Celność</h4>
                     <div className="form-group">
                       <label className="form-label">Dystans</label>
                       <input
@@ -374,7 +410,17 @@ const AddShootingSessionPage = () => {
                         min="1"
                         className="form-input"
                         value={formData.shots}
-                        onChange={(e) => setFormData({ ...formData, shots: e.target.value })}
+                        onChange={(e) => {
+                          const shots = e.target.value;
+                          setFormData(prev => {
+                            const updated = { ...prev, shots: shots };
+                            // Synchronizuj z sekcją kosztów, jeśli jest aktywna
+                            if (prev.include_cost) {
+                              updated.quantity = shots;
+                            }
+                            return updated;
+                          });
+                        }}
                         required
                       />
                     </div>
@@ -406,20 +452,6 @@ const AddShootingSessionPage = () => {
                     </div>
                   </>
                 )}
-
-                {/* Sekcja Koszty - w środku prawej kolumny */}
-                <h4 style={{ marginTop: '1.5rem', marginBottom: '1rem', fontSize: '1.1rem', fontWeight: 'bold' }}>Koszty</h4>
-                <div className="form-group">
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                    <input
-                      type="checkbox"
-                      checked={formData.include_cost}
-                      onChange={(e) => setFormData({ ...formData, include_cost: e.target.checked })}
-                      style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-                    />
-                    <span>Dodaj koszty</span>
-                  </label>
-                </div>
               </div>
             </div>
 
