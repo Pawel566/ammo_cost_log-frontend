@@ -76,6 +76,15 @@ export const sessionsAPI = {
   getSummary: () => api.get('/sessions/summary'),
 };
 
+// Shooting Sessions API
+export const shootingSessionsAPI = {
+  getAll: () => api.get('/shooting-sessions'),
+  getById: (id) => api.get(`/shooting-sessions/${id}`),
+  create: (sessionData) => api.post('/shooting-sessions', sessionData),
+  update: (id, sessionData) => api.patch(`/shooting-sessions/${id}`, sessionData),
+  delete: (id) => api.delete(`/shooting-sessions/${id}`),
+};
+
 
 // Attachments API
 export const attachmentsAPI = {
