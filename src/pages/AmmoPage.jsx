@@ -148,10 +148,6 @@ const AmmoPage = () => {
     }
   };
 
-  const getSortIcon = (column) => {
-    if (sortColumn !== column) return '↕️';
-    return sortDirection === 'asc' ? '↑' : '↓';
-  };
 
   const getUniqueCalibers = () => {
     const calibers = ammo.map(item => item.caliber).filter(Boolean);
@@ -656,7 +652,7 @@ const AmmoPage = () => {
                         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
                         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                       >
-                        Nazwa {getSortIcon('name')}
+                        Nazwa
                       </th>
                       <th 
                         style={{ 
@@ -671,7 +667,7 @@ const AmmoPage = () => {
                         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
                         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                       >
-                        Kaliber {getSortIcon('caliber')}
+                        Kaliber
                       </th>
                       <th 
                         style={{ 
@@ -686,7 +682,7 @@ const AmmoPage = () => {
                         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
                         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                       >
-                        Cena / szt. {getSortIcon('price_per_unit')}
+                        Cena / szt.
                       </th>
                       <th 
                         style={{ 
@@ -701,7 +697,7 @@ const AmmoPage = () => {
                         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
                         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                       >
-                        Typ {getSortIcon('type')}
+                        Typ
                       </th>
                       <th 
                         style={{ 
@@ -716,7 +712,7 @@ const AmmoPage = () => {
                         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
                         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                       >
-                        Dostępna ilość {getSortIcon('units_in_package')}
+                        Dostępna ilość
                       </th>
                       <th style={{ padding: '0.75rem', textAlign: 'left', color: '#aaa', fontWeight: 'normal' }}></th>
                     </tr>

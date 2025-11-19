@@ -217,10 +217,6 @@ const GunsPage = () => {
     }
   };
 
-  const getSortIcon = (column) => {
-    if (sortColumn !== column) return '↕️';
-    return sortDirection === 'asc' ? '↑' : '↓';
-  };
 
   const getUniqueTypes = () => {
     const types = guns.map(gun => gun.type).filter(Boolean);
@@ -724,7 +720,7 @@ const GunsPage = () => {
                       onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
-                      Nazwa {getSortIcon('name')}
+                      Nazwa
                     </th>
                     <th 
                       style={{ 
@@ -739,7 +735,7 @@ const GunsPage = () => {
                       onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
-                      Rodzaj {getSortIcon('type')}
+                      Rodzaj
                     </th>
                     <th 
                       style={{ 
@@ -754,7 +750,7 @@ const GunsPage = () => {
                       onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
-                      Kaliber {getSortIcon('caliber')}
+                      Kaliber
                     </th>
                     <th style={{ padding: '0.75rem', textAlign: 'left', color: '#aaa', fontWeight: 'normal' }}>Konserwacja</th>
                     <th style={{ padding: '0.75rem', textAlign: 'left', color: '#aaa', fontWeight: 'normal' }}>Akcje</th>
