@@ -3,6 +3,29 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { gunsAPI, maintenanceAPI, sessionsAPI } from '../services/api';
 
+const COMMON_CALIBERS = [
+  '9×19',
+  '.45 ACP',
+  '.40 S&W',
+  '.380 ACP',
+  '.22 LR',
+  '10 mm Auto',
+  '.357 SIG',
+  '5.56×45 / .223 Rem',
+  '7.62×39',
+  '7.62×51 / .308 Win',
+  '7.62×54R (Mosin Nagant)',
+  '.30-06 Springfield',
+  '6.5 Creedmoor',
+  '.300 WinMag',
+  '.338 Lapua Magnum',
+  '12/70',
+  '12/76',
+  '.243 Win',
+  '.270 Win',
+  '20/70'
+];
+
 const GunsPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -17,9 +40,11 @@ const GunsPage = () => {
   const [formData, setFormData] = useState({
     name: '',
     caliber: '',
+    caliberCustom: '',
     type: '',
     notes: ''
   });
+  const [useCustomCaliber, setUseCustomCaliber] = useState(false);
   
   // Filtry
   const [typeFilter, setTypeFilter] = useState('');
@@ -205,13 +230,30 @@ const GunsPage = () => {
     return { status: finalStatus, color: colors[finalStatus] };
   };
 
+  const handleCaliberChange = (e) => {
+    const value = e.target.value;
+    if (value === 'custom') {
+      setUseCustomCaliber(true);
+      setFormData({ ...formData, caliber: '', caliberCustom: '' });
+    } else {
+      setUseCustomCaliber(false);
+      setFormData({ ...formData, caliber: value, caliberCustom: '' });
+    }
+  };
+
+  const handleCustomCaliberChange = (e) => {
+    setFormData({ ...formData, caliberCustom: e.target.value });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     try {
+      const finalCaliber = useCustomCaliber ? formData.caliberCustom : formData.caliber;
+      
       const gunData = {
         name: formData.name,
-        caliber: formData.caliber || null,
+        caliber: finalCaliber || null,
         type: formData.type || null,
         notes: formData.notes || null
       };
@@ -223,7 +265,8 @@ const GunsPage = () => {
         await gunsAPI.create(gunData);
       }
       
-      setFormData({ name: '', caliber: '', type: '', notes: '' });
+      setFormData({ name: '', caliber: '', caliberCustom: '', type: '', notes: '' });
+      setUseCustomCaliber(false);
       setShowForm(false);
       setError(null);
       fetchGuns();
@@ -234,12 +277,17 @@ const GunsPage = () => {
   };
 
   const handleEdit = (gun) => {
+    const gunCaliber = gun.caliber || '';
+    const isInList = COMMON_CALIBERS.includes(gunCaliber);
+    
     setFormData({
       name: gun.name,
-      caliber: gun.caliber || '',
+      caliber: isInList ? gunCaliber : '',
+      caliberCustom: isInList ? '' : gunCaliber,
       type: gun.type || '',
       notes: gun.notes || ''
     });
+    setUseCustomCaliber(!isInList && gunCaliber !== '');
     setEditingId(gun.id);
     setShowForm(true);
     setActiveMenuId(null);
@@ -248,7 +296,8 @@ const GunsPage = () => {
   const handleCancel = () => {
     setShowForm(false);
     setEditingId(null);
-    setFormData({ name: '', caliber: '', type: '', notes: '' });
+    setFormData({ name: '', caliber: '', caliberCustom: '', type: '', notes: '' });
+    setUseCustomCaliber(false);
   };
 
   const handleDelete = async (id) => {
@@ -348,13 +397,65 @@ const GunsPage = () => {
               </div>
               <div className="form-group">
                 <label className="form-label">Kaliber</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  value={formData.caliber}
-                  onChange={(e) => setFormData({ ...formData, caliber: e.target.value })}
-                  placeholder="np. 9mm, .45 ACP"
-                />
+                {!useCustomCaliber ? (
+                  <select
+                    className="form-input"
+                    value={formData.caliber}
+                    onChange={handleCaliberChange}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      backgroundColor: '#2c2c2c',
+                      color: 'white',
+                      border: '1px solid #555',
+                      borderRadius: '4px',
+                      fontSize: '1rem'
+                    }}
+                  >
+                    <option value="">Wybierz kaliber</option>
+                    {COMMON_CALIBERS.map(caliber => (
+                      <option key={caliber} value={caliber}>{caliber}</option>
+                    ))}
+                    <option value="custom">Własny kaliber...</option>
+                  </select>
+                ) : (
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={formData.caliberCustom}
+                      onChange={handleCustomCaliberChange}
+                      placeholder="Wpisz własny kaliber"
+                      style={{
+                        flex: 1,
+                        padding: '0.75rem',
+                        backgroundColor: '#2c2c2c',
+                        color: 'white',
+                        border: '1px solid #555',
+                        borderRadius: '4px',
+                        fontSize: '1rem'
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUseCustomCaliber(false);
+                        setFormData({ ...formData, caliberCustom: '' });
+                      }}
+                      style={{
+                        padding: '0.5rem 1rem',
+                        backgroundColor: '#555',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '0.9rem'
+                      }}
+                    >
+                      Anuluj
+                    </button>
+                  </div>
+                )}
               </div>
               <div className="form-group">
                 <label className="form-label">Rodzaj broni</label>
