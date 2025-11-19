@@ -282,7 +282,7 @@ const GunsPage = () => {
     setFormData({ 
       ...formData, 
       type: newType,
-      caliber: '', // Resetuj kaliber przy zmianie rodzaju broni
+      caliber: '', 
       caliberCustom: ''
     });
     setUseCustomCaliber(false);
@@ -460,6 +460,23 @@ const GunsPage = () => {
                 />
               </div>
               <div className="form-group">
+                <label className="form-label">Rodzaj broni</label>
+                <select
+                  className="form-input"
+                  value={formData.type}
+                  onChange={handleTypeChange}
+                >
+                  <option value="">Wybierz rodzaj</option>
+                  <option value="Pistolet">Pistolet</option>
+                  <option value="Pistolet maszynowy">Pistolet maszynowy</option>
+                  <option value="Rewolwer">Rewolwer</option>
+                  <option value="Karabinek">Karabinek</option>
+                  <option value="Karabin">Karabin</option>
+                  <option value="Strzelba">Strzelba</option>
+                  <option value="Inna">Inna</option>
+                </select>
+              </div>
+              <div className="form-group">
                 <label className="form-label">Kaliber</label>
                 {!useCustomCaliber ? (
                   <select
@@ -525,23 +542,6 @@ const GunsPage = () => {
                     </button>
                   </div>
                 )}
-              </div>
-              <div className="form-group">
-                <label className="form-label">Rodzaj broni</label>
-                <select
-                  className="form-input"
-                  value={formData.type}
-                  onChange={handleTypeChange}
-                >
-                  <option value="">Wybierz rodzaj</option>
-                  <option value="Pistolet">Pistolet</option>
-                  <option value="Pistolet maszynowy">Pistolet maszynowy</option>
-                  <option value="Rewolwer">Rewolwer</option>
-                  <option value="Karabinek">Karabinek</option>
-                  <option value="Karabin">Karabin</option>
-                  <option value="Strzelba">Strzelba</option>
-                  <option value="Inna">Inna</option>
-                </select>
               </div>
               <div className="form-group">
                 <label className="form-label">Notatki</label>
