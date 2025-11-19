@@ -1,8 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { gunsAPI, maintenanceAPI, sessionsAPI } from '../services/api';
 
 const GunsPage = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [guns, setGuns] = useState([]);
+  const [filteredGuns, setFilteredGuns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
@@ -15,12 +20,27 @@ const GunsPage = () => {
     type: '',
     notes: ''
   });
+  
+  // Filtry
+  const [typeFilter, setTypeFilter] = useState('');
+  const [caliberFilter, setCaliberFilter] = useState('');
+  
+  // Paginacja
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
+  
+  // Menu akcji
+  const [activeMenuId, setActiveMenuId] = useState(null);
 
   useEffect(() => {
     fetchGuns();
     fetchAllMaintenance();
     fetchAllSessions();
   }, []);
+
+  useEffect(() => {
+    applyFilters();
+  }, [guns, typeFilter, caliberFilter]);
 
   const fetchGuns = async () => {
     try {
@@ -86,6 +106,31 @@ const GunsPage = () => {
     }
   };
 
+  const applyFilters = () => {
+    let filtered = [...guns];
+    
+    if (typeFilter) {
+      filtered = filtered.filter(gun => gun.type === typeFilter);
+    }
+    
+    if (caliberFilter) {
+      filtered = filtered.filter(gun => gun.caliber === caliberFilter);
+    }
+    
+    setFilteredGuns(filtered);
+    setCurrentPage(1);
+  };
+
+  const getUniqueTypes = () => {
+    const types = guns.map(gun => gun.type).filter(Boolean);
+    return [...new Set(types)].sort();
+  };
+
+  const getUniqueCalibers = () => {
+    const calibers = guns.map(gun => gun.caliber).filter(Boolean);
+    return [...new Set(calibers)].sort();
+  };
+
   const getLastMaintenance = (gunId) => {
     const gunMaintenance = maintenance[gunId];
     if (!gunMaintenance || gunMaintenance.length === 0) {
@@ -101,7 +146,6 @@ const GunsPage = () => {
     const gunSessions = sessions[gunId];
     if (!gunSessions) return 0;
 
-    // Używamy tylko cost sessions, bo accuracy sessions również tworzą cost sessions
     const costSessions = gunSessions.cost || [];
     const maintenanceDate = new Date(lastMaint.date);
     
@@ -131,23 +175,20 @@ const GunsPage = () => {
   const getMaintenanceStatus = (gunId) => {
     const lastMaint = getLastMaintenance(gunId);
     if (!lastMaint) {
-      return null; // Brak konserwacji - nie pokazujemy statusu
+      return { status: 'green', color: '#4caf50' };
     }
 
     const rounds = calculateRoundsSinceLastMaintenance(gunId);
     const days = calculateDaysSinceLastMaintenance(gunId);
 
-    // Status według strzałów
     let roundsStatus = 'green';
     if (rounds >= 500) roundsStatus = 'red';
     else if (rounds >= 300) roundsStatus = 'yellow';
 
-    // Status według dni
     let daysStatus = 'green';
     if (days >= 60) daysStatus = 'red';
     else if (days >= 30) daysStatus = 'yellow';
 
-    // Najgorszy status
     let finalStatus = roundsStatus;
     if (daysStatus === 'red' || roundsStatus === 'red') {
       finalStatus = 'red';
@@ -155,14 +196,13 @@ const GunsPage = () => {
       finalStatus = 'yellow';
     }
 
-    // Zwracamy tylko żółty lub czerwony (nie zielony)
-    if (finalStatus === 'red') {
-      return { status: 'red', color: '#f44336', icon: '🔴' };
-    } else if (finalStatus === 'yellow') {
-      return { status: 'yellow', color: '#ff9800', icon: '🟡' };
-    }
+    const colors = {
+      green: '#4caf50',
+      yellow: '#ff9800',
+      red: '#f44336'
+    };
 
-    return null; // Zielony - nie pokazujemy
+    return { status: finalStatus, color: colors[finalStatus] };
   };
 
   const handleSubmit = async (e) => {
@@ -202,6 +242,7 @@ const GunsPage = () => {
     });
     setEditingId(gun.id);
     setShowForm(true);
+    setActiveMenuId(null);
   };
 
   const handleCancel = () => {
@@ -215,12 +256,41 @@ const GunsPage = () => {
       try {
         await gunsAPI.delete(id);
         fetchGuns();
+        setActiveMenuId(null);
       } catch (err) {
         setError(err.response?.data?.detail || 'Błąd podczas usuwania broni');
         console.error(err);
       }
     }
   };
+
+  const handleDetails = (gunId) => {
+    navigate(`/my-weapons?gun_id=${gunId}`);
+    setActiveMenuId(null);
+  };
+
+  // Paginacja
+  const totalPages = Math.ceil(filteredGuns.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedGuns = filteredGuns.slice(startIndex, endIndex);
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
+
+  // Zamknij menu przy kliknięciu poza nim
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (activeMenuId && !event.target.closest('.action-menu-container')) {
+        setActiveMenuId(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [activeMenuId]);
 
   if (loading) {
     return <div className="text-center">Ładowanie...</div>;
@@ -240,8 +310,17 @@ const GunsPage = () => {
                 setShowForm(true);
               }
             }}
+            style={{ 
+              backgroundColor: '#007bff',
+              color: 'white',
+              border: 'none',
+              padding: '0.5rem 1rem',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '0.9rem'
+            }}
           >
-            {showForm ? 'Anuluj' : '+ Dodaj broń'}
+            + Dodaj broń
           </button>
         </div>
 
@@ -310,59 +389,222 @@ const GunsPage = () => {
         )}
 
         <div className="card">
-          <h3 style={{ marginBottom: '1rem' }}>Lista broni</h3>
-          {guns.length === 0 ? (
+          {/* Filtry i paginacja */}
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            marginBottom: '1rem',
+            flexWrap: 'wrap',
+            gap: '1rem'
+          }}>
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+              <div>
+                <label style={{ marginRight: '0.5rem', color: '#aaa', fontSize: '0.9rem' }}>Rodzaj:</label>
+                <select
+                  value={typeFilter}
+                  onChange={(e) => setTypeFilter(e.target.value)}
+                  style={{
+                    padding: '0.5rem',
+                    backgroundColor: '#2c2c2c',
+                    color: 'white',
+                    border: '1px solid #555',
+                    borderRadius: '4px',
+                    fontSize: '0.9rem'
+                  }}
+                >
+                  <option value="">Wszystkie</option>
+                  {getUniqueTypes().map(type => (
+                    <option key={type} value={type}>{type}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label style={{ marginRight: '0.5rem', color: '#aaa', fontSize: '0.9rem' }}>Kaliber:</label>
+                <select
+                  value={caliberFilter}
+                  onChange={(e) => setCaliberFilter(e.target.value)}
+                  style={{
+                    padding: '0.5rem',
+                    backgroundColor: '#2c2c2c',
+                    color: 'white',
+                    border: '1px solid #555',
+                    borderRadius: '4px',
+                    fontSize: '0.9rem'
+                  }}
+                >
+                  <option value="">Wszystkie</option>
+                  {getUniqueCalibers().map(caliber => (
+                    <option key={caliber} value={caliber}>{caliber}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ color: '#aaa', fontSize: '0.9rem' }}>Pokaż:</span>
+              <select
+                value={itemsPerPage}
+                onChange={(e) => {
+                  setItemsPerPage(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                style={{
+                  padding: '0.5rem',
+                  backgroundColor: '#2c2c2c',
+                  color: 'white',
+                  border: '1px solid #555',
+                  borderRadius: '4px',
+                  fontSize: '0.9rem'
+                }}
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: currentPage === 1 ? '#555' : '#fff',
+                  cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                  fontSize: '1.2rem',
+                  padding: '0.25rem 0.5rem'
+                }}
+              >
+                ←
+              </button>
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: currentPage === totalPages ? '#555' : '#fff',
+                  cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                  fontSize: '1.2rem',
+                  padding: '0.25rem 0.5rem'
+                }}
+              >
+                →
+              </button>
+            </div>
+          </div>
+
+          {/* Tabela */}
+          {paginatedGuns.length === 0 ? (
             <p className="text-center" style={{ color: '#888', padding: '2rem' }}>
-              Brak dodanej broni
+              Brak broni spełniającej kryteria
             </p>
           ) : (
             <div style={{ overflowX: 'auto' }}>
-              <table className="table">
+              <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
-                  <tr>
-                    <th>Nazwa</th>
-                    <th>Rodzaj</th>
-                    <th>Kaliber</th>
-                    <th>Notatki</th>
-                    <th>Status konserwacji</th>
-                    <th>Akcje</th>
+                  <tr style={{ borderBottom: '1px solid #555' }}>
+                    <th style={{ padding: '0.75rem', textAlign: 'left', color: '#aaa', fontWeight: 'normal' }}>Nazwa</th>
+                    <th style={{ padding: '0.75rem', textAlign: 'left', color: '#aaa', fontWeight: 'normal' }}>Rodzaj</th>
+                    <th style={{ padding: '0.75rem', textAlign: 'left', color: '#aaa', fontWeight: 'normal' }}>Kaliber</th>
+                    <th style={{ padding: '0.75rem', textAlign: 'left', color: '#aaa', fontWeight: 'normal' }}>Konserwacja</th>
+                    <th style={{ padding: '0.75rem', textAlign: 'left', color: '#aaa', fontWeight: 'normal' }}>Akcje</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {guns.map((gun) => {
+                  {paginatedGuns.map((gun) => {
                     const maintenanceStatus = getMaintenanceStatus(gun.id);
                     return (
-                    <tr key={gun.id}>
-                      <td style={{ fontWeight: '500' }}>
-                        <span>{gun.name}</span>
-                      </td>
-                      <td>{gun.type || '-'}</td>
-                      <td>{gun.caliber || '-'}</td>
-                      <td style={{ color: '#aaa' }}>{gun.notes || '-'}</td>
-                      <td>
-                        {maintenanceStatus && (
-                          <span style={{ color: maintenanceStatus.color, fontSize: '1.2rem' }}>
-                            {maintenanceStatus.icon}
-                          </span>
-                        )}
-                      </td>
-                      <td>
-                        <button
-                          className="btn btn-primary"
-                          onClick={() => handleEdit(gun)}
-                          style={{ marginRight: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.9rem' }}
-                        >
-                          Edytuj
-                        </button>
-                        <button
-                          className="btn btn-danger"
-                          onClick={() => handleDelete(gun.id)}
-                          style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}
-                        >
-                          Usuń
-                        </button>
-                      </td>
-                    </tr>
+                      <tr key={gun.id} style={{ borderBottom: '1px solid #333' }}>
+                        <td style={{ padding: '0.75rem', fontWeight: '500' }}>{gun.name}</td>
+                        <td style={{ padding: '0.75rem' }}>{gun.type || '-'}</td>
+                        <td style={{ padding: '0.75rem' }}>{gun.caliber || '-'}</td>
+                        <td style={{ padding: '0.75rem' }}>
+                          <div
+                            style={{
+                              width: '12px',
+                              height: '12px',
+                              borderRadius: '50%',
+                              backgroundColor: maintenanceStatus.color,
+                              display: 'inline-block'
+                            }}
+                          />
+                        </td>
+                        <td style={{ padding: '0.75rem', position: 'relative' }}>
+                          <div className="action-menu-container" style={{ position: 'relative' }}>
+                            <button
+                              onClick={() => setActiveMenuId(activeMenuId === gun.id ? null : gun.id)}
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                color: '#aaa',
+                                cursor: 'pointer',
+                                fontSize: '1.2rem',
+                                padding: '0.25rem 0.5rem'
+                              }}
+                            >
+                              ⋯
+                            </button>
+                            {activeMenuId === gun.id && (
+                              <div
+                                style={{
+                                  position: 'absolute',
+                                  right: 0,
+                                  top: '100%',
+                                  backgroundColor: '#2c2c2c',
+                                  border: '1px solid #555',
+                                  borderRadius: '4px',
+                                  minWidth: '150px',
+                                  zIndex: 1000,
+                                  marginTop: '0.25rem',
+                                  boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
+                                }}
+                              >
+                                {user && (
+                                  <div
+                                    onClick={() => handleDetails(gun.id)}
+                                    style={{
+                                      padding: '0.75rem 1rem',
+                                      cursor: 'pointer',
+                                      color: '#fff',
+                                      borderBottom: '1px solid #555'
+                                    }}
+                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                  >
+                                    Szczegóły
+                                  </div>
+                                )}
+                                <div
+                                  onClick={() => handleEdit(gun)}
+                                  style={{
+                                    padding: '0.75rem 1rem',
+                                    cursor: 'pointer',
+                                    color: '#fff',
+                                    borderBottom: user ? '1px solid #555' : 'none'
+                                  }}
+                                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                >
+                                  Edytuj
+                                </div>
+                                <div
+                                  onClick={() => handleDelete(gun.id)}
+                                  style={{
+                                    padding: '0.75rem 1rem',
+                                    cursor: 'pointer',
+                                    color: '#f44336'
+                                  }}
+                                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                >
+                                  Usuń
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
                     );
                   })}
                 </tbody>
