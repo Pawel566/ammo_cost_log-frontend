@@ -256,6 +256,11 @@ const MyWeaponsPage = () => {
   };
 
   const getGunTypeLabel = (type) => {
+    // Mapowanie starych wartości na nowe
+    if (type === 'Broń krótka') {
+      return 'Pistolet';
+    }
+    
     const labels = {
       pistol: 'Pistolet',
       rifle: 'Karabin',

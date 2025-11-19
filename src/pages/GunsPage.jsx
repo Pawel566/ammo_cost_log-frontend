@@ -3,27 +3,67 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { gunsAPI, maintenanceAPI, sessionsAPI } from '../services/api';
 
-const COMMON_CALIBERS = [
-  '9×19',
-  '.45 ACP',
-  '.40 S&W',
-  '.380 ACP',
-  '.22 LR',
-  '10 mm Auto',
-  '.357 SIG',
-  '5.56×45 / .223 Rem',
-  '7.62×39',
-  '7.62×51 / .308 Win',
-  '7.62×54R (Mosin Nagant)',
-  '.30-06 Springfield',
-  '6.5 Creedmoor',
-  '.300 WinMag',
-  '.338 Lapua Magnum',
-  '12/70',
-  '12/76',
-  '.243 Win',
-  '.270 Win',
-  '20/70'
+// Mapowanie rodzajów broni do kalibrów
+const CALIBERS_BY_GUN_TYPE = {
+  'Pistolet': [
+    '9×19',
+    '.45 ACP',
+    '.40 S&W',
+    '.380 ACP',
+    '10 mm Auto',
+    '.357 SIG',
+    '.32 ACP',
+    '.22 LR'
+  ],
+  'Pistolet maszynowy': [
+    '9×19',
+    '.40 S&W',
+    '.45 ACP',
+    '10 mm Auto'
+  ],
+  'Karabinek': [
+    '5.56×45 / .223 Rem',
+    '7.62×39',
+    '7.62×51 / .308 Win',
+    '6.5 Grendel',
+    '6 mm ARC',
+    '9×19 (PCC)'
+  ],
+  'Karabin': [
+    '7.62×54R',
+    '8×57 IS',
+    '.30-06',
+    '7.5×55 Swiss',
+    '6.5 Creedmoor',
+    '.300 WinMag',
+    '.338 Lapua Magnum',
+    '.243 Win',
+    '.270 Win'
+  ],
+  'Strzelba': [
+    '12/70',
+    '12/76',
+    '20/70',
+    '20/76'
+  ],
+  'Rewolwer': [
+    '.357 Magnum',
+    '.38 Special',
+    '.44 Magnum',
+    '.22 LR'
+  ]
+};
+
+// Wszystkie kalibry (dla opcji "Inna" i własny kaliber)
+const ALL_CALIBERS = [
+  ...new Set([
+    ...CALIBERS_BY_GUN_TYPE['Pistolet'],
+    ...CALIBERS_BY_GUN_TYPE['Pistolet maszynowy'],
+    ...CALIBERS_BY_GUN_TYPE['Karabinek'],
+    ...CALIBERS_BY_GUN_TYPE['Karabin'],
+    ...CALIBERS_BY_GUN_TYPE['Strzelba'],
+    ...CALIBERS_BY_GUN_TYPE['Rewolwer']
+  ])
 ];
 
 const GunsPage = () => {
@@ -230,6 +270,24 @@ const GunsPage = () => {
     return { status: finalStatus, color: colors[finalStatus] };
   };
 
+  const getAvailableCalibers = () => {
+    if (!formData.type || formData.type === 'Inna') {
+      return ALL_CALIBERS;
+    }
+    return CALIBERS_BY_GUN_TYPE[formData.type] || ALL_CALIBERS;
+  };
+
+  const handleTypeChange = (e) => {
+    const newType = e.target.value;
+    setFormData({ 
+      ...formData, 
+      type: newType,
+      caliber: '', // Resetuj kaliber przy zmianie rodzaju broni
+      caliberCustom: ''
+    });
+    setUseCustomCaliber(false);
+  };
+
   const handleCaliberChange = (e) => {
     const value = e.target.value;
     if (value === 'custom') {
@@ -278,13 +336,19 @@ const GunsPage = () => {
 
   const handleEdit = (gun) => {
     const gunCaliber = gun.caliber || '';
-    const isInList = COMMON_CALIBERS.includes(gunCaliber);
+    const gunType = gun.type || '';
+    
+    // Sprawdź czy kaliber jest w dostępnych dla danego typu broni
+    const availableCalibers = gunType && CALIBERS_BY_GUN_TYPE[gunType] 
+      ? CALIBERS_BY_GUN_TYPE[gunType] 
+      : ALL_CALIBERS;
+    const isInList = availableCalibers.includes(gunCaliber) || ALL_CALIBERS.includes(gunCaliber);
     
     setFormData({
       name: gun.name,
       caliber: isInList ? gunCaliber : '',
       caliberCustom: isInList ? '' : gunCaliber,
-      type: gun.type || '',
+      type: gunType,
       notes: gun.notes || ''
     });
     setUseCustomCaliber(!isInList && gunCaliber !== '');
@@ -402,6 +466,7 @@ const GunsPage = () => {
                     className="form-input"
                     value={formData.caliber}
                     onChange={handleCaliberChange}
+                    disabled={!formData.type}
                     style={{
                       width: '100%',
                       padding: '0.75rem',
@@ -409,14 +474,18 @@ const GunsPage = () => {
                       color: 'white',
                       border: '1px solid #555',
                       borderRadius: '4px',
-                      fontSize: '1rem'
+                      fontSize: '1rem',
+                      opacity: formData.type ? 1 : 0.6,
+                      cursor: formData.type ? 'pointer' : 'not-allowed'
                     }}
                   >
-                    <option value="">Wybierz kaliber</option>
-                    {COMMON_CALIBERS.map(caliber => (
+                    <option value="">
+                      {formData.type ? 'Wybierz kaliber' : 'Najpierw wybierz rodzaj broni'}
+                    </option>
+                    {formData.type && getAvailableCalibers().map(caliber => (
                       <option key={caliber} value={caliber}>{caliber}</option>
                     ))}
-                    <option value="custom">Własny kaliber...</option>
+                    {formData.type && <option value="custom">Własny kaliber...</option>}
                   </select>
                 ) : (
                   <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
@@ -462,14 +531,15 @@ const GunsPage = () => {
                 <select
                   className="form-input"
                   value={formData.type}
-                  onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                  onChange={handleTypeChange}
                 >
                   <option value="">Wybierz rodzaj</option>
+                  <option value="Pistolet">Pistolet</option>
                   <option value="Pistolet maszynowy">Pistolet maszynowy</option>
-                  <option value="Karabin">Karabin</option>
+                  <option value="Rewolwer">Rewolwer</option>
                   <option value="Karabinek">Karabinek</option>
+                  <option value="Karabin">Karabin</option>
                   <option value="Strzelba">Strzelba</option>
-                  <option value="Broń krótka">Broń krótka</option>
                   <option value="Inna">Inna</option>
                 </select>
               </div>
