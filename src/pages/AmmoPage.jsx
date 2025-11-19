@@ -61,6 +61,10 @@ const AmmoPage = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   
+  // Sortowanie
+  const [sortColumn, setSortColumn] = useState(null);
+  const [sortDirection, setSortDirection] = useState('asc'); // 'asc' lub 'desc'
+  
   // Menu akcji
   const [activeMenuId, setActiveMenuId] = useState(null);
 
@@ -70,7 +74,7 @@ const AmmoPage = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [ammo, caliberFilter, typeFilter]);
+  }, [ammo, caliberFilter, typeFilter, sortColumn, sortDirection]);
 
   const fetchAmmo = async () => {
     try {
@@ -99,8 +103,54 @@ const AmmoPage = () => {
       filtered = filtered.filter(item => item.type === typeFilter);
     }
     
+    // Sortowanie
+    if (sortColumn) {
+      filtered.sort((a, b) => {
+        let aValue = a[sortColumn];
+        let bValue = b[sortColumn];
+        
+        // Specjalna obsługa dla units_in_package (liczba)
+        if (sortColumn === 'units_in_package') {
+          aValue = aValue || 0;
+          bValue = bValue || 0;
+          return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+        }
+        
+        // Specjalna obsługa dla price_per_unit (liczba)
+        if (sortColumn === 'price_per_unit') {
+          aValue = aValue || 0;
+          bValue = bValue || 0;
+          return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+        }
+        
+        // Dla pozostałych kolumn - sortowanie tekstowe
+        aValue = String(aValue || '').toLowerCase();
+        bValue = String(bValue || '').toLowerCase();
+        
+        if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+    
     setFilteredAmmo(filtered);
     setCurrentPage(1);
+  };
+
+  const handleSort = (column) => {
+    if (sortColumn === column) {
+      // Zmień kierunek sortowania
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Ustaw nową kolumnę i domyślny kierunek
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
+  const getSortIcon = (column) => {
+    if (sortColumn !== column) return '↕️';
+    return sortDirection === 'asc' ? '↑' : '↓';
   };
 
   const getUniqueCalibers = () => {
@@ -593,11 +643,81 @@ const AmmoPage = () => {
                 <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ borderBottom: '1px solid #555' }}>
-                      <th style={{ padding: '0.75rem', textAlign: 'left', color: '#aaa', fontWeight: 'normal' }}>Nazwa</th>
-                      <th style={{ padding: '0.75rem', textAlign: 'left', color: '#aaa', fontWeight: 'normal' }}>Kaliber</th>
-                      <th style={{ padding: '0.75rem', textAlign: 'left', color: '#aaa', fontWeight: 'normal' }}>Cena / szt.</th>
-                      <th style={{ padding: '0.75rem', textAlign: 'left', color: '#aaa', fontWeight: 'normal' }}>Typ</th>
-                      <th style={{ padding: '0.75rem', textAlign: 'left', color: '#aaa', fontWeight: 'normal' }}>Dostępna ilość</th>
+                      <th 
+                        style={{ 
+                          padding: '0.75rem', 
+                          textAlign: 'left', 
+                          color: '#aaa', 
+                          fontWeight: 'normal',
+                          cursor: 'pointer',
+                          userSelect: 'none'
+                        }}
+                        onClick={() => handleSort('name')}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                      >
+                        Nazwa {getSortIcon('name')}
+                      </th>
+                      <th 
+                        style={{ 
+                          padding: '0.75rem', 
+                          textAlign: 'left', 
+                          color: '#aaa', 
+                          fontWeight: 'normal',
+                          cursor: 'pointer',
+                          userSelect: 'none'
+                        }}
+                        onClick={() => handleSort('caliber')}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                      >
+                        Kaliber {getSortIcon('caliber')}
+                      </th>
+                      <th 
+                        style={{ 
+                          padding: '0.75rem', 
+                          textAlign: 'left', 
+                          color: '#aaa', 
+                          fontWeight: 'normal',
+                          cursor: 'pointer',
+                          userSelect: 'none'
+                        }}
+                        onClick={() => handleSort('price_per_unit')}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                      >
+                        Cena / szt. {getSortIcon('price_per_unit')}
+                      </th>
+                      <th 
+                        style={{ 
+                          padding: '0.75rem', 
+                          textAlign: 'left', 
+                          color: '#aaa', 
+                          fontWeight: 'normal',
+                          cursor: 'pointer',
+                          userSelect: 'none'
+                        }}
+                        onClick={() => handleSort('type')}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                      >
+                        Typ {getSortIcon('type')}
+                      </th>
+                      <th 
+                        style={{ 
+                          padding: '0.75rem', 
+                          textAlign: 'left', 
+                          color: '#aaa', 
+                          fontWeight: 'normal',
+                          cursor: 'pointer',
+                          userSelect: 'none'
+                        }}
+                        onClick={() => handleSort('units_in_package')}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                      >
+                        Dostępna ilość {getSortIcon('units_in_package')}
+                      </th>
                       <th style={{ padding: '0.75rem', textAlign: 'left', color: '#aaa', fontWeight: 'normal' }}></th>
                     </tr>
                   </thead>

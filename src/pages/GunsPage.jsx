@@ -94,6 +94,10 @@ const GunsPage = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   
+  // Sortowanie
+  const [sortColumn, setSortColumn] = useState(null);
+  const [sortDirection, setSortDirection] = useState('asc'); // 'asc' lub 'desc'
+  
   // Menu akcji
   const [activeMenuId, setActiveMenuId] = useState(null);
 
@@ -105,7 +109,7 @@ const GunsPage = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [guns, typeFilter, caliberFilter]);
+  }, [guns, typeFilter, caliberFilter, sortColumn, sortDirection]);
 
   const fetchGuns = async () => {
     try {
@@ -182,8 +186,40 @@ const GunsPage = () => {
       filtered = filtered.filter(gun => gun.caliber === caliberFilter);
     }
     
+    // Sortowanie
+    if (sortColumn) {
+      filtered.sort((a, b) => {
+        let aValue = a[sortColumn] || '';
+        let bValue = b[sortColumn] || '';
+        
+        // Konwersja na stringi dla porównania
+        aValue = String(aValue).toLowerCase();
+        bValue = String(bValue).toLowerCase();
+        
+        if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+    
     setFilteredGuns(filtered);
     setCurrentPage(1);
+  };
+
+  const handleSort = (column) => {
+    if (sortColumn === column) {
+      // Zmień kierunek sortowania
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Ustaw nową kolumnę i domyślny kierunek
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
+  const getSortIcon = (column) => {
+    if (sortColumn !== column) return '↕️';
+    return sortDirection === 'asc' ? '↑' : '↓';
   };
 
   const getUniqueTypes = () => {
@@ -675,9 +711,51 @@ const GunsPage = () => {
               <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid #555' }}>
-                    <th style={{ padding: '0.75rem', textAlign: 'left', color: '#aaa', fontWeight: 'normal' }}>Nazwa</th>
-                    <th style={{ padding: '0.75rem', textAlign: 'left', color: '#aaa', fontWeight: 'normal' }}>Rodzaj</th>
-                    <th style={{ padding: '0.75rem', textAlign: 'left', color: '#aaa', fontWeight: 'normal' }}>Kaliber</th>
+                    <th 
+                      style={{ 
+                        padding: '0.75rem', 
+                        textAlign: 'left', 
+                        color: '#aaa', 
+                        fontWeight: 'normal',
+                        cursor: 'pointer',
+                        userSelect: 'none'
+                      }}
+                      onClick={() => handleSort('name')}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    >
+                      Nazwa {getSortIcon('name')}
+                    </th>
+                    <th 
+                      style={{ 
+                        padding: '0.75rem', 
+                        textAlign: 'left', 
+                        color: '#aaa', 
+                        fontWeight: 'normal',
+                        cursor: 'pointer',
+                        userSelect: 'none'
+                      }}
+                      onClick={() => handleSort('type')}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    >
+                      Rodzaj {getSortIcon('type')}
+                    </th>
+                    <th 
+                      style={{ 
+                        padding: '0.75rem', 
+                        textAlign: 'left', 
+                        color: '#aaa', 
+                        fontWeight: 'normal',
+                        cursor: 'pointer',
+                        userSelect: 'none'
+                      }}
+                      onClick={() => handleSort('caliber')}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    >
+                      Kaliber {getSortIcon('caliber')}
+                    </th>
                     <th style={{ padding: '0.75rem', textAlign: 'left', color: '#aaa', fontWeight: 'normal' }}>Konserwacja</th>
                     <th style={{ padding: '0.75rem', textAlign: 'left', color: '#aaa', fontWeight: 'normal' }}>Akcje</th>
                   </tr>
