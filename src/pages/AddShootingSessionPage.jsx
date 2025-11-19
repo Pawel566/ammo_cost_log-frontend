@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { sessionsAPI, gunsAPI, ammoAPI } from '../services/api';
+import { sessionsAPI, gunsAPI, ammoAPI, settingsAPI } from '../services/api';
 
 const AddShootingSessionPage = () => {
   const navigate = useNavigate();
@@ -10,6 +10,7 @@ const AddShootingSessionPage = () => {
   const [ammo, setAmmo] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [distanceUnit, setDistanceUnit] = useState('m');
   const [formData, setFormData] = useState({
     gun_id: '',
     ammo_id: '',
@@ -27,13 +28,23 @@ const AddShootingSessionPage = () => {
 
   useEffect(() => {
     fetchData();
+    fetchSettings();
   }, []);
 
+  const fetchSettings = async () => {
+    try {
+      const response = await settingsAPI.get();
+      setDistanceUnit(response.data.distance_unit || 'm');
+    } catch (err) {
+      console.error('Błąd pobierania ustawień:', err);
+    }
+  };
+
   useEffect(() => {
-    if (isEditMode && id) {
+    if (isEditMode && id && distanceUnit) {
       loadSessionData();
     }
-  }, [id, isEditMode]);
+  }, [id, isEditMode, distanceUnit]);
 
   const loadSessionData = async () => {
     try {
@@ -49,6 +60,21 @@ const AddShootingSessionPage = () => {
       const selectedAmmo = session.ammo_id ? ammoItems.find(a => a.id === session.ammo_id) : null;
       const pricePerUnit = selectedAmmo ? selectedAmmo.price_per_unit.toFixed(2).replace('.', ',') + ' zł' : '';
       
+      // Konwersja dystansu z metrów na jednostki użytkownika
+      let distanceDisplay = '';
+      if (session.distance_m) {
+        const distanceInMeters = session.distance_m;
+        // Użyj aktualnej wartości distanceUnit (może być jeszcze 'm' jeśli ustawienia nie zostały załadowane)
+        const currentUnit = distanceUnit || 'm';
+        if (currentUnit === 'yd') {
+          // Konwersja metrów na jardy: 1 m = 1.09361 yd
+          const distanceInYards = Math.round(distanceInMeters * 1.09361);
+          distanceDisplay = `${distanceInYards} yd`;
+        } else {
+          distanceDisplay = `${distanceInMeters} m`;
+        }
+      }
+
       setFormData({
         gun_id: session.gun_id || '',
         ammo_id: session.ammo_id || '',
@@ -59,7 +85,7 @@ const AddShootingSessionPage = () => {
         quantity: session.shots ? session.shots.toString() : '',
         price_per_unit: pricePerUnit,
         include_accuracy: !!(session.distance_m || session.hits !== null),
-        distance_m: session.distance_m ? `${session.distance_m} m` : '',
+        distance_m: distanceDisplay,
         shots: session.shots ? session.shots.toString() : '',
         hits: session.hits !== null && session.hits !== undefined ? session.hits.toString() : ''
       });
@@ -70,6 +96,7 @@ const AddShootingSessionPage = () => {
       setLoading(false);
     }
   };
+
 
   useEffect(() => {
     // Ustaw cenę amunicji tylko jeśli nie jest w trybie edycji lub jeśli price_per_unit jest puste
@@ -210,10 +237,23 @@ const AddShootingSessionPage = () => {
         return;
       }
       
-      const distance = parseInt(formData.distance_m.replace(' m', '').trim(), 10);
-      if (isNaN(distance) || distance <= 0) {
-        setError('Dystans musi być większy od 0');
-        return;
+      // Parsowanie dystansu z jednostkami użytkownika i konwersja na metry
+      let distanceInMeters = 0;
+      const distanceStr = formData.distance_m.trim();
+      if (distanceUnit === 'yd') {
+        const distanceInYards = parseFloat(distanceStr.replace(' yd', '').trim());
+        if (isNaN(distanceInYards) || distanceInYards <= 0) {
+          setError('Dystans musi być większy od 0');
+          return;
+        }
+        // Konwersja jardów na metry: 1 yd = 0.9144 m
+        distanceInMeters = Math.round(distanceInYards * 0.9144);
+      } else {
+        distanceInMeters = parseInt(distanceStr.replace(' m', '').trim(), 10);
+        if (isNaN(distanceInMeters) || distanceInMeters <= 0) {
+          setError('Dystans musi być większy od 0');
+          return;
+        }
       }
     }
     
@@ -239,7 +279,17 @@ const AddShootingSessionPage = () => {
       }
 
       if (formData.include_accuracy) {
-        sessionData.distance_m = parseInt(formData.distance_m.replace(' m', '').trim(), 10);
+        // Parsowanie dystansu z jednostkami użytkownika i konwersja na metry
+        const distanceStr = formData.distance_m.trim();
+        let distanceInMeters = 0;
+        if (distanceUnit === 'yd') {
+          const distanceInYards = parseFloat(distanceStr.replace(' yd', '').trim());
+          // Konwersja jardów na metry: 1 yd = 0.9144 m
+          distanceInMeters = Math.round(distanceInYards * 0.9144);
+        } else {
+          distanceInMeters = parseInt(distanceStr.replace(' m', '').trim(), 10);
+        }
+        sessionData.distance_m = distanceInMeters;
         sessionData.hits = parseInt(formData.hits, 10);
       }
       
@@ -467,7 +517,7 @@ const AddShootingSessionPage = () => {
                         className="form-input"
                         value={formData.distance_m}
                         onChange={(e) => setFormData({ ...formData, distance_m: e.target.value })}
-                        placeholder="20 m"
+                        placeholder={distanceUnit === 'yd' ? '20 yd' : '20 m'}
                         required
                       />
                     </div>
