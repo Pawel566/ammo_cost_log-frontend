@@ -13,7 +13,7 @@ const ShootingSessionsPage = () => {
   const [filterType, setFilterType] = useState('');
   const [filterValue, setFilterValue] = useState('');
   const [openMenuId, setOpenMenuId] = useState(null);
-  
+
   // Sortowanie
   const [sortColumn, setSortColumn] = useState(null);
   const [sortDirection, setSortDirection] = useState('asc'); // 'asc' lub 'desc'
@@ -55,30 +55,30 @@ const ShootingSessionsPage = () => {
 
   const applyFilters = () => {
     let filtered = [...sessions];
-    
+
     // Filtrowanie
     if (filterType && filterValue) {
       filtered = filtered.filter(session => {
-        const value = filterValue.toLowerCase();
-        switch (filterType) {
-          case 'gun':
-            const gun = guns.find(g => g.id === session.gun_id);
-            return gun && gun.name.toLowerCase().includes(value);
-          case 'ammo':
-            const ammoItem = ammo.find(a => a.id === session.ammo_id);
-            return ammoItem && ammoItem.name.toLowerCase().includes(value);
-          case 'date':
-            return new Date(session.date).toLocaleDateString('pl-PL').includes(value);
-          case 'cost':
-            return session.cost && session.cost.toString().includes(value);
-          case 'distance':
-            return session.distance_m && session.distance_m.toString().includes(value);
-          case 'accuracy':
-            return session.accuracy_percent && session.accuracy_percent.toString().includes(value);
-          default:
-            return true;
-        }
-      });
+      const value = filterValue.toLowerCase();
+      switch (filterType) {
+        case 'gun':
+          const gun = guns.find(g => g.id === session.gun_id);
+          return gun && gun.name.toLowerCase().includes(value);
+        case 'ammo':
+          const ammoItem = ammo.find(a => a.id === session.ammo_id);
+          return ammoItem && ammoItem.name.toLowerCase().includes(value);
+        case 'date':
+          return new Date(session.date).toLocaleDateString('pl-PL').includes(value);
+        case 'cost':
+          return session.cost && session.cost.toString().includes(value);
+        case 'distance':
+          return session.distance_m && session.distance_m.toString().includes(value);
+        case 'accuracy':
+          return session.accuracy_percent && session.accuracy_percent.toString().includes(value);
+        default:
+          return true;
+      }
+    });
     }
 
     // Sortowanie

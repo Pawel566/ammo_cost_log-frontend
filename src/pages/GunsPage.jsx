@@ -774,7 +774,7 @@ const GunsPage = () => {
                               display: 'inline-block'
                             }}
                           />
-                        </td>
+                      </td>
                         <td style={{ padding: '0.75rem', position: 'relative' }}>
                           <div className="action-menu-container" style={{ position: 'relative' }}>
                             <button
@@ -821,7 +821,7 @@ const GunsPage = () => {
                                   </div>
                                 )}
                                 <div
-                                  onClick={() => handleEdit(gun)}
+                          onClick={() => handleEdit(gun)}
                                   style={{
                                     padding: '0.75rem 1rem',
                                     cursor: 'pointer',
@@ -830,11 +830,11 @@ const GunsPage = () => {
                                   }}
                                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
                                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                                >
-                                  Edytuj
+                        >
+                          Edytuj
                                 </div>
                                 <div
-                                  onClick={() => handleDelete(gun.id)}
+                          onClick={() => handleDelete(gun.id)}
                                   style={{
                                     padding: '0.75rem 1rem',
                                     cursor: 'pointer',
@@ -842,14 +842,14 @@ const GunsPage = () => {
                                   }}
                                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
                                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                                >
-                                  Usuń
+                        >
+                          Usuń
                                 </div>
                               </div>
                             )}
                           </div>
-                        </td>
-                      </tr>
+                      </td>
+                    </tr>
                     );
                   })}
                 </tbody>

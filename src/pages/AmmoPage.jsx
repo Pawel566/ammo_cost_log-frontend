@@ -417,8 +417,8 @@ const AmmoPage = () => {
                     </>
                   ) : (
                     <>
-                      <input
-                        type="text"
+                <input
+                  type="text"
                         className="form-input"
                         value={formData.caliberCustom}
                         onChange={handleCustomCaliberChange}
@@ -635,9 +635,9 @@ const AmmoPage = () => {
             </p>
           ) : (
             <>
-              <div style={{ overflowX: 'auto' }}>
+            <div style={{ overflowX: 'auto' }}>
                 <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
+                <thead>
                     <tr style={{ borderBottom: '1px solid #555' }}>
                       <th 
                         style={{ 
@@ -715,14 +715,14 @@ const AmmoPage = () => {
                         Dostępna ilość
                       </th>
                       <th style={{ padding: '0.75rem', textAlign: 'left', color: '#aaa', fontWeight: 'normal' }}></th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                  </tr>
+                </thead>
+                <tbody>
                     {paginatedAmmo.map((item) => {
-                      const price = Number(item.price_per_unit || 0);
+                    const price = Number(item.price_per_unit || 0);
                       const units = item.units_in_package || 0;
                       const lowStock = isLowStock(units);
-                      return (
+                    return (
                         <tr 
                           key={item.id} 
                           style={{ 
@@ -743,7 +743,7 @@ const AmmoPage = () => {
                           </td>
                           <td style={{ padding: '0.75rem', position: 'relative' }}>
                             <div className="action-menu-container" style={{ position: 'relative' }}>
-                              <button
+                          <button
                                 onClick={() => setActiveMenuId(activeMenuId === item.id ? null : item.id)}
                                 style={{
                                   background: 'none',
@@ -772,7 +772,7 @@ const AmmoPage = () => {
                                   }}
                                 >
                                   <div
-                                    onClick={() => handleAddQuantity(item.id)}
+                            onClick={() => handleAddQuantity(item.id)}
                                     style={{
                                       padding: '0.75rem 1rem',
                                       cursor: 'pointer',
@@ -781,11 +781,11 @@ const AmmoPage = () => {
                                     }}
                                     onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
                                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                                  >
-                                    Dodaj ilość
+                          >
+                            Dodaj ilość
                                   </div>
                                   <div
-                                    onClick={() => handleDelete(item.id)}
+                            onClick={() => handleDelete(item.id)}
                                     style={{
                                       padding: '0.75rem 1rem',
                                       cursor: 'pointer',
@@ -793,19 +793,19 @@ const AmmoPage = () => {
                                     }}
                                     onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
                                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                                  >
-                                    Usuń
+                          >
+                            Usuń
                                   </div>
                                 </div>
                               )}
                             </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
               
               {/* Paginacja */}
               {totalPages > 1 && (

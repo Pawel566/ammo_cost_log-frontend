@@ -60,6 +60,25 @@ const AddShootingSessionPage = () => {
       const selectedAmmo = session.ammo_id ? ammoItems.find(a => a.id === session.ammo_id) : null;
       const pricePerUnit = selectedAmmo ? selectedAmmo.price_per_unit.toFixed(2).replace('.', ',') + ' zł' : '';
       
+      // Oblicz koszt stały: session.cost to suma kosztu stałego + (shots * price_per_unit)
+      // Musimy odjąć koszt amunicji od całkowitego kosztu, aby uzyskać tylko koszt stały
+      let fixedCost = '';
+      if (session.cost && selectedAmmo && session.shots) {
+        const totalCost = parseFloat(session.cost);
+        const ammoCost = session.shots * selectedAmmo.price_per_unit;
+        const fixedCostValue = totalCost - ammoCost;
+        // Jeśli koszt stały jest <= 0, ustawiamy na pusty string (będzie wyświetlane jako 0)
+        if (fixedCostValue > 0) {
+          fixedCost = fixedCostValue.toFixed(2).replace('.', ',');
+        }
+      } else if (session.cost) {
+        // Jeśli nie ma amunicji lub shots, ale jest koszt, może to być tylko koszt stały
+        const totalCost = parseFloat(session.cost);
+        if (totalCost > 0) {
+          fixedCost = totalCost.toFixed(2).replace('.', ',');
+        }
+      }
+      
       // Konwersja dystansu z metrów na jednostki użytkownika
       let distanceDisplay = '';
       if (session.distance_m) {
@@ -74,14 +93,14 @@ const AddShootingSessionPage = () => {
           distanceDisplay = `${distanceInMeters} m`;
         }
       }
-
+      
       setFormData({
         gun_id: session.gun_id || '',
         ammo_id: session.ammo_id || '',
         date: session.date || new Date().toISOString().split('T')[0],
         notes: session.notes || '',
         include_cost: !!session.cost,
-        cost: session.cost ? parseFloat(session.cost).toFixed(2).replace('.', ',') : '',
+        cost: fixedCost,
         quantity: session.shots ? session.shots.toString() : '',
         price_per_unit: pricePerUnit,
         include_accuracy: !!(session.distance_m || session.hits !== null),
@@ -219,7 +238,7 @@ const AddShootingSessionPage = () => {
     else if (formData.quantity) {
       shots = parseInt(formData.quantity, 10);
     }
-
+    
     if (!shots || shots <= 0) {
       setError("Liczba strzałów musi być większa od 0");
       return;
@@ -255,8 +274,8 @@ const AddShootingSessionPage = () => {
       } else {
         distanceInMeters = parseInt(distanceStr.replace(' m', '').trim(), 10);
         if (isNaN(distanceInMeters) || distanceInMeters <= 0) {
-          setError('Dystans musi być większy od 0');
-          return;
+        setError('Dystans musi być większy od 0');
+        return;
         }
       }
     }
@@ -274,11 +293,14 @@ const AddShootingSessionPage = () => {
       // 1. Jeśli zaznaczono "Dodaj koszty" - użyj pól kosztowych (ale zawsze używaj shots, nie quantity)
       // 2. Jeśli NIE zaznaczono "Dodaj koszty" - nie wysyłaj cost (backend obliczy automatycznie na podstawie shots i price_per_unit)
       if (formData.include_cost) {
-        const costValue = parseFloat(formData.cost.replace(',', '.').replace(' zł', '').trim()) || 0;
+        // baseCost to koszt stały (np. opłata za tor) - tylko wartość z pola cost
+        const baseCost = parseFloat(formData.cost.replace(',', '.').replace(' zł', '').trim()) || 0;
+        // price to cena za sztukę amunicji
         const price = parseFloat(formData.price_per_unit.replace(',', '.').replace(' zł', '').trim()) || 0;
         
-        if (costValue > 0 || price > 0) {
-          sessionData.cost = costValue + (shots * price);
+        // sessionData.cost = baseCost (koszt stały) + (shots * price) (koszt amunicji)
+        if (baseCost > 0 || price > 0) {
+          sessionData.cost = baseCost + (shots * price);
         }
       }
 
