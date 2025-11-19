@@ -86,8 +86,6 @@ const AddShootingSessionPage = () => {
 
   useEffect(() => {
     if (formData.include_cost && formData.price_per_unit) {
-      // Zawsze używaj shots (wartość z pola "Liczba strzałów") × cena za sztukę
-      // shots ma priorytet, quantity tylko jako fallback gdy shots nie jest wypełnione
       let shotsValue = 0;
       if (formData.shots) {
         shotsValue = parseFloat(formData.shots);
@@ -104,9 +102,7 @@ const AddShootingSessionPage = () => {
     }
   }, [formData.quantity, formData.shots, formData.price_per_unit, formData.cost, formData.include_cost]);
 
-  // Synchronizacja liczby strzałów między sekcjami celności i kosztów
   useEffect(() => {
-    // Jeśli zaznaczono celność i wpisano strzały, a potem zaznaczono koszty, ustaw ilość sztuk
     if (formData.include_accuracy && formData.shots && formData.include_cost) {
       if (!formData.quantity || formData.quantity === '') {
         setFormData(prev => ({ ...prev, quantity: prev.shots }));
@@ -237,14 +233,10 @@ const AddShootingSessionPage = () => {
         const costValue = parseFloat(formData.cost.replace(',', '.').replace(' zł', '').trim()) || 0;
         const price = parseFloat(formData.price_per_unit.replace(',', '.').replace(' zł', '').trim()) || 0;
         
-        // Zawsze używaj shots (nie quantity) - bo to ta sama sesja, płacimy tylko raz
-        // Jeśli użytkownik wypełnił przynajmniej jedno pole kosztowe, oblicz koszt
         if (costValue > 0 || price > 0) {
           sessionData.cost = costValue + (shots * price);
         }
-        // Jeśli żadne pole nie jest wypełnione, nie wysyłaj cost - backend obliczy automatycznie
       }
-      // Jeśli include_cost jest false, nie wysyłaj cost - backend automatycznie obliczy na podstawie shots i price_per_unit
 
       if (formData.include_accuracy) {
         sessionData.distance_m = parseInt(formData.distance_m.replace(' m', '').trim(), 10);

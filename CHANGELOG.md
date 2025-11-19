@@ -1,6 +1,20 @@
 # Changelog
 
-## [0.3.1] – 2025-01-X
+## [0.3.5] – 2025-01-XX
+### Dodano
+- Strona zarządzania kontem użytkownika (AccountPage)
+- Panel konserwacji broni (MaintenancePage)
+- Strona ustawień użytkownika (SettingsPage)
+- Zarządzanie wyposażeniem i akcesoriami do broni
+- Strona sesji strzeleckich (ShootingSessionsPage)
+- Strona dodawania sesji strzeleckich (AddShootingSessionPage)
+- Strona "Moja broń" (MyWeaponsPage)
+
+### Zmieniono
+- Rozszerzona funkcjonalność zarządzania sprzętem strzeleckim
+- Ulepszona nawigacja między sekcjami aplikacji
+
+## [0.3.1] – 2025-01-XX
 ### Dodano
 - Pełny system autoryzacji z AuthContext (logowanie, rejestracja, wylogowanie)
 - Strony Login i Register z formularzami
@@ -29,12 +43,4 @@
 - Dodano warstwę serwisową (`app/services/`) – logika przeniesiona z routerów
 - Ulepszona obsługa błędów z backendu
 - Poprawiono strukturę projektu (routery = routing, serwisy = logika)
-
-
-## [0.2.0] – 2025-11-05
-### Zmieniono
-- Dodano warstwę serwisową (`app/services/`) – logika przeniesiona z routerów
-- Ulepszona obsługa błędów z backendu
-- Poprawiono strukturę projektu (routery = routing, serwisy = logika)
-
 
