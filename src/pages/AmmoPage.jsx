@@ -292,14 +292,24 @@ const AmmoPage = () => {
               color: 'white',
               borderRadius: '4px',
               display: 'flex',
-              alignItems: 'center',
+              alignItems: 'flex-start',
               gap: '0.5rem'
             }}
           >
             <span style={{ fontSize: '1.2rem' }}>⚠️</span>
-            <span>
-              <strong>Ostrzeżenie:</strong> {lowStockItems.length} {lowStockItems.length === 1 ? 'amunicja ma' : 'amunicje mają'} mniej niż 20 sztuk
-            </span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>
+                Ostrzeżenie: Niska ilość amunicji
+              </div>
+              <div style={{ fontSize: '0.9rem' }}>
+                {lowStockItems.map((item, index) => (
+                  <span key={item.id}>
+                    {item.name} ({item.units_in_package || 0} szt.)
+                    {index < lowStockItems.length - 1 && ', '}
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
         )}
 
@@ -587,6 +597,7 @@ const AmmoPage = () => {
                       <th style={{ padding: '0.75rem', textAlign: 'left', color: '#aaa', fontWeight: 'normal' }}>Kaliber</th>
                       <th style={{ padding: '0.75rem', textAlign: 'left', color: '#aaa', fontWeight: 'normal' }}>Cena / szt.</th>
                       <th style={{ padding: '0.75rem', textAlign: 'left', color: '#aaa', fontWeight: 'normal' }}>Typ</th>
+                      <th style={{ padding: '0.75rem', textAlign: 'left', color: '#aaa', fontWeight: 'normal' }}>Dostępna ilość</th>
                       <th style={{ padding: '0.75rem', textAlign: 'left', color: '#aaa', fontWeight: 'normal' }}></th>
                     </tr>
                   </thead>
@@ -607,6 +618,13 @@ const AmmoPage = () => {
                           <td style={{ padding: '0.75rem' }}>{item.caliber || '-'}</td>
                           <td style={{ padding: '0.75rem' }}>{price.toFixed(2).replace('.', ',')} zł</td>
                           <td style={{ padding: '0.75rem' }}>{getAmmoTypeLabel(item.type)}</td>
+                          <td style={{ 
+                            padding: '0.75rem',
+                            color: lowStock ? '#ff9800' : 'inherit',
+                            fontWeight: lowStock ? 'bold' : 'normal'
+                          }}>
+                            {units} szt.
+                          </td>
                           <td style={{ padding: '0.75rem', position: 'relative' }}>
                             <div className="action-menu-container" style={{ position: 'relative' }}>
                               <button
