@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.3.5] – 2025-01-XX
+## [0.3.5] – 2025-11-17
 ### Dodano
 - Strona zarządzania kontem użytkownika (AccountPage)
 - Panel konserwacji broni (MaintenancePage)
@@ -14,7 +14,7 @@
 - Rozszerzona funkcjonalność zarządzania sprzętem strzeleckim
 - Ulepszona nawigacja między sekcjami aplikacji
 
-## [0.3.1] – 2025-01-XX
+## [0.3.1] – 2025-11-XX
 ### Dodano
 - Pełny system autoryzacji z AuthContext (logowanie, rejestracja, wylogowanie)
 - Strony Login i Register z formularzami

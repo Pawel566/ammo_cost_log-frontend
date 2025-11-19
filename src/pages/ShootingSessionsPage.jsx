@@ -13,6 +13,10 @@ const ShootingSessionsPage = () => {
   const [filterType, setFilterType] = useState('');
   const [filterValue, setFilterValue] = useState('');
   const [openMenuId, setOpenMenuId] = useState(null);
+  
+  // Sortowanie
+  const [sortColumn, setSortColumn] = useState(null);
+  const [sortDirection, setSortDirection] = useState('asc'); // 'asc' lub 'desc'
 
   useEffect(() => {
     fetchData();
@@ -20,7 +24,7 @@ const ShootingSessionsPage = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [filterType, filterValue, sessions]);
+  }, [filterType, filterValue, sessions, sortColumn, sortDirection]);
 
   const fetchData = async () => {
     try {
@@ -50,34 +54,102 @@ const ShootingSessionsPage = () => {
   };
 
   const applyFilters = () => {
-    if (!filterType || !filterValue) {
-      setFilteredSessions(sessions);
-      return;
+    let filtered = [...sessions];
+    
+    // Filtrowanie
+    if (filterType && filterValue) {
+      filtered = filtered.filter(session => {
+        const value = filterValue.toLowerCase();
+        switch (filterType) {
+          case 'gun':
+            const gun = guns.find(g => g.id === session.gun_id);
+            return gun && gun.name.toLowerCase().includes(value);
+          case 'ammo':
+            const ammoItem = ammo.find(a => a.id === session.ammo_id);
+            return ammoItem && ammoItem.name.toLowerCase().includes(value);
+          case 'date':
+            return new Date(session.date).toLocaleDateString('pl-PL').includes(value);
+          case 'cost':
+            return session.cost && session.cost.toString().includes(value);
+          case 'distance':
+            return session.distance_m && session.distance_m.toString().includes(value);
+          case 'accuracy':
+            return session.accuracy_percent && session.accuracy_percent.toString().includes(value);
+          default:
+            return true;
+        }
+      });
     }
 
-    const filtered = sessions.filter(session => {
-      const value = filterValue.toLowerCase();
-      switch (filterType) {
-        case 'gun':
-          const gun = guns.find(g => g.id === session.gun_id);
-          return gun && gun.name.toLowerCase().includes(value);
-        case 'ammo':
-          const ammoItem = ammo.find(a => a.id === session.ammo_id);
-          return ammoItem && ammoItem.name.toLowerCase().includes(value);
-        case 'date':
-          return new Date(session.date).toLocaleDateString('pl-PL').includes(value);
-        case 'cost':
-          return session.cost && session.cost.toString().includes(value);
-        case 'distance':
-          return session.distance_m && session.distance_m.toString().includes(value);
-        case 'accuracy':
-          return session.accuracy_percent && session.accuracy_percent.toString().includes(value);
-        default:
-          return true;
-      }
-    });
+    // Sortowanie
+    if (sortColumn) {
+      filtered.sort((a, b) => {
+        let aValue, bValue;
+        
+        switch (sortColumn) {
+          case 'date':
+            aValue = new Date(a.date);
+            bValue = new Date(b.date);
+            return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+          case 'gun':
+            const gunA = guns.find(g => g.id === a.gun_id);
+            const gunB = guns.find(g => g.id === b.gun_id);
+            aValue = gunA ? gunA.name.toLowerCase() : '';
+            bValue = gunB ? gunB.name.toLowerCase() : '';
+            break;
+          case 'ammo':
+            const ammoA = ammo.find(am => am.id === a.ammo_id);
+            const ammoB = ammo.find(am => am.id === b.ammo_id);
+            aValue = ammoA ? ammoA.name.toLowerCase() : '';
+            bValue = ammoB ? ammoB.name.toLowerCase() : '';
+            break;
+          case 'shots':
+            aValue = a.shots || 0;
+            bValue = b.shots || 0;
+            return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+          case 'cost':
+            aValue = a.cost || 0;
+            bValue = b.cost || 0;
+            return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+          case 'distance':
+            aValue = a.distance_m || 0;
+            bValue = b.distance_m || 0;
+            return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+          case 'hits':
+            aValue = a.hits !== null && a.hits !== undefined ? a.hits : 0;
+            bValue = b.hits !== null && b.hits !== undefined ? b.hits : 0;
+            return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+          case 'accuracy':
+            aValue = a.accuracy_percent !== null && a.accuracy_percent !== undefined ? a.accuracy_percent : 0;
+            bValue = b.accuracy_percent !== null && b.accuracy_percent !== undefined ? b.accuracy_percent : 0;
+            return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+          default:
+            aValue = String(a[sortColumn] || '').toLowerCase();
+            bValue = String(b[sortColumn] || '').toLowerCase();
+        }
+        
+        // Sortowanie tekstowe
+        if (typeof aValue === 'string' && typeof bValue === 'string') {
+          if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+          if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+        }
+        
+        return 0;
+      });
+    }
 
     setFilteredSessions(filtered);
+  };
+
+  const handleSort = (column) => {
+    if (sortColumn === column) {
+      // Zmień kierunek sortowania
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Ustaw nową kolumnę i domyślny kierunek
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
   };
 
   const getGunName = (gunId) => {
@@ -191,16 +263,104 @@ const ShootingSessionsPage = () => {
               <table className="table">
                 <thead>
                   <tr>
-                    <th>Data</th>
-                    <th>Broń</th>
-                    <th>Amunicja</th>
-                    <th>Strzały</th>
-                    <th>Koszt</th>
-                    <th>Dystans</th>
-                    <th>Trafienia</th>
-                    <th>Celność %</th>
-                    <th>Notatki</th>
-                    <th style={{ width: '50px' }}></th>
+                    <th 
+                      style={{ 
+                        cursor: 'pointer',
+                        userSelect: 'none',
+                        padding: '0.75rem'
+                      }}
+                      onClick={() => handleSort('date')}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    >
+                      Data
+                    </th>
+                    <th 
+                      style={{ 
+                        cursor: 'pointer',
+                        userSelect: 'none',
+                        padding: '0.75rem'
+                      }}
+                      onClick={() => handleSort('gun')}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    >
+                      Broń
+                    </th>
+                    <th 
+                      style={{ 
+                        cursor: 'pointer',
+                        userSelect: 'none',
+                        padding: '0.75rem'
+                      }}
+                      onClick={() => handleSort('ammo')}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    >
+                      Amunicja
+                    </th>
+                    <th 
+                      style={{ 
+                        cursor: 'pointer',
+                        userSelect: 'none',
+                        padding: '0.75rem'
+                      }}
+                      onClick={() => handleSort('shots')}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    >
+                      Strzały
+                    </th>
+                    <th 
+                      style={{ 
+                        cursor: 'pointer',
+                        userSelect: 'none',
+                        padding: '0.75rem'
+                      }}
+                      onClick={() => handleSort('cost')}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    >
+                      Koszt
+                    </th>
+                    <th 
+                      style={{ 
+                        cursor: 'pointer',
+                        userSelect: 'none',
+                        padding: '0.75rem'
+                      }}
+                      onClick={() => handleSort('distance')}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    >
+                      Dystans
+                    </th>
+                    <th 
+                      style={{ 
+                        cursor: 'pointer',
+                        userSelect: 'none',
+                        padding: '0.75rem'
+                      }}
+                      onClick={() => handleSort('hits')}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    >
+                      Trafienia
+                    </th>
+                    <th 
+                      style={{ 
+                        cursor: 'pointer',
+                        userSelect: 'none',
+                        padding: '0.75rem'
+                      }}
+                      onClick={() => handleSort('accuracy')}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    >
+                      Celność %
+                    </th>
+                    <th style={{ padding: '0.75rem' }}>Notatki</th>
+                    <th style={{ width: '50px', padding: '0.75rem' }}></th>
                   </tr>
                 </thead>
                 <tbody>

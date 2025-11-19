@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react'; // test123
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { gunsAPI, attachmentsAPI, sessionsAPI, ammoAPI, maintenanceAPI } from '../services/api';
 
 const MyWeaponsPage = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [guns, setGuns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -22,15 +23,32 @@ const MyWeaponsPage = () => {
   });
 
   useEffect(() => {
-    fetchGuns();
-    fetchAmmo();
-    fetchAllMaintenance();
-    fetchAllSessions();
+    const loadData = async () => {
+      await Promise.all([
+        fetchGuns(),
+        fetchAmmo(),
+        fetchAllMaintenance(),
+        fetchAllSessions()
+      ]);
+      
+      // Sprawdź query param po załadowaniu danych
+      const gunIdFromQuery = searchParams.get('gun_id');
+      if (gunIdFromQuery && !expandedGun) {
+        setExpandedGun(gunIdFromQuery);
+      }
+    };
+    
+    loadData();
   }, []);
 
   useEffect(() => {
     if (expandedGun) {
       fetchGunDetails(expandedGun);
+      // Aktualizuj URL bez przeładowania strony tylko jeśli się różni
+      const currentGunId = searchParams.get('gun_id');
+      if (currentGunId !== expandedGun) {
+        setSearchParams({ gun_id: expandedGun }, { replace: true });
+      }
     }
   }, [expandedGun]);
 
@@ -238,6 +256,11 @@ const MyWeaponsPage = () => {
   };
 
   const getGunTypeLabel = (type) => {
+    // Mapowanie starych wartości na nowe
+    if (type === 'Broń krótka') {
+      return 'Pistolet';
+    }
+    
     const labels = {
       pistol: 'Pistolet',
       rifle: 'Karabin',
@@ -370,6 +393,7 @@ const MyWeaponsPage = () => {
                     onClick={() => {
                       if (isExpanded) {
                         setExpandedGun(null);
+                        setSearchParams({}, { replace: true });
                       } else {
                         setExpandedGun(gun.id);
                       }
@@ -426,6 +450,7 @@ const MyWeaponsPage = () => {
                           onClick={(e) => {
                             e.stopPropagation();
                             setExpandedGun(null);
+                            setSearchParams({}, { replace: true });
                           }}
                           style={{ padding: '0.5rem 1rem' }}
                         >
