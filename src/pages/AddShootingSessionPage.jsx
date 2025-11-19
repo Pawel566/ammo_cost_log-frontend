@@ -210,14 +210,18 @@ const AddShootingSessionPage = () => {
     }
 
     let shots = 0;
-    if (formData.include_accuracy && formData.shots) {
+
+    // Najważniejsze: zawsze używaj formData.shots, jeśli istnieje
+    if (formData.shots) {
       shots = parseInt(formData.shots, 10);
-    } else if (formData.include_cost && formData.quantity) {
+    } 
+    // fallback – tylko jeśli ktoś nie wpisał shots a używa costs
+    else if (formData.quantity) {
       shots = parseInt(formData.quantity, 10);
     }
-    
+
     if (!shots || shots <= 0) {
-      setError('Liczba strzałów musi być większa od 0');
+      setError("Liczba strzałów musi być większa od 0");
       return;
     }
 
