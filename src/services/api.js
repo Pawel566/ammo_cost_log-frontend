@@ -22,7 +22,9 @@ function isGuestExpired() {
 
 api.interceptors.request.use((config) => {
   const accessToken = localStorage.getItem('access_token');
-  if (!accessToken) {
+  if (accessToken) {
+    config.headers["Authorization"] = `Bearer ${accessToken}`;
+  } else {
     let guestId = localStorage.getItem(GUEST_ID_KEY);
     let guestExpires = localStorage.getItem(GUEST_EXPIRES_KEY);
     if (!guestId || !guestExpires || isGuestExpired()) {
