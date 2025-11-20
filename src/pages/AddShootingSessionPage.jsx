@@ -303,7 +303,7 @@ const AddShootingSessionPage = () => {
       } else {
         const response = await sessionsAPI.createSession(sessionData);
         
-        if (response.data.remaining_ammo !== undefined) {
+        if (response.data && response.data.remaining_ammo !== undefined) {
           alert(`Pozostało ${response.data.remaining_ammo} sztuk amunicji`);
         }
         

@@ -107,23 +107,15 @@ const MyWeaponsPage = () => {
   const fetchAllSessions = async () => {
     try {
       const response = await sessionsAPI.getAll({ limit: 1000 });
-      const sessionsData = response.data || {};
-      const costSessions = sessionsData.cost_sessions?.items || [];
-      const accuracySessions = sessionsData.accuracy_sessions?.items || [];
+      const allSessions = Array.isArray(response.data) ? response.data : [];
       
       // Grupuj sesje według gun_id
       const sessionsByGun = {};
-      [...costSessions, ...accuracySessions].forEach(session => {
+      allSessions.forEach(session => {
         if (!sessionsByGun[session.gun_id]) {
-          sessionsByGun[session.gun_id] = { cost: [], accuracy: [] };
+          sessionsByGun[session.gun_id] = [];
         }
-        if (session.shots !== undefined) {
-          // To jest cost session
-          sessionsByGun[session.gun_id].cost.push(session);
-        } else {
-          // To jest accuracy session
-          sessionsByGun[session.gun_id].accuracy.push(session);
-        }
+        sessionsByGun[session.gun_id].push(session);
       });
       
       setSessions(sessionsByGun);
@@ -137,15 +129,14 @@ const MyWeaponsPage = () => {
       const [attachmentsRes, maintenanceRes, sessionsRes] = await Promise.all([
         attachmentsAPI.getForGun(gunId).catch(() => ({ data: [] })),
         maintenanceAPI.getForGun(gunId).catch(() => ({ data: [] })),
-        sessionsAPI.getAll({ gun_id: gunId, limit: 100 }).catch(() => ({ data: { cost_sessions: { items: [] }, accuracy_sessions: { items: [] } } }))
+        sessionsAPI.getAll({ gun_id: gunId, limit: 100 }).catch(() => ({ data: [] }))
       ]);
       
       setAttachments({ ...attachments, [gunId]: attachmentsRes.data || [] });
       setMaintenance({ ...maintenance, [gunId]: maintenanceRes.data || [] });
       
-      const costSessions = sessionsRes.data.cost_sessions?.items || [];
-      const accuracySessions = sessionsRes.data.accuracy_sessions?.items || [];
-      setSessions({ ...sessions, [gunId]: { cost: costSessions, accuracy: accuracySessions } });
+      const gunSessions = Array.isArray(sessionsRes.data) ? sessionsRes.data : [];
+      setSessions({ ...sessions, [gunId]: gunSessions });
     } catch (err) {
       console.error('Błąd pobierania szczegółów broni:', err);
     }
@@ -284,15 +275,13 @@ const MyWeaponsPage = () => {
     if (!lastMaint) return 0;
 
     const gunSessions = sessions[gunId];
-    if (!gunSessions) return 0;
+    if (!gunSessions || !Array.isArray(gunSessions)) return 0;
 
-    // Używamy tylko cost sessions, bo accuracy sessions również tworzą cost sessions
-    const costSessions = gunSessions.cost || [];
     const maintenanceDate = new Date(lastMaint.date);
     
     // Sumuj strzały tylko z sesji po dacie konserwacji
     let totalRounds = 0;
-    costSessions.forEach(session => {
+    gunSessions.forEach(session => {
       const sessionDate = new Date(session.date);
       if (sessionDate >= maintenanceDate) {
         totalRounds += session.shots || 0;
@@ -643,7 +632,7 @@ const MyWeaponsPage = () => {
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                             <h4 style={{ margin: 0 }}>Historia użytkowania</h4>
                           </div>
-                          {sessions[gun.id] && (sessions[gun.id].cost.length > 0 || sessions[gun.id].accuracy.length > 0) ? (
+                          {sessions[gun.id] && Array.isArray(sessions[gun.id]) && sessions[gun.id].length > 0 ? (
                             <div style={{ overflowX: 'auto' }}>
                               <table className="table" style={{ width: '100%' }}>
                                 <thead>
@@ -654,7 +643,7 @@ const MyWeaponsPage = () => {
                                   </tr>
                                 </thead>
                                 <tbody>
-                                  {[...sessions[gun.id].cost, ...sessions[gun.id].accuracy]
+                                  {sessions[gun.id]
                                     .sort((a, b) => new Date(b.date) - new Date(a.date))
                                     .map((session) => {
                                       const sessionAmmo = ammo.find(a => a.id === session.ammo_id);

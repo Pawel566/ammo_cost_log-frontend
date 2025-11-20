@@ -34,8 +34,7 @@ const ShootingSessionsPage = () => {
         gunsAPI.getAll(),
         ammoAPI.getAll()
       ]);
-      const sessionsData = sessionsRes.data?.sessions || {};
-      const allSessions = Array.isArray(sessionsData) ? sessionsData : sessionsData?.items ?? [];
+      const allSessions = Array.isArray(sessionsRes.data) ? sessionsRes.data : [];
       const gunsData = gunsRes.data;
       const ammoData = ammoRes.data;
       const gunItems = Array.isArray(gunsData) ? gunsData : gunsData?.items ?? [];

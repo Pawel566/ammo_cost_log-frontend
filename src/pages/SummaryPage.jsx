@@ -20,8 +20,7 @@ const SummaryPage = () => {
       ]);
       const summaryData = summaryRes.data;
       const summaryItems = Array.isArray(summaryData) ? summaryData : summaryData?.items ?? [];
-      const sessionsData = sessionsRes.data?.sessions || {};
-      const allSessions = Array.isArray(sessionsData) ? sessionsData : sessionsData?.items ?? [];
+      const allSessions = Array.isArray(sessionsRes.data) ? sessionsRes.data : [];
       setSummary(summaryItems);
       setSessions(allSessions);
       setError(null);

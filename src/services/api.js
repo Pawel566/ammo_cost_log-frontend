@@ -70,11 +70,11 @@ export const ammoAPI = {
   addQuantity: (id, amount) => api.post(`/ammo/${id}/add`, { amount })
 };
 
-// Sessions API
+// Sessions API - deprecated, use shootingSessionsAPI instead
 export const sessionsAPI = {
-  getAll: (params) => api.get('/sessions', { params }),
-  createSession: (sessionData) => api.post('/sessions', sessionData),
-  getSummary: () => api.get('/sessions/summary'),
+  getAll: (params) => api.get('/shooting-sessions', { params }),
+  createSession: (sessionData) => api.post('/shooting-sessions', sessionData),
+  getSummary: () => api.get('/shooting-sessions/summary'),
   update: (id, sessionData) => api.patch(`/shooting-sessions/${id}`, sessionData),
   delete: (id) => api.delete(`/shooting-sessions/${id}`),
   getById: (id) => api.get(`/shooting-sessions/${id}`),

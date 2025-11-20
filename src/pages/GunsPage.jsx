@@ -153,20 +153,14 @@ const GunsPage = () => {
   const fetchAllSessions = async () => {
     try {
       const response = await sessionsAPI.getAll({ limit: 1000 });
-      const sessionsData = response.data || {};
-      const costSessions = sessionsData.cost_sessions?.items || [];
-      const accuracySessions = sessionsData.accuracy_sessions?.items || [];
+      const allSessions = Array.isArray(response.data) ? response.data : [];
       
       const sessionsByGun = {};
-      [...costSessions, ...accuracySessions].forEach(session => {
+      allSessions.forEach(session => {
         if (!sessionsByGun[session.gun_id]) {
-          sessionsByGun[session.gun_id] = { cost: [], accuracy: [] };
+          sessionsByGun[session.gun_id] = [];
         }
-        if (session.shots !== undefined) {
-          sessionsByGun[session.gun_id].cost.push(session);
-        } else {
-          sessionsByGun[session.gun_id].accuracy.push(session);
-        }
+        sessionsByGun[session.gun_id].push(session);
       });
       
       setSessions(sessionsByGun);
@@ -241,13 +235,12 @@ const GunsPage = () => {
     if (!lastMaint) return 0;
 
     const gunSessions = sessions[gunId];
-    if (!gunSessions) return 0;
+    if (!gunSessions || !Array.isArray(gunSessions)) return 0;
 
-    const costSessions = gunSessions.cost || [];
     const maintenanceDate = new Date(lastMaint.date);
     
     let totalRounds = 0;
-    costSessions.forEach(session => {
+    gunSessions.forEach(session => {
       const sessionDate = new Date(session.date);
       if (sessionDate >= maintenanceDate) {
         totalRounds += session.shots || 0;
