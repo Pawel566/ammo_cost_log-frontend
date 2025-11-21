@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { sessionsAPI, gunsAPI, ammoAPI } from '../services/api';
+import { shootingSessionsAPI, gunsAPI, ammoAPI } from '../services/api';
 
 const ShootingSessionsPage = () => {
   const navigate = useNavigate();
@@ -30,7 +30,7 @@ const ShootingSessionsPage = () => {
     try {
       setLoading(true);
       const [sessionsRes, gunsRes, ammoRes] = await Promise.all([
-        sessionsAPI.getAll(),
+        shootingSessionsAPI.getAll(),
         gunsAPI.getAll(),
         ammoAPI.getAll()
       ]);
@@ -167,7 +167,7 @@ const ShootingSessionsPage = () => {
     }
 
     try {
-      await sessionsAPI.delete(sessionId);
+      await shootingSessionsAPI.delete(sessionId);
       setSessions(sessions.filter(s => s.id !== sessionId));
       setOpenMenuId(null);
     } catch (err) {

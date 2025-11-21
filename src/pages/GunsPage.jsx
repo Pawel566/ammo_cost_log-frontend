@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { gunsAPI, maintenanceAPI, sessionsAPI } from '../services/api';
+import { gunsAPI, maintenanceAPI, shootingSessionsAPI } from '../services/api';
 
 // Mapowanie rodzajów broni do kalibrów
 const CALIBERS_BY_GUN_TYPE = {
@@ -152,7 +152,7 @@ const GunsPage = () => {
 
   const fetchAllSessions = async () => {
     try {
-      const response = await sessionsAPI.getAll({ limit: 1000 });
+      const response = await shootingSessionsAPI.getAll({ limit: 1000 });
       const allSessions = Array.isArray(response.data) ? response.data : [];
       
       const sessionsByGun = {};

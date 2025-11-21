@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'; // test123
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { gunsAPI, attachmentsAPI, sessionsAPI, ammoAPI, maintenanceAPI } from '../services/api';
+import { gunsAPI, attachmentsAPI, shootingSessionsAPI, ammoAPI, maintenanceAPI } from '../services/api';
 
 const MyWeaponsPage = () => {
   const navigate = useNavigate();
@@ -106,7 +106,7 @@ const MyWeaponsPage = () => {
 
   const fetchAllSessions = async () => {
     try {
-      const response = await sessionsAPI.getAll({ limit: 1000 });
+      const response = await shootingSessionsAPI.getAll({ limit: 1000 });
       const allSessions = Array.isArray(response.data) ? response.data : [];
       
       // Grupuj sesje według gun_id
@@ -129,7 +129,7 @@ const MyWeaponsPage = () => {
       const [attachmentsRes, maintenanceRes, sessionsRes] = await Promise.all([
         attachmentsAPI.getForGun(gunId).catch(() => ({ data: [] })),
         maintenanceAPI.getForGun(gunId).catch(() => ({ data: [] })),
-        sessionsAPI.getAll({ gun_id: gunId, limit: 100 }).catch(() => ({ data: [] }))
+        shootingSessionsAPI.getAll({ gun_id: gunId, limit: 100 }).catch(() => ({ data: [] }))
       ]);
       
       setAttachments({ ...attachments, [gunId]: attachmentsRes.data || [] });

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { sessionsAPI, gunsAPI, ammoAPI, settingsAPI } from '../services/api';
+import { shootingSessionsAPI, gunsAPI, ammoAPI, settingsAPI } from '../services/api';
 
 const AddShootingSessionPage = () => {
   const navigate = useNavigate();
@@ -50,7 +50,7 @@ const AddShootingSessionPage = () => {
     try {
       setLoading(true);
       const [sessionRes, ammoRes] = await Promise.all([
-        sessionsAPI.getById(id),
+        shootingSessionsAPI.getById(id),
         ammoAPI.getAll()
       ]);
       const session = sessionRes.data;
@@ -266,9 +266,12 @@ const AddShootingSessionPage = () => {
         gun_id: formData.gun_id,
         ammo_id: formData.ammo_id,
         date: formData.date,
-        shots: shots,
-        notes: formData.notes || null
+        shots: Number(shots),
       };
+
+      if (formData.notes && formData.notes.trim()) {
+        sessionData.notes = formData.notes.trim();
+      }
 
       // Koszt jest liczony tylko raz:
       // 1. Jeśli zaznaczono "Dodaj koszty" - użyj pól kosztowych (ale zawsze używaj shots, nie quantity)
@@ -278,7 +281,7 @@ const AddShootingSessionPage = () => {
         const price = parseFloat(formData.price_per_unit.replace(',', '.').replace(' zł', '').trim()) || 0;
         
         if (costValue > 0 || price > 0) {
-          sessionData.cost = costValue + (shots * price);
+          sessionData.cost = Number((costValue + (shots * price)).toFixed(2));
         }
       }
 
@@ -289,19 +292,22 @@ const AddShootingSessionPage = () => {
         if (distanceUnit === 'yd') {
           const distanceInYards = parseFloat(distanceStr.replace(' yd', '').trim());
           // Konwersja jardów na metry: 1 yd = 0.9144 m
-          distanceInMeters = Math.round(distanceInYards * 0.9144);
+          distanceInMeters = Number((distanceInYards * 0.9144).toFixed(2));
         } else {
-          distanceInMeters = parseInt(distanceStr.replace(' m', '').trim(), 10);
+          distanceInMeters = Number(parseFloat(distanceStr.replace(' m', '').trim()).toFixed(2));
         }
         sessionData.distance_m = distanceInMeters;
-        sessionData.hits = parseInt(formData.hits, 10);
+        const hitsValue = parseInt(formData.hits, 10);
+        if (!isNaN(hitsValue)) {
+          sessionData.hits = Number(hitsValue);
+        }
       }
       
       if (isEditMode) {
-        await sessionsAPI.update(id, sessionData);
+        await shootingSessionsAPI.update(id, sessionData);
         navigate('/shooting-sessions');
       } else {
-        const response = await sessionsAPI.createSession(sessionData);
+        const response = await shootingSessionsAPI.create(sessionData);
         
         if (response.data && response.data.remaining_ammo !== undefined) {
           alert(`Pozostało ${response.data.remaining_ammo} sztuk amunicji`);
