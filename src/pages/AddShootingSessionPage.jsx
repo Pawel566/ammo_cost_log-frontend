@@ -85,7 +85,7 @@ const AddShootingSessionPage = () => {
         quantity: session.shots ? session.shots.toString() : '',
         price_per_unit: pricePerUnit,
         include_accuracy: !!(session.distance_m || session.hits !== null),
-        distance_m: distanceDisplay,
+        distance_m: distanceDisplay || '',
         shots: session.shots ? session.shots.toString() : '',
         hits: session.hits !== null && session.hits !== undefined ? session.hits.toString() : ''
       });
@@ -196,6 +196,11 @@ const AddShootingSessionPage = () => {
     return '0,00';
   };
 
+  const normalize = (v) => {
+    if (v === "" || v === null || v === undefined) return null;
+    return v;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -301,10 +306,30 @@ const AddShootingSessionPage = () => {
         if (!isNaN(hitsValue)) {
           sessionData.hits = Number(hitsValue);
         }
+      } else {
+        // Jeśli nie zaznaczono celności, wyślij null dla distance_m i hits
+        sessionData.distance_m = null;
+        sessionData.hits = null;
       }
       
       if (isEditMode) {
-        await shootingSessionsAPI.update(id, sessionData);
+        // W trybie edycji zawsze wysyłaj pola, które mogą być wyczyszczone
+        const normalizedData = {
+          date: sessionData.date,
+          shots: sessionData.shots,
+          distance_m: normalize(sessionData.distance_m),
+          hits: normalize(sessionData.hits),
+          cost: normalize(sessionData.cost),
+          notes: normalize(sessionData.notes || '')
+        };
+        // Tylko dodaj gun_id i ammo_id jeśli zostały zmienione
+        if (sessionData.gun_id) {
+          normalizedData.gun_id = sessionData.gun_id;
+        }
+        if (sessionData.ammo_id) {
+          normalizedData.ammo_id = sessionData.ammo_id;
+        }
+        await shootingSessionsAPI.update(id, normalizedData);
         navigate('/shooting-sessions');
       } else {
         const response = await shootingSessionsAPI.create(sessionData);
