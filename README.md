@@ -25,7 +25,7 @@ npm run dev
 **Wymagania**: Backend uruchomiony na porcie 8000
 
 ## 📱 Strony aplikacji
-
+d
 - **Strona główna** (`/`) - opis aplikacji i nawigacja
 - **Broń** (`/guns`) - zarządzanie bronią
 - **Moja broń** (`/my-weapons`) - przegląd posiadanej broni

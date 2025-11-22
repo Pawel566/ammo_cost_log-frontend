@@ -22,7 +22,9 @@ function isGuestExpired() {
 
 api.interceptors.request.use((config) => {
   const accessToken = localStorage.getItem('access_token');
-  if (!accessToken) {
+  if (accessToken) {
+    config.headers["Authorization"] = `Bearer ${accessToken}`;
+  } else {
     let guestId = localStorage.getItem(GUEST_ID_KEY);
     let guestExpires = localStorage.getItem(GUEST_EXPIRES_KEY);
     if (!guestId || !guestExpires || isGuestExpired()) {
@@ -68,11 +70,11 @@ export const ammoAPI = {
   addQuantity: (id, amount) => api.post(`/ammo/${id}/add`, { amount })
 };
 
-// Sessions API
+// Sessions API - deprecated, use shootingSessionsAPI instead
 export const sessionsAPI = {
-  getAll: (params) => api.get('/sessions', { params }),
-  createSession: (sessionData) => api.post('/sessions', sessionData),
-  getSummary: () => api.get('/sessions/summary'),
+  getAll: (params) => api.get('/shooting-sessions', { params }),
+  createSession: (sessionData) => api.post('/shooting-sessions', sessionData),
+  getSummary: () => api.get('/shooting-sessions/summary'),
   update: (id, sessionData) => api.patch(`/shooting-sessions/${id}`, sessionData),
   delete: (id) => api.delete(`/shooting-sessions/${id}`),
   getById: (id) => api.get(`/shooting-sessions/${id}`),
@@ -80,11 +82,12 @@ export const sessionsAPI = {
 
 // Shooting Sessions API
 export const shootingSessionsAPI = {
-  getAll: () => api.get('/shooting-sessions'),
+  getAll: (params) => api.get('/shooting-sessions', { params }),
   getById: (id) => api.get(`/shooting-sessions/${id}`),
   create: (sessionData) => api.post('/shooting-sessions', sessionData),
   update: (id, sessionData) => api.patch(`/shooting-sessions/${id}`, sessionData),
   delete: (id) => api.delete(`/shooting-sessions/${id}`),
+  getSummary: () => api.get('/shooting-sessions/summary'),
 };
 
 

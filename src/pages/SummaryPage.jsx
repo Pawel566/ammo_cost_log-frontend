@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { sessionsAPI } from '../services/api';
+import { shootingSessionsAPI } from '../services/api';
 
 const SummaryPage = () => {
   const [summary, setSummary] = useState([]);
@@ -15,13 +15,12 @@ const SummaryPage = () => {
     try {
       setLoading(true);
       const [summaryRes, sessionsRes] = await Promise.all([
-        sessionsAPI.getSummary(),
-        sessionsAPI.getAll()
+        shootingSessionsAPI.getSummary(),
+        shootingSessionsAPI.getAll()
       ]);
       const summaryData = summaryRes.data;
       const summaryItems = Array.isArray(summaryData) ? summaryData : summaryData?.items ?? [];
-      const sessionsData = sessionsRes.data?.sessions || {};
-      const allSessions = Array.isArray(sessionsData) ? sessionsData : sessionsData?.items ?? [];
+      const allSessions = Array.isArray(sessionsRes.data) ? sessionsRes.data : [];
       setSummary(summaryItems);
       setSessions(allSessions);
       setError(null);
