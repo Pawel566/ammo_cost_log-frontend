@@ -73,6 +73,7 @@ const GunsPage = () => {
   const [filteredGuns, setFilteredGuns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [maintenance, setMaintenance] = useState({});
@@ -341,11 +342,15 @@ const GunsPage = () => {
         notes: formData.notes || null
       };
       
+      let gunName = formData.name;
+      let gunType = formData.type || '';
       if (editingId) {
         await gunsAPI.update(editingId, gunData);
         setEditingId(null);
+        setSuccess(`${gunType ? gunType + ' ' : ''}${gunName} zaktualizowany!`);
       } else {
         await gunsAPI.create(gunData);
+        setSuccess(`${gunType ? gunType + ' ' : ''}${gunName} dodany!`);
       }
       
       setFormData({ name: '', caliber: '', caliberCustom: '', type: '', notes: '' });
@@ -353,6 +358,7 @@ const GunsPage = () => {
       setShowForm(false);
       setError(null);
       fetchGuns();
+      setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       setError(err.response?.data?.detail || 'Błąd podczas zapisywania broni');
       console.error(err);
@@ -390,11 +396,18 @@ const GunsPage = () => {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Czy na pewno chcesz usunąć tę broń?')) {
+    const gunToDelete = guns.find(g => g.id === id);
+    const gunName = gunToDelete ? gunToDelete.name : '';
+    const gunType = gunToDelete ? (gunToDelete.type || '') : '';
+    const gunDisplayName = `${gunType ? gunType + ' ' : ''}${gunName}`;
+    
+    if (window.confirm(`Czy na pewno chcesz usunąć ${gunDisplayName}?`)) {
       try {
         await gunsAPI.delete(id);
+        setSuccess(`${gunType ? gunType + ' ' : ''}${gunName} usunięty!`);
         fetchGuns();
         setActiveMenuId(null);
+        setTimeout(() => setSuccess(null), 3000);
       } catch (err) {
         setError(err.response?.data?.detail || 'Błąd podczas usuwania broni');
         console.error(err);
@@ -465,6 +478,12 @@ const GunsPage = () => {
         {error && (
           <div className="alert alert-danger" style={{ marginBottom: '1rem' }}>
             {error}
+          </div>
+        )}
+
+        {success && (
+          <div className="alert alert-success" style={{ marginBottom: '1rem' }}>
+            {success}
           </div>
         )}
 

@@ -42,6 +42,7 @@ const AmmoPage = () => {
   const [filteredAmmo, setFilteredAmmo] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -206,7 +207,9 @@ const AmmoPage = () => {
       setUseCustomCaliber(false);
       setShowForm(false);
       setError(null);
+      setSuccess(`Amunicja ${formData.name} dodana!`);
       fetchAmmo();
+      setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       setError(err.response?.data?.detail || 'Błąd podczas dodawania amunicji');
       console.error(err);
@@ -214,11 +217,16 @@ const AmmoPage = () => {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Czy na pewno chcesz usunąć tę amunicję?')) {
+    const ammoToDelete = ammo.find(a => a.id === id);
+    const ammoName = ammoToDelete ? ammoToDelete.name : '';
+    
+    if (window.confirm(`Czy na pewno chcesz usunąć amunicję ${ammoName}?`)) {
       try {
         await ammoAPI.delete(id);
+        setSuccess(`Amunicja ${ammoName} usunięta!`);
         fetchAmmo();
         setActiveMenuId(null);
+        setTimeout(() => setSuccess(null), 3000);
       } catch (err) {
         setError(err.response?.data?.detail || 'Błąd podczas usuwania amunicji');
         console.error(err);
@@ -326,6 +334,12 @@ const AmmoPage = () => {
         {error && (
           <div className="alert alert-danger" style={{ marginBottom: '1rem' }}>
             {error}
+          </div>
+        )}
+
+        {success && (
+          <div className="alert alert-success" style={{ marginBottom: '1rem' }}>
+            {success}
           </div>
         )}
 
