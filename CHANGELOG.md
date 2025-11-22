@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.3.7.1] – 2025-01-XX
+### Naprawiono
+- Naprawiono błędy związane z edycją i usuwaniem sesji strzeleckich
+- Poprawiono obsługę błędów 422 przy PATCH sesji
+- Naprawiono problemy z serializacją odpowiedzi z backendu
+
+### Zmieniono
+- Zaktualizowano integrację z nowymi endpointami sesji strzeleckich
+- Ujednolicono format danych wysyłanych do backendu (date jako string ISO, distance_m jako float)
+
 ## [0.3.5] – 2025-11-17
 ### Dodano
 - Strona zarządzania kontem użytkownika (AccountPage)
