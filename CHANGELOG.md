@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.3.7.1] – 2025-01-XX
+## [0.3.7.1] – 2025-11-22
 ### Naprawiono
 - Naprawiono błędy związane z edycją i usuwaniem sesji strzeleckich
 - Poprawiono obsługę błędów 422 przy PATCH sesji
