@@ -10,6 +10,7 @@ const AddShootingSessionPage = () => {
   const [ammo, setAmmo] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
   const [distanceUnit, setDistanceUnit] = useState('m');
   const [formData, setFormData] = useState({
     gun_id: '',
@@ -306,11 +307,8 @@ const AddShootingSessionPage = () => {
         // price to cena za sztukę amunicji
         const price = parseFloat(formData.price_per_unit.replace(',', '.').replace(' zł', '').trim()) || 0;
         
-
-
-        if (costValue > 0 || price > 0) {
-          sessionData.cost = Number((costValue + (shots * price)).toFixed(2));
-       
+        if (baseCost > 0 || price > 0) {
+          sessionData.cost = Number((baseCost + (shots * price)).toFixed(2));
         }
       }
 
@@ -336,6 +334,10 @@ const AddShootingSessionPage = () => {
         sessionData.hits = null;
       }
       
+      const selectedGun = guns.find(g => g.id === formData.gun_id);
+      const gunName = selectedGun ? selectedGun.name : '';
+      const gunType = selectedGun ? (selectedGun.type || '') : '';
+      
       if (isEditMode) {
         // W trybie edycji zawsze wysyłaj pola, które mogą być wyczyszczone
         const normalizedData = {
@@ -354,15 +356,22 @@ const AddShootingSessionPage = () => {
           normalizedData.ammo_id = sessionData.ammo_id;
         }
         await shootingSessionsAPI.update(id, normalizedData);
-        navigate('/shooting-sessions');
+        setSuccess(`Sesja dla ${gunType ? gunType + ' ' : ''}${gunName} zaktualizowana!`);
+        setTimeout(() => {
+          navigate('/shooting-sessions');
+        }, 1500);
       } else {
         const response = await shootingSessionsAPI.create(sessionData);
         
+        let successMessage = `Sesja dla ${gunType ? gunType + ' ' : ''}${gunName} dodana!`;
         if (response.data && response.data.remaining_ammo !== undefined) {
-          alert(`Pozostało ${response.data.remaining_ammo} sztuk amunicji`);
+          successMessage += ` Pozostało ${response.data.remaining_ammo} sztuk amunicji.`;
         }
+        setSuccess(successMessage);
         
-        navigate('/shooting-sessions');
+        setTimeout(() => {
+          navigate('/shooting-sessions');
+        }, 3000);
       }
     } catch (err) {
       setError(err.response?.data?.detail || 'Błąd podczas dodawania sesji');
@@ -386,6 +395,12 @@ const AddShootingSessionPage = () => {
         {error && (
           <div className="alert alert-danger" style={{ marginBottom: '1rem' }}>
             {error}
+          </div>
+        )}
+
+        {success && (
+          <div className="alert alert-success" style={{ marginBottom: '1rem' }}>
+            {success}
           </div>
         )}
 

@@ -10,6 +10,7 @@ const ShootingSessionsPage = () => {
   const [ammo, setAmmo] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
   const [filterType, setFilterType] = useState('');
   const [filterValue, setFilterValue] = useState('');
   const [openMenuId, setOpenMenuId] = useState(null);
@@ -162,7 +163,13 @@ const ShootingSessionsPage = () => {
   };
 
   const handleDelete = async (sessionId) => {
-    if (!window.confirm('Czy na pewno chcesz usunąć tę sesję?')) {
+    const sessionToDelete = sessions.find(s => s.id === sessionId);
+    const gun = guns.find(g => g.id === sessionToDelete?.gun_id);
+    const gunName = gun ? gun.name : '';
+    const gunType = gun ? (gun.type || '') : '';
+    const gunDisplayName = `${gunType ? gunType + ' ' : ''}${gunName}`;
+    
+    if (!window.confirm(`Czy na pewno chcesz usunąć sesję dla ${gunDisplayName}?`)) {
       return;
     }
 
@@ -170,6 +177,8 @@ const ShootingSessionsPage = () => {
       await shootingSessionsAPI.delete(sessionId);
       setSessions(sessions.filter(s => s.id !== sessionId));
       setOpenMenuId(null);
+      setSuccess(`Sesja dla ${gunType ? gunType + ' ' : ''}${gunName} usunięta!`);
+      setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       setError(err.response?.data?.detail || 'Błąd podczas usuwania sesji');
       console.error(err);
@@ -220,6 +229,12 @@ const ShootingSessionsPage = () => {
         {error && (
           <div className="alert alert-danger" style={{ marginBottom: '1rem' }}>
             {error}
+          </div>
+        )}
+
+        {success && (
+          <div className="alert alert-success" style={{ marginBottom: '1rem' }}>
+            {success}
           </div>
         )}
 
