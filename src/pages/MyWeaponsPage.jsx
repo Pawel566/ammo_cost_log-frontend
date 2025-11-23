@@ -502,21 +502,44 @@ const MyWeaponsPage = () => {
                         <p style={{ margin: '0.25rem 0', color: '#888', fontSize: '0.85rem' }}>
                           {getGunTypeLabel(gun.type)}
                         </p>
-                        <div style={{ fontSize: '0.85rem', color: '#888', marginTop: '0.5rem', display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
-                          {attCount > 0 && (
-                            <span>{attCount} {attCount === 1 ? 'dodatek' : attCount < 5 ? 'dodatki' : 'dodatków'}</span>
-                          )}
-                          {lastMaintenance && (
-                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                              <span style={{ color: '#007bff' }}>
-                                Ostatnia konserwacja: {new Date(lastMaintenance.date).toLocaleDateString('pl-PL')}
+                        <div style={{ fontSize: '0.85rem', color: '#888', marginTop: '0.5rem', display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                            {attCount > 0 && (
+                              <span>{attCount} {attCount === 1 ? 'dodatek' : attCount < 5 ? 'dodatki' : 'dodatków'}</span>
+                            )}
+                            {lastMaintenance && (
+                              <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <span style={{ color: '#007bff' }}>
+                                  Ostatnia konserwacja: {new Date(lastMaintenance.date).toLocaleDateString('pl-PL')}
+                                </span>
+                                <span style={{ color: maintenanceStatus.color, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                  <MaintenanceStatusIcon status={maintenanceStatus.status} />
+                                  {maintenanceStatus.message}
+                                </span>
                               </span>
-                              <span style={{ color: maintenanceStatus.color, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <MaintenanceStatusIcon status={maintenanceStatus.status} />
-                                {maintenanceStatus.message}
-                              </span>
-                            </span>
-                          )}
+                            )}
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setExpandedGun(gun.id);
+                              setEditingMaintenance(null);
+                              setMaintenanceForm({ 
+                                date: new Date().toISOString().split('T')[0], 
+                                notes: '',
+                                activities: []
+                              });
+                              setShowMaintenanceModal(true);
+                            }}
+                            className="btn btn-primary"
+                            style={{ 
+                              padding: '0.5rem 1rem',
+                              fontSize: '0.85rem',
+                              whiteSpace: 'nowrap'
+                            }}
+                          >
+                            + Dodaj konserwację
+                          </button>
                         </div>
                       </div>
                     </div>
