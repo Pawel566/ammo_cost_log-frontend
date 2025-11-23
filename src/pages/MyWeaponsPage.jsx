@@ -348,6 +348,28 @@ const MyWeaponsPage = () => {
     return { status: finalStatus, color, icon, message, rounds, days };
   };
 
+  const getTotalShots = (gunId) => {
+    const gunSessions = sessions[gunId];
+    if (!gunSessions || !Array.isArray(gunSessions)) return 0;
+    return gunSessions.reduce((total, session) => total + (session.shots || 0), 0);
+  };
+
+  const getAverageAccuracy = (gunId) => {
+    const gunSessions = sessions[gunId];
+    if (!gunSessions || !Array.isArray(gunSessions)) return 0;
+    
+    const accuracySessions = gunSessions.filter(s => 
+      s.hits !== null && s.hits !== undefined && s.distance_m
+    );
+    
+    if (accuracySessions.length === 0) return 0;
+    
+    const totalShots = accuracySessions.reduce((sum, session) => sum + (session.shots || 0), 0);
+    const totalHits = accuracySessions.reduce((sum, session) => sum + (session.hits || 0), 0);
+    
+    return totalShots > 0 ? (totalHits / totalShots) * 100 : 0;
+  };
+
   if (loading) {
     return <div className="text-center">Ładowanie...</div>;
   }
@@ -431,255 +453,146 @@ const MyWeaponsPage = () => {
                   </div>
 
                   {isExpanded && (
-                    <div className="card" style={{ marginTop: '0.5rem', marginBottom: '1rem' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                        <h3 style={{ margin: 0 }}>{gun.name}</h3>
+                    <div style={{ marginTop: '0.5rem', marginBottom: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                      {/* Karta identyfikacji broni */}
+                      <div className="card">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                          <div style={{
+                            width: '100px',
+                            height: '100px',
+                            backgroundColor: '#2c2c2c',
+                            borderRadius: '8px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0
+                          }}>
+                            <span style={{ fontSize: '3rem' }}>🔫</span>
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <h3 style={{ margin: 0, marginBottom: '0.5rem', fontSize: '1.5rem', fontWeight: 'bold' }}>
+                              {gun.name}
+                            </h3>
+                            <p style={{ margin: '0.25rem 0', color: '#aaa', fontSize: '1rem' }}>
+                              Kaliber: {gun.caliber || '-'}
+                            </p>
+                            <p style={{ margin: '0.25rem 0', color: '#aaa', fontSize: '1rem' }}>
+                              {getGunTypeLabel(gun.type)}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Karta statystyk */}
+                      <div className="card">
+                        <h3 style={{ margin: 0, marginBottom: '1rem', fontSize: '1.2rem', fontWeight: 'bold' }}>
+                          Statystyki broni
+                        </h3>
+                        <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                          <li style={{ marginBottom: '0.75rem', paddingLeft: '1.5rem', position: 'relative' }}>
+                            <span style={{ position: 'absolute', left: 0 }}>•</span>
+                            Łączna liczba strzałów: {getTotalShots(gun.id)}
+                          </li>
+                          <li style={{ marginBottom: '0.75rem', paddingLeft: '1.5rem', position: 'relative' }}>
+                            <span style={{ position: 'absolute', left: 0 }}>•</span>
+                            Średnia celność: {getAverageAccuracy(gun.id).toFixed(1).replace('.', ',')}%
+                          </li>
+                          <li style={{ marginBottom: '0.75rem', paddingLeft: '1.5rem', position: 'relative' }}>
+                            <span style={{ position: 'absolute', left: 0 }}>•</span>
+                            Ostatnia konserwacja: {lastMaintenance 
+                              ? new Date(lastMaintenance.date).toLocaleDateString('pl-PL')
+                              : 'Brak'}
+                          </li>
+                          <li style={{ marginBottom: '0.75rem', paddingLeft: '1.5rem', position: 'relative' }}>
+                            <span style={{ position: 'absolute', left: 0 }}>•</span>
+                            Strzałów od ostatniej konserwacji: {calculateRoundsSinceLastMaintenance(gun.id)}
+                          </li>
+                          <li style={{ marginBottom: '0.75rem', paddingLeft: '1.5rem', position: 'relative', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <span style={{ position: 'absolute', left: 0 }}>•</span>
+                            Status: <span style={{ 
+                              display: 'inline-block', 
+                              width: '8px', 
+                              height: '8px', 
+                              borderRadius: '50%', 
+                              backgroundColor: maintenanceStatus.color,
+                              marginLeft: '0.25rem'
+                            }}></span> {maintenanceStatus.message}
+                          </li>
+                        </ul>
+                      </div>
+
+                      {/* Karta dodatków */}
+                      <div className="card">
+                        <h3 style={{ margin: 0, marginBottom: '1rem', fontSize: '1.2rem', fontWeight: 'bold' }}>
+                          Dodatki
+                        </h3>
+                        {attachments[gun.id]?.length > 0 ? (
+                          <div style={{ marginBottom: '1rem' }}>
+                            {attachments[gun.id].map((att) => (
+                              <div key={att.id} style={{ marginBottom: '0.5rem' }}>
+                                {getAttachmentTypeLabel(att.type)} - {att.name}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p style={{ color: '#888', marginBottom: '1rem' }}>Brak dodatków</p>
+                        )}
                         <button
-                          className="btn btn-secondary"
                           onClick={(e) => {
                             e.stopPropagation();
-                            setExpandedGun(null);
-                            setSearchParams({}, { replace: true });
+                            setShowAttachmentModal(true);
                           }}
-                          style={{ padding: '0.5rem 1rem' }}
+                          style={{ 
+                            color: '#007bff', 
+                            textDecoration: 'none',
+                            padding: 0,
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            fontSize: '0.9rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.25rem'
+                          }}
                         >
-                          Zwiń
+                          <span>+</span> Dodaj dodatek
                         </button>
                       </div>
 
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                        <div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                            <h4 style={{ margin: 0 }}>Dodatki</h4>
+                      {/* Karta historii użytkowania */}
+                      <div className="card">
+                        <h3 style={{ margin: 0, marginBottom: '1rem', fontSize: '1.2rem', fontWeight: 'bold' }}>
+                          Historia użytkowania
+                        </h3>
+                        {sessions[gun.id] && Array.isArray(sessions[gun.id]) && sessions[gun.id].length > 0 ? (
+                          <div style={{ overflowX: 'auto' }}>
+                            <table className="table" style={{ width: '100%' }}>
+                              <thead>
+                                <tr>
+                                  <th>Data</th>
+                                  <th>Amunicja</th>
+                                  <th>Strzały</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {sessions[gun.id]
+                                  .sort((a, b) => new Date(b.date) - new Date(a.date))
+                                  .map((session) => {
+                                    const sessionAmmo = ammo.find(a => a.id === session.ammo_id);
+                                    return (
+                                      <tr key={session.id}>
+                                        <td>{new Date(session.date).toLocaleDateString('pl-PL')}</td>
+                                        <td>{sessionAmmo ? sessionAmmo.name : '-'}</td>
+                                        <td>{session.shots}</td>
+                                      </tr>
+                                    );
+                                  })}
+                              </tbody>
+                            </table>
                           </div>
-                          {attachments[gun.id]?.length > 0 ? (
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
-                              {attachments[gun.id].map((att) => (
-                                <div
-                                  key={att.id}
-                                  style={{
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: '0.5rem',
-                                    padding: '0.5rem 1rem',
-                                    backgroundColor: '#2c2c2c',
-                                    borderRadius: '20px',
-                                    fontSize: '0.9rem',
-                                    position: 'relative'
-                                  }}
-                                >
-                                  <span>{getAttachmentTypeLabel(att.type)} - {att.name}</span>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleDeleteAttachment(att.id);
-                                    }}
-                                    style={{
-                                      marginLeft: '0.5rem',
-                                      background: 'none',
-                                      border: 'none',
-                                      color: '#f44336',
-                                      cursor: 'pointer',
-                                      fontSize: '1rem',
-                                      padding: 0,
-                                      width: '20px',
-                                      height: '20px',
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      justifyContent: 'center'
-                                    }}
-                                  >
-                                    ×
-                                  </button>
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <p style={{ color: '#888', marginBottom: '1rem' }}>Brak dodatków</p>
-                          )}
-                          <button
-                            className="btn btn-link"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setShowAttachmentModal(true);
-                            }}
-                            style={{ 
-                              color: '#007bff', 
-                              textDecoration: 'none',
-                              padding: 0,
-                              background: 'none',
-                              border: 'none',
-                              cursor: 'pointer',
-                              fontSize: '0.9rem'
-                            }}
-                          >
-                            + Dodaj dodatek
-                          </button>
-                        </div>
-
-                        <div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                            <h4 style={{ margin: 0 }}>Konserwacja</h4>
-                          </div>
-                          {maintenance[gun.id]?.length > 0 ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1rem' }}>
-                              {maintenance[gun.id]
-                                .sort((a, b) => new Date(b.date) - new Date(a.date))
-                                .map((maint) => (
-                                  <div
-                                    key={maint.id}
-                                    style={{
-                                      padding: '0.75rem',
-                                      backgroundColor: '#2c2c2c',
-                                      borderRadius: '8px',
-                                      display: 'flex',
-                                      justifyContent: 'space-between',
-                                      alignItems: 'center'
-                                    }}
-                                  >
-                                    <div>
-                                      <div style={{ fontWeight: '500' }}>
-                                        {new Date(maint.date).toLocaleDateString('pl-PL')}
-                                      </div>
-                                      {maint.notes && (
-                                        <div style={{ fontSize: '0.85rem', color: '#888', marginTop: '0.25rem' }}>
-                                          {maint.notes}
-                                        </div>
-                                      )}
-                                    </div>
-                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          navigate(`/maintenance?gun_id=${gun.id}`);
-                                        }}
-                                        style={{
-                                          background: 'none',
-                                          border: 'none',
-                                          color: '#007bff',
-                                          cursor: 'pointer',
-                                          fontSize: '0.9rem',
-                                          padding: '0.25rem 0.5rem'
-                                        }}
-                                      >
-                                        Szczegóły
-                                      </button>
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleEditMaintenance(maint);
-                                        }}
-                                        style={{
-                                          background: 'none',
-                                          border: 'none',
-                                          color: '#007bff',
-                                          cursor: 'pointer',
-                                          fontSize: '0.9rem',
-                                          padding: '0.25rem 0.5rem'
-                                        }}
-                                      >
-                                        Edytuj
-                                      </button>
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleDeleteMaintenance(maint.id);
-                                        }}
-                                        style={{
-                                          background: 'none',
-                                          border: 'none',
-                                          color: '#f44336',
-                                          cursor: 'pointer',
-                                          fontSize: '1.2rem',
-                                          padding: '0.25rem 0.5rem'
-                                        }}
-                                      >
-                                        ×
-                                      </button>
-                                    </div>
-                                  </div>
-                                ))}
-                            </div>
-                          ) : (
-                            <p style={{ color: '#888', marginBottom: '1rem' }}>Brak konserwacji</p>
-                          )}
-                          <button
-                            className="btn btn-link"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setEditingMaintenance(null);
-                              setMaintenanceForm({ 
-                                date: new Date().toISOString().split('T')[0], 
-                                notes: ''
-                              });
-                              setShowMaintenanceModal(true);
-                            }}
-                            style={{ 
-                              color: '#007bff', 
-                              textDecoration: 'none',
-                              padding: 0,
-                              background: 'none',
-                              border: 'none',
-                              cursor: 'pointer',
-                              fontSize: '0.9rem'
-                            }}
-                          >
-                            + Dodaj konserwację
-                          </button>
-                        </div>
-
-                        <div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                            <h4 style={{ margin: 0 }}>Historia użytkowania</h4>
-                          </div>
-                          {sessions[gun.id] && Array.isArray(sessions[gun.id]) && sessions[gun.id].length > 0 ? (
-                            <div style={{ overflowX: 'auto' }}>
-                              <table className="table" style={{ width: '100%' }}>
-                                <thead>
-                                  <tr>
-                                    <th>Data</th>
-                                    <th>Amunicja</th>
-                                    <th>Strzały</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {sessions[gun.id]
-                                    .sort((a, b) => new Date(b.date) - new Date(a.date))
-                                    .map((session) => {
-                                      const sessionAmmo = ammo.find(a => a.id === session.ammo_id);
-                                      return (
-                                        <tr key={session.id}>
-                                          <td>{new Date(session.date).toLocaleDateString('pl-PL')}</td>
-                                          <td>{sessionAmmo ? sessionAmmo.name : '-'}</td>
-                                          <td>{session.shots}</td>
-                                        </tr>
-                                      );
-                                    })}
-                                </tbody>
-                              </table>
-                            </div>
-                          ) : (
-                            <p style={{ color: '#888', marginBottom: '1rem' }}>Brak sesji</p>
-                          )}
-                          <button
-                            className="btn btn-link"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate('/cost-sessions');
-                            }}
-                            style={{ 
-                              color: '#007bff', 
-                              textDecoration: 'none',
-                              padding: 0,
-                              background: 'none',
-                              border: 'none',
-                              cursor: 'pointer',
-                              fontSize: '0.9rem'
-                            }}
-                          >
-                            + Dodaj sesję
-                          </button>
-                        </div>
+                        ) : (
+                          <p style={{ color: '#888' }}>Brak sesji</p>
+                        )}
                       </div>
                     </div>
                   )}

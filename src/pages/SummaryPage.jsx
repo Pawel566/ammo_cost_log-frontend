@@ -1,6 +1,134 @@
 import React, { useState, useEffect } from 'react';
 import { shootingSessionsAPI } from '../services/api';
 
+const MonthlyCostsChart = ({ data }) => {
+  if (!data || data.length === 0) return null;
+
+  const width = 800;
+  const height = 300;
+  const padding = { top: 20, right: 40, bottom: 60, left: 60 };
+  const chartWidth = width - padding.left - padding.right;
+  const chartHeight = height - padding.top - padding.bottom;
+
+  const maxCost = Math.max(...data.map(m => m.total_cost), 100);
+  const minCost = Math.min(...data.map(m => m.total_cost), 0);
+  const costRange = maxCost - minCost || 100;
+
+  const formatMonthLabel = (monthString) => {
+    const [year, month] = monthString.split('-');
+    const date = new Date(year, month - 1);
+    const monthNames = ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru'];
+    const monthName = monthNames[date.getMonth()];
+    const yearFull = date.getFullYear();
+    return { month: monthName, year: yearFull.toString() };
+  };
+
+  const points = data.map((item, index) => {
+    const x = padding.left + (index / (data.length - 1 || 1)) * chartWidth;
+    const y = padding.top + chartHeight - ((item.total_cost - minCost) / costRange) * chartHeight;
+    return { x, y, cost: item.total_cost, month: item.month };
+  });
+
+  const pathData = points.map((point, index) => 
+    `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`
+  ).join(' ');
+
+  const yAxisTicks = 5;
+  const yTickValues = [];
+  for (let i = 0; i <= yAxisTicks; i++) {
+    yTickValues.push(minCost + (costRange / yAxisTicks) * i);
+  }
+
+  return (
+    <div style={{ overflowX: 'auto', padding: '20px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: 'block', maxWidth: '100%', height: 'auto' }}>
+        {/* Y-axis grid lines and labels */}
+        {yTickValues.map((value, index) => {
+          const y = padding.top + chartHeight - ((value - minCost) / costRange) * chartHeight;
+          return (
+            <g key={index}>
+              <line
+                x1={padding.left}
+                y1={y}
+                x2={width - padding.right}
+                y2={y}
+                stroke="#404040"
+                strokeWidth="1"
+                strokeDasharray="2,2"
+              />
+              <text
+                x={padding.left - 10}
+                y={y + 4}
+                fill="#aaa"
+                fontSize="12"
+                textAnchor="end"
+              >
+                {Math.round(value)}
+              </text>
+            </g>
+          );
+        })}
+
+        {/* X-axis labels */}
+        {points.map((point, index) => {
+          const label = formatMonthLabel(point.month);
+          const isYearLabel = index === 0 || 
+            (index > 0 && formatMonthLabel(data[index - 1].month).year !== label.year) ||
+            index === data.length - 1;
+          
+          return (
+            <g key={index}>
+              <text
+                x={point.x}
+                y={height - padding.bottom + 20}
+                fill="#aaa"
+                fontSize="11"
+                textAnchor="middle"
+              >
+                {label.month}
+              </text>
+              {isYearLabel && (
+                <text
+                  x={point.x}
+                  y={height - padding.bottom + 35}
+                  fill="#aaa"
+                  fontSize="11"
+                  fontWeight="bold"
+                  textAnchor="middle"
+                >
+                  {label.year}
+                </text>
+              )}
+            </g>
+          );
+        })}
+
+        {/* Line path */}
+        <path
+          d={pathData}
+          fill="none"
+          stroke="#007bff"
+          strokeWidth="2"
+        />
+
+        {/* Data points */}
+        {points.map((point, index) => (
+          <g key={index}>
+            <circle
+              cx={point.x}
+              cy={point.y}
+              r="4"
+              fill="#007bff"
+              stroke="#fff"
+              strokeWidth="2"
+            />
+          </g>
+        ))}
+      </svg>
+    </div>
+  );
+};
+
 const SummaryPage = () => {
   const [summary, setSummary] = useState([]);
   const [sessions, setSessions] = useState([]);
@@ -60,30 +188,6 @@ const SummaryPage = () => {
     };
   };
 
-  const getMonthlyAccuracy = () => {
-    const monthlyData = {};
-    
-    sessions
-      .filter(s => s.hits !== null && s.hits !== undefined && s.distance_m)
-      .forEach(session => {
-        const month = session.date.substring(0, 7);
-        if (!monthlyData[month]) {
-          monthlyData[month] = { shots: 0, hits: 0, sessions: 0 };
-        }
-        monthlyData[month].shots += session.shots || 0;
-        monthlyData[month].hits += session.hits || 0;
-        monthlyData[month].sessions += 1;
-      });
-    
-    return Object.entries(monthlyData).map(([month, data]) => ({
-      month,
-      accuracy: data.shots > 0 ? (data.hits / data.shots) * 100 : 0,
-      shots: data.shots,
-      hits: data.hits,
-      sessions: data.sessions
-    })).sort((a, b) => a.month.localeCompare(b.month));
-  };
-
   const formatMonth = (monthString) => {
     const [year, month] = monthString.split('-');
     const date = new Date(year, month - 1);
@@ -126,51 +230,52 @@ const SummaryPage = () => {
           </div>
         ) : (
           <>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+            <div style={{ marginBottom: '1.5rem' }}>
+              <h3 style={{ marginBottom: '1rem', fontSize: '1.2rem', fontWeight: '500' }}>Podsumowanie</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '1rem', overflowX: 'auto' }}>
               <div className="card" style={{ textAlign: 'center' }}>
-                <h3 style={{ marginBottom: '0.5rem', fontSize: '1rem', color: '#aaa' }}>Łączny koszt</h3>
+                <h3 style={{ marginBottom: '0.5rem', fontSize: '0.9rem', color: '#aaa' }}>Łączny koszt</h3>
                 <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#dc3545' }}>
-                  {getTotalCost().toFixed(2)} zł
+                  {getTotalCost().toFixed(2).replace('.', ',')} zł
                 </div>
               </div>
               <div className="card" style={{ textAlign: 'center' }}>
-                <h3 style={{ marginBottom: '0.5rem', fontSize: '1rem', color: '#aaa' }}>Łączna liczba strzałów</h3>
+                <h3 style={{ marginBottom: '0.5rem', fontSize: '0.9rem', color: '#aaa' }}>Łączna liczba strzałów</h3>
                 <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#007bff' }}>
                   {getTotalShots()}
                 </div>
               </div>
               <div className="card" style={{ textAlign: 'center' }}>
-                <h3 style={{ marginBottom: '0.5rem', fontSize: '1rem', color: '#aaa' }}>Średni koszt za strzał</h3>
+                <h3 style={{ marginBottom: '0.5rem', fontSize: '0.9rem', color: '#aaa' }}>Średni koszt za strzał</h3>
                 <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#28a745' }}>
-                  {getTotalShots() > 0 ? (getTotalCost() / getTotalShots()).toFixed(2) : '0.00'} zł
+                  {getTotalShots() > 0 ? (getTotalCost() / getTotalShots()).toFixed(2).replace('.', ',') : '0,00'} zł
                 </div>
               </div>
-            </div>
-
-            {sessions.filter(s => s.hits !== null && s.hits !== undefined && s.distance_m).length > 0 && (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
                 <div className="card" style={{ textAlign: 'center' }}>
-                  <h3 style={{ marginBottom: '0.5rem', fontSize: '1rem', color: '#aaa' }}>Średnia celność</h3>
-                  <div style={{ 
-                    fontSize: '2rem', 
-                    fontWeight: 'bold', 
-                    color: accuracyStats.averageAccuracy >= 80 ? '#28a745' : accuracyStats.averageAccuracy >= 60 ? '#ffc107' : '#dc3545' 
-                  }}>
-                    {accuracyStats.averageAccuracy.toFixed(1)}%
+                  <h3 style={{ marginBottom: '0.5rem', fontSize: '0.9rem', color: '#aaa' }}>Średnia celność</h3>
+                  <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#ff9800' }}>
+                    {accuracyStats.averageAccuracy.toFixed(1).replace('.', ',')}%
                   </div>
                 </div>
                 <div className="card" style={{ textAlign: 'center' }}>
-                  <h3 style={{ marginBottom: '0.5rem', fontSize: '1rem', color: '#aaa' }}>Sesje celnościowe</h3>
+                  <h3 style={{ marginBottom: '0.5rem', fontSize: '0.9rem', color: '#aaa' }}>Sesje celnościowe</h3>
                   <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#6f42c1' }}>
                     {accuracyStats.totalSessions}
                   </div>
                 </div>
                 <div className="card" style={{ textAlign: 'center' }}>
-                  <h3 style={{ marginBottom: '0.5rem', fontSize: '1rem', color: '#aaa' }}>Łączne trafienia</h3>
-                  <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#17a2b8' }}>
+                  <h3 style={{ marginBottom: '0.5rem', fontSize: '0.9rem', color: '#aaa' }}>Łączne trafienia</h3>
+                  <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#007bff' }}>
                     {accuracyStats.totalHits}
                   </div>
                 </div>
+              </div>
+            </div>
+
+            {summary.length > 0 && (
+              <div className="card" style={{ marginBottom: '1.5rem' }}>
+                <h3 style={{ marginBottom: '1rem' }}>Koszty miesięczne</h3>
+                <MonthlyCostsChart data={summary} />
               </div>
             )}
 
@@ -192,102 +297,18 @@ const SummaryPage = () => {
                         <tr key={month.month}>
                           <td style={{ fontWeight: '500' }}>{formatMonth(month.month)}</td>
                           <td style={{ fontWeight: 'bold', color: '#dc3545' }}>
-                            {month.total_cost.toFixed(2)} zł
+                            {month.total_cost.toFixed(2).replace('.', ',')} zł
                           </td>
                           <td style={{ fontWeight: 'bold', color: '#007bff' }}>
                             {month.total_shots}
                           </td>
                           <td style={{ fontWeight: 'bold', color: '#28a745' }}>
-                            {month.total_shots > 0 ? (month.total_cost / month.total_shots).toFixed(2) : '0.00'} zł
+                            {month.total_shots > 0 ? (month.total_cost / month.total_shots).toFixed(2).replace('.', ',') : '0,00'} zł
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
-                </div>
-              </div>
-            )}
-
-            {summary.length > 0 && (
-              <div className="card" style={{ marginBottom: '1.5rem' }}>
-                <h3 style={{ marginBottom: '1rem' }}>Wykres kosztów miesięcznych</h3>
-                <div style={{ height: '300px', display: 'flex', alignItems: 'end', gap: '10px', padding: '20px' }}>
-                  {summary.map((month) => {
-                    const maxCost = Math.max(...summary.map(m => m.total_cost));
-                    const height = maxCost > 0 ? (month.total_cost / maxCost) * 200 : 0;
-                    return (
-                      <div key={month.month} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
-                        <div
-                          style={{
-                            width: '100%',
-                            height: `${height}px`,
-                            backgroundColor: '#007bff',
-                            borderRadius: '4px 4px 0 0',
-                            marginBottom: '10px',
-                            display: 'flex',
-                            alignItems: 'end',
-                            justifyContent: 'center',
-                            color: 'white',
-                            fontSize: '12px',
-                            fontWeight: 'bold',
-                            minHeight: height > 0 ? '20px' : '0'
-                          }}
-                          title={`${month.total_cost.toFixed(2)} zł`}
-                        >
-                          {month.total_cost > 0 && (
-                            <span style={{ marginBottom: '5px' }}>
-                              {month.total_cost.toFixed(0)}zł
-                            </span>
-                          )}
-                        </div>
-                        <div style={{ fontSize: '12px', textAlign: 'center', transform: 'rotate(-45deg)', whiteSpace: 'nowrap' }}>
-                          {month.month.split('-')[1]}/{month.month.split('-')[0].slice(2)}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {getMonthlyAccuracy().length > 0 && (
-              <div className="card">
-                <h3 style={{ marginBottom: '1rem' }}>Wykres celności miesięcznej</h3>
-                <div style={{ height: '300px', display: 'flex', alignItems: 'end', gap: '10px', padding: '20px' }}>
-                  {getMonthlyAccuracy().map((month) => {
-                    const maxAccuracy = Math.max(...getMonthlyAccuracy().map(m => m.accuracy), 100);
-                    const height = (month.accuracy / maxAccuracy) * 200;
-                    return (
-                      <div key={month.month} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
-                        <div
-                          style={{
-                            width: '100%',
-                            height: `${height}px`,
-                            backgroundColor: month.accuracy >= 80 ? '#28a745' : month.accuracy >= 60 ? '#ffc107' : '#dc3545',
-                            borderRadius: '4px 4px 0 0',
-                            marginBottom: '10px',
-                            display: 'flex',
-                            alignItems: 'end',
-                            justifyContent: 'center',
-                            color: 'white',
-                            fontSize: '12px',
-                            fontWeight: 'bold',
-                            minHeight: height > 0 ? '20px' : '0'
-                          }}
-                          title={`${month.accuracy.toFixed(1)}% (${month.hits}/${month.shots})`}
-                        >
-                          {month.accuracy > 0 && (
-                            <span style={{ marginBottom: '5px' }}>
-                              {month.accuracy.toFixed(0)}%
-                            </span>
-                          )}
-                        </div>
-                        <div style={{ fontSize: '12px', textAlign: 'center', transform: 'rotate(-45deg)', whiteSpace: 'nowrap' }}>
-                          {month.month.split('-')[1]}/{month.month.split('-')[0].slice(2)}
-                        </div>
-                      </div>
-                    );
-                  })}
                 </div>
               </div>
             )}
