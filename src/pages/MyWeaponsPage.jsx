@@ -33,7 +33,7 @@ const MyWeaponsPage = () => {
       
       // Sprawdź query param po załadowaniu danych
       const gunIdFromQuery = searchParams.get('gun_id');
-      if (gunIdFromQuery && !expandedGun) {
+      if (gunIdFromQuery) {
         setExpandedGun(gunIdFromQuery);
       }
     };
@@ -49,6 +49,11 @@ const MyWeaponsPage = () => {
       if (currentGunId !== expandedGun) {
         setSearchParams({ gun_id: expandedGun }, { replace: true });
       }
+    } else {
+      // Jeśli expandedGun jest null, usuń query param
+      if (searchParams.get('gun_id')) {
+        setSearchParams({}, { replace: true });
+      }
     }
   }, [expandedGun]);
 
@@ -58,7 +63,11 @@ const MyWeaponsPage = () => {
       const response = await gunsAPI.getAll();
       const data = response.data;
       const items = Array.isArray(data) ? data : data?.items ?? [];
-      setGuns(items);
+      // Usuń duplikaty na podstawie ID
+      const uniqueGuns = items.filter((gun, index, self) => 
+        index === self.findIndex(g => g.id === gun.id)
+      );
+      setGuns(uniqueGuns);
       setError('');
     } catch (err) {
       setError('Błąd podczas pobierania listy broni');
@@ -401,10 +410,10 @@ const MyWeaponsPage = () => {
                       cursor: 'pointer',
                       transition: 'transform 0.2s',
                     }}
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       if (isExpanded) {
                         setExpandedGun(null);
-                        setSearchParams({}, { replace: true });
                       } else {
                         setExpandedGun(gun.id);
                       }
