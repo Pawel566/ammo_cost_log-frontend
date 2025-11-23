@@ -462,35 +462,8 @@ const MyWeaponsPage = () => {
                   </div>
 
                   {isExpanded && (
-                    <div style={{ marginTop: '0.5rem', marginBottom: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                      {/* Karta identyfikacji broni */}
-                      <div className="card">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                          <div style={{
-                            width: '100px',
-                            height: '100px',
-                            backgroundColor: '#2c2c2c',
-                            borderRadius: '8px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            flexShrink: 0
-                          }}>
-                            <span style={{ fontSize: '3rem' }}>🔫</span>
-                          </div>
-                          <div style={{ flex: 1 }}>
-                            <h3 style={{ margin: 0, marginBottom: '0.5rem', fontSize: '1.5rem', fontWeight: 'bold' }}>
-                              {gun.name}
-                            </h3>
-                            <p style={{ margin: '0.25rem 0', color: '#aaa', fontSize: '1rem' }}>
-                              Kaliber: {gun.caliber || '-'}
-                            </p>
-                            <p style={{ margin: '0.25rem 0', color: '#aaa', fontSize: '1rem' }}>
-                              {getGunTypeLabel(gun.type)}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
+                    
+                    <div>
 
                       {/* Karta statystyk */}
                       <div className="card">
