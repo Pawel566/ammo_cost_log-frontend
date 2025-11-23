@@ -55,7 +55,10 @@ const MyWeaponsPage = () => {
   const [ammo, setAmmo] = useState([]);
   const [showAttachmentModal, setShowAttachmentModal] = useState(false);
   const [showMaintenanceModal, setShowMaintenanceModal] = useState(false);
+  const [showMaintenanceDetailsModal, setShowMaintenanceDetailsModal] = useState(false);
+  const [selectedMaintenance, setSelectedMaintenance] = useState(null);
   const [editingMaintenance, setEditingMaintenance] = useState(null);
+  const [openMaintenanceMenu, setOpenMaintenanceMenu] = useState(null);
   const [attachmentForm, setAttachmentForm] = useState({ type: 'optic', name: '', notes: '' });
   const [maintenanceForm, setMaintenanceForm] = useState({ 
     date: new Date().toISOString().split('T')[0], 
@@ -96,6 +99,22 @@ const MyWeaponsPage = () => {
     
     loadData();
   }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (openMaintenanceMenu && !event.target.closest('[data-maintenance-menu]')) {
+        setOpenMaintenanceMenu(null);
+      }
+    };
+
+    if (openMaintenanceMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [openMaintenanceMenu]);
 
   useEffect(() => {
     if (expandedGun) {
@@ -283,6 +302,7 @@ const MyWeaponsPage = () => {
       notes: maint.notes || '',
       activities: maint.activities || []
     });
+    setShowActivitiesList(maint.activities && maint.activities.length > 0);
     setShowMaintenanceModal(true);
   };
 
@@ -652,7 +672,7 @@ const MyWeaponsPage = () => {
                                       {new Date(maint.date).toLocaleDateString('pl-PL')}
                                     </div>
                                     {maint.activities && maint.activities.length > 0 && (
-                                      <div style={{ fontSize: '0.9rem', color: '#aaa', marginBottom: '0.5rem' }}>
+                                      <div style={{ fontSize: '0.9rem', color: '#aaa' }}>
                                         <div style={{ marginBottom: '0.25rem', fontWeight: '500' }}>Wykonane czynności:</div>
                                         <ul style={{ margin: 0, paddingLeft: '1.25rem', listStyle: 'disc' }}>
                                           {maint.activities.map((activity, idx) => (
@@ -661,45 +681,120 @@ const MyWeaponsPage = () => {
                                         </ul>
                                       </div>
                                     )}
-                                    {maint.notes && (
-                                      <div style={{ fontSize: '0.9rem', color: '#888', marginTop: maint.activities && maint.activities.length > 0 ? '0.5rem' : '0' }}>
-                                        <strong>Opis:</strong> {maint.notes}
-                                      </div>
-                                    )}
                                   </div>
-                                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                  <div style={{ position: 'relative' }} data-maintenance-menu>
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        handleEditMaintenance(maint);
+                                        setOpenMaintenanceMenu(openMaintenanceMenu === maint.id ? null : maint.id);
                                       }}
                                       style={{
                                         background: 'none',
                                         border: 'none',
-                                        color: '#007bff',
-                                        cursor: 'pointer',
-                                        fontSize: '0.9rem',
-                                        padding: '0.25rem 0.5rem'
-                                      }}
-                                    >
-                                      Edytuj
-                                    </button>
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDeleteMaintenance(maint.id);
-                                      }}
-                                      style={{
-                                        background: 'none',
-                                        border: 'none',
-                                        color: '#f44336',
+                                        color: '#aaa',
                                         cursor: 'pointer',
                                         fontSize: '1.2rem',
-                                        padding: '0.25rem 0.5rem'
+                                        padding: '0.5rem',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        width: '32px',
+                                        height: '32px',
+                                        borderRadius: '4px'
                                       }}
+                                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                                     >
-                                      ×
+                                      ⋯
                                     </button>
+                                    {openMaintenanceMenu === maint.id && (
+                                      <div
+                                        style={{
+                                          position: 'absolute',
+                                          right: 0,
+                                          top: '100%',
+                                          marginTop: '0.25rem',
+                                          backgroundColor: '#2c2c2c',
+                                          border: '1px solid #555',
+                                          borderRadius: '8px',
+                                          minWidth: '150px',
+                                          zIndex: 1000,
+                                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)',
+                                          overflow: 'hidden'
+                                        }}
+                                        onClick={(e) => e.stopPropagation()}
+                                      >
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setOpenMaintenanceMenu(null);
+                                            setSelectedMaintenance(maint);
+                                            setShowMaintenanceDetailsModal(true);
+                                          }}
+                                          style={{
+                                            width: '100%',
+                                            padding: '0.75rem 1rem',
+                                            background: 'none',
+                                            border: 'none',
+                                            color: '#fff',
+                                            cursor: 'pointer',
+                                            textAlign: 'left',
+                                            fontSize: '0.9rem',
+                                            display: 'block'
+                                          }}
+                                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                        >
+                                          Szczegóły
+                                        </button>
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setOpenMaintenanceMenu(null);
+                                            handleEditMaintenance(maint);
+                                          }}
+                                          style={{
+                                            width: '100%',
+                                            padding: '0.75rem 1rem',
+                                            background: 'none',
+                                            border: 'none',
+                                            color: '#fff',
+                                            cursor: 'pointer',
+                                            textAlign: 'left',
+                                            fontSize: '0.9rem',
+                                            display: 'block',
+                                            borderTop: '1px solid #555'
+                                          }}
+                                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                        >
+                                          Edytuj
+                                        </button>
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setOpenMaintenanceMenu(null);
+                                            handleDeleteMaintenance(maint.id);
+                                          }}
+                                          style={{
+                                            width: '100%',
+                                            padding: '0.75rem 1rem',
+                                            background: 'none',
+                                            border: 'none',
+                                            color: '#f44336',
+                                            cursor: 'pointer',
+                                            textAlign: 'left',
+                                            fontSize: '0.9rem',
+                                            display: 'block',
+                                            borderTop: '1px solid #555'
+                                          }}
+                                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                        >
+                                          Usuń
+                                        </button>
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
                               ))}
@@ -1030,6 +1125,121 @@ const MyWeaponsPage = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {showMaintenanceDetailsModal && selectedMaintenance && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000
+          }}
+          onClick={() => {
+            setShowMaintenanceDetailsModal(false);
+            setSelectedMaintenance(null);
+          }}
+        >
+          <div
+            className="card"
+            style={{ maxWidth: '600px', width: '90%', maxHeight: '80vh', overflowY: 'auto' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h3 style={{ margin: 0 }}>Szczegóły konserwacji</h3>
+              <button
+                onClick={() => {
+                  setShowMaintenanceDetailsModal(false);
+                  setSelectedMaintenance(null);
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#aaa',
+                  cursor: 'pointer',
+                  fontSize: '1.5rem',
+                  padding: '0.25rem 0.5rem'
+                }}
+              >
+                ×
+              </button>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#aaa' }}>
+                  Data wykonania
+                </label>
+                <div style={{ padding: '0.75rem', backgroundColor: '#2c2c2c', borderRadius: '4px', color: '#fff' }}>
+                  {new Date(selectedMaintenance.date).toLocaleDateString('pl-PL')}
+                </div>
+              </div>
+
+              {selectedMaintenance.activities && selectedMaintenance.activities.length > 0 && (
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#aaa' }}>
+                    Lista czynności
+                  </label>
+                  <div style={{ padding: '0.75rem', backgroundColor: '#2c2c2c', borderRadius: '4px' }}>
+                    <ul style={{ margin: 0, paddingLeft: '1.25rem', listStyle: 'disc', color: '#fff' }}>
+                      {selectedMaintenance.activities.map((activity, idx) => (
+                        <li key={idx} style={{ marginBottom: '0.5rem' }}>{activity}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              )}
+
+              {selectedMaintenance.notes && (
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#aaa' }}>
+                    Opis
+                  </label>
+                  <div style={{ padding: '0.75rem', backgroundColor: '#2c2c2c', borderRadius: '4px', color: '#fff', whiteSpace: 'pre-wrap' }}>
+                    {selectedMaintenance.notes}
+                  </div>
+                </div>
+              )}
+
+              {!selectedMaintenance.notes && (!selectedMaintenance.activities || selectedMaintenance.activities.length === 0) && (
+                <div style={{ color: '#888', textAlign: 'center', padding: '1rem' }}>
+                  Brak dodatkowych informacji
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+              <button
+                onClick={() => {
+                  setShowMaintenanceDetailsModal(false);
+                  const maintToEdit = selectedMaintenance;
+                  setSelectedMaintenance(null);
+                  handleEditMaintenance(maintToEdit);
+                }}
+                className="btn btn-primary"
+                style={{ flex: 1 }}
+              >
+                Edytuj
+              </button>
+              <button
+                onClick={() => {
+                  setShowMaintenanceDetailsModal(false);
+                  setSelectedMaintenance(null);
+                }}
+                className="btn btn-secondary"
+                style={{ flex: 1 }}
+              >
+                Zamknij
+              </button>
+            </div>
           </div>
         </div>
       )}
