@@ -1060,7 +1060,6 @@ const MyWeaponsPage = () => {
                           style={{
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '0.5rem',
                             padding: '0.5rem',
                             cursor: 'pointer',
                             borderRadius: '4px'
@@ -1084,9 +1083,9 @@ const MyWeaponsPage = () => {
                                 });
                               }
                             }}
-                            style={{ cursor: 'pointer' }}
+                            style={{ cursor: 'pointer', margin: 0, marginRight: '1rem', flexShrink: 0 }}
                           />
-                          <span>{activity}</span>
+                          <span style={{ textAlign: 'left', flex: 1 }}>{activity}</span>
                         </label>
                       ))}
                     </div>
