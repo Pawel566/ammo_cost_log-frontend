@@ -1,6 +1,46 @@
-import React, { useState, useEffect } from 'react'; // test123
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { gunsAPI, attachmentsAPI, shootingSessionsAPI, ammoAPI, maintenanceAPI } from '../services/api';
+
+const MaintenanceStatusIcon = ({ status }) => {
+  const iconSize = 20;
+  
+  if (status === 'green' || status === 'ok') {
+    // Zielona ikona z checkmarkiem - OK
+    return (
+      <svg width={iconSize} height={iconSize} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="10" cy="10" r="9" fill="#4caf50" stroke="none"/>
+        <path d="M6 10 L9 13 L14 7" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+      </svg>
+    );
+  } else if (status === 'yellow' || status === 'warning') {
+    // Żółta ikona z wykrzyknikiem - Wkrótce wymagana
+    return (
+      <svg width={iconSize} height={iconSize} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10 2 L18 18 L2 18 Z" fill="#ff9800" stroke="none"/>
+        <path d="M10 6 L10 11" stroke="black" strokeWidth="2" strokeLinecap="round"/>
+        <circle cx="10" cy="14" r="1" fill="black"/>
+      </svg>
+    );
+  } else if (status === 'red' || status === 'required') {
+    // Czerwona ikona z wykrzyknikiem - Wymagana
+    return (
+      <svg width={iconSize} height={iconSize} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="10" cy="10" r="9" fill="#f44336" stroke="none"/>
+        <path d="M10 5 L10 11" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+        <circle cx="10" cy="14" r="1" fill="white"/>
+      </svg>
+    );
+  } else {
+    // Szara ikona z przekreśleniem - Nie dotyczy
+    return (
+      <svg width={iconSize} height={iconSize} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="10" cy="10" r="9" fill="#888" stroke="none"/>
+        <path d="M6 6 L14 14 M14 6 L6 14" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+      </svg>
+    );
+  }
+};
 
 const MyWeaponsPage = () => {
   const navigate = useNavigate();
@@ -315,7 +355,7 @@ const MyWeaponsPage = () => {
   const getMaintenanceStatus = (gunId) => {
     const lastMaint = getLastMaintenance(gunId);
     if (!lastMaint) {
-      return { status: 'none', color: '#888', icon: '', message: 'Brak konserwacji' };
+      return { status: 'none', color: '#888', message: 'Nie dotyczy' };
     }
 
     const rounds = calculateRoundsSinceLastMaintenance(gunId);
@@ -339,22 +379,19 @@ const MyWeaponsPage = () => {
       finalStatus = 'yellow';
     }
 
-    let color, icon, message;
+    let color, message;
     if (finalStatus === 'red') {
       color = '#f44336';
-      icon = '🔴';
-      message = 'Wymagana konserwacja';
+      message = 'Wymagana';
     } else if (finalStatus === 'yellow') {
       color = '#ff9800';
-      icon = '🟡';
-      message = 'Zbliża się konserwacja';
+      message = 'Wkrótce wymagana';
     } else {
       color = '#4caf50';
-      icon = '🟢';
       message = 'OK';
     }
 
-    return { status: finalStatus, color, icon, message, rounds, days };
+    return { status: finalStatus, color, message, rounds, days };
   };
 
   const getTotalShots = (gunId) => {
@@ -451,8 +488,9 @@ const MyWeaponsPage = () => {
                               <span style={{ color: '#007bff' }}>
                                 Ostatnia konserwacja: {new Date(lastMaintenance.date).toLocaleDateString('pl-PL')}
                               </span>
-                              <span style={{ color: maintenanceStatus.color, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                                {maintenanceStatus.icon} {maintenanceStatus.message}
+                              <span style={{ color: maintenanceStatus.color, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <MaintenanceStatusIcon status={maintenanceStatus.status} />
+                                {maintenanceStatus.message}
                               </span>
                             </span>
                           )}
@@ -492,13 +530,12 @@ const MyWeaponsPage = () => {
                           <li style={{ marginBottom: '0.75rem', paddingLeft: '1.5rem', position: 'relative', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                             <span style={{ position: 'absolute', left: 0 }}>•</span>
                             Status: <span style={{ 
-                              display: 'inline-block', 
-                              width: '8px', 
-                              height: '8px', 
-                              borderRadius: '50%', 
-                              backgroundColor: maintenanceStatus.color,
-                              marginLeft: '0.25rem'
-                            }}></span> {maintenanceStatus.message}
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              marginLeft: '0.5rem'
+                            }}>
+                              <MaintenanceStatusIcon status={maintenanceStatus.status} />
+                            </span> {maintenanceStatus.message}
                           </li>
                         </ul>
                       </div>
