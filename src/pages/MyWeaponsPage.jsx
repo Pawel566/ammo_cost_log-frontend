@@ -59,8 +59,24 @@ const MyWeaponsPage = () => {
   const [attachmentForm, setAttachmentForm] = useState({ type: 'optic', name: '', notes: '' });
   const [maintenanceForm, setMaintenanceForm] = useState({ 
     date: new Date().toISOString().split('T')[0], 
-    notes: ''
+    notes: '',
+    activities: []
   });
+  const [showActivitiesList, setShowActivitiesList] = useState(false);
+
+  const maintenanceActivities = [
+    'Czyszczenie lufy',
+    'Czyszczenie suwadła',
+    'Czyszczenie zamka',
+    'Czyszczenie iglicy',
+    'Smarowanie prowadnic',
+    'Smarowanie zamka',
+    'Kontrola zużycia sprężyn',
+    'Kontrola zamka / rygli',
+    'Wymiana części',
+    'Sprawdzenie optyki',
+    'Czyszczenie magazynków'
+  ];
 
   useEffect(() => {
     const loadData = async () => {
@@ -228,19 +244,25 @@ const MyWeaponsPage = () => {
         if (maintenanceForm.notes !== undefined) {
           formData.notes = maintenanceForm.notes || null;
         }
+        if (maintenanceForm.activities !== undefined) {
+          formData.activities = maintenanceForm.activities.length > 0 ? maintenanceForm.activities : null;
+        }
         await maintenanceAPI.update(editingMaintenance.id, formData);
       } else {
         formData = {
           date: maintenanceForm.date,
-          notes: maintenanceForm.notes || null
+          notes: maintenanceForm.notes || null,
+          activities: maintenanceForm.activities.length > 0 ? maintenanceForm.activities : null
         };
         await maintenanceAPI.create(expandedGun, formData);
       }
       setShowMaintenanceModal(false);
       setEditingMaintenance(null);
+      setShowActivitiesList(false);
       setMaintenanceForm({ 
         date: new Date().toISOString().split('T')[0], 
-        notes: ''
+        notes: '',
+        activities: []
       });
       await fetchGunDetails(expandedGun);
       await fetchAllMaintenance();
@@ -258,7 +280,8 @@ const MyWeaponsPage = () => {
       : maint.date.split('T')[0];
     setMaintenanceForm({
       date: dateValue,
-      notes: maint.notes || ''
+      notes: maint.notes || '',
+      activities: maint.activities || []
     });
     setShowMaintenanceModal(true);
   };
@@ -578,6 +601,116 @@ const MyWeaponsPage = () => {
                         </button>
                       </div>
 
+                      {/* Karta konserwacji */}
+                      <div className="card">
+                        <h3 style={{ margin: 0, marginBottom: '1rem', fontSize: '1.2rem', fontWeight: 'bold' }}>
+                          Konserwacja
+                        </h3>
+                        {maintenance[gun.id] && Array.isArray(maintenance[gun.id]) && maintenance[gun.id].length > 0 ? (
+                          <div style={{ marginBottom: '1rem' }}>
+                            {maintenance[gun.id]
+                              .sort((a, b) => new Date(b.date) - new Date(a.date))
+                              .map((maint) => (
+                                <div 
+                                  key={maint.id} 
+                                  style={{ 
+                                    marginBottom: '0.75rem', 
+                                    padding: '0.75rem',
+                                    backgroundColor: '#2c2c2c',
+                                    borderRadius: '8px',
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'flex-start',
+                                    gap: '1rem'
+                                  }}
+                                >
+                                  <div style={{ flex: 1 }}>
+                                    <div style={{ fontWeight: '500', marginBottom: '0.5rem', fontSize: '1rem' }}>
+                                      {new Date(maint.date).toLocaleDateString('pl-PL')}
+                                    </div>
+                                    {maint.activities && maint.activities.length > 0 && (
+                                      <div style={{ fontSize: '0.9rem', color: '#aaa', marginBottom: '0.5rem' }}>
+                                        <div style={{ marginBottom: '0.25rem', fontWeight: '500' }}>Wykonane czynności:</div>
+                                        <ul style={{ margin: 0, paddingLeft: '1.25rem', listStyle: 'disc' }}>
+                                          {maint.activities.map((activity, idx) => (
+                                            <li key={idx} style={{ marginBottom: '0.15rem' }}>{activity}</li>
+                                          ))}
+                                        </ul>
+                                      </div>
+                                    )}
+                                    {maint.notes && (
+                                      <div style={{ fontSize: '0.9rem', color: '#888', marginTop: maint.activities && maint.activities.length > 0 ? '0.5rem' : '0' }}>
+                                        <strong>Opis:</strong> {maint.notes}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleEditMaintenance(maint);
+                                      }}
+                                      style={{
+                                        background: 'none',
+                                        border: 'none',
+                                        color: '#007bff',
+                                        cursor: 'pointer',
+                                        fontSize: '0.9rem',
+                                        padding: '0.25rem 0.5rem'
+                                      }}
+                                    >
+                                      Edytuj
+                                    </button>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteMaintenance(maint.id);
+                                      }}
+                                      style={{
+                                        background: 'none',
+                                        border: 'none',
+                                        color: '#f44336',
+                                        cursor: 'pointer',
+                                        fontSize: '1.2rem',
+                                        padding: '0.25rem 0.5rem'
+                                      }}
+                                    >
+                                      ×
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                          </div>
+                        ) : (
+                          <p style={{ color: '#888', marginBottom: '1rem' }}>Brak konserwacji</p>
+                        )}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingMaintenance(null);
+                            setMaintenanceForm({ 
+                              date: new Date().toISOString().split('T')[0], 
+                              notes: ''
+                            });
+                            setShowMaintenanceModal(true);
+                          }}
+                          style={{ 
+                            color: '#007bff', 
+                            textDecoration: 'none',
+                            padding: 0,
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            fontSize: '0.9rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.25rem'
+                          }}
+                        >
+                          <span>+</span> Dodaj konserwację
+                        </button>
+                      </div>
+
                       {/* Karta historii użytkowania */}
                       <div className="card">
                         <h3 style={{ margin: 0, marginBottom: '1rem', fontSize: '1.2rem', fontWeight: 'bold' }}>
@@ -740,9 +873,11 @@ const MyWeaponsPage = () => {
           onClick={() => {
             setShowMaintenanceModal(false);
             setEditingMaintenance(null);
+            setShowActivitiesList(false);
             setMaintenanceForm({ 
               date: new Date().toISOString().split('T')[0], 
-              notes: ''
+              notes: '',
+              activities: []
             });
           }}
         >
@@ -764,17 +899,95 @@ const MyWeaponsPage = () => {
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">Notatki</label>
+                <label className="form-label">Lista czynności</label>
+                <div style={{ border: '1px solid #555', borderRadius: '4px', backgroundColor: '#2c2c2c' }}>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setShowActivitiesList(!showActivitiesList);
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      background: 'none',
+                      border: 'none',
+                      color: '#fff',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}
+                  >
+                    <span>
+                      {maintenanceForm.activities.length > 0 
+                        ? `Wybrano: ${maintenanceForm.activities.length}` 
+                        : 'Wybierz czynności'}
+                    </span>
+                    <span style={{ fontSize: '0.8rem' }}>
+                      {showActivitiesList ? '▼' : '▶'}
+                    </span>
+                  </button>
+                  {showActivitiesList && (
+                    <div style={{ 
+                      padding: '0.5rem', 
+                      borderTop: '1px solid #555',
+                      maxHeight: '200px',
+                      overflowY: 'auto'
+                    }}>
+                      {maintenanceActivities.map((activity) => (
+                        <label
+                          key={activity}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            padding: '0.5rem',
+                            cursor: 'pointer',
+                            borderRadius: '4px'
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={maintenanceForm.activities.includes(activity)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setMaintenanceForm({
+                                  ...maintenanceForm,
+                                  activities: [...maintenanceForm.activities, activity]
+                                });
+                              } else {
+                                setMaintenanceForm({
+                                  ...maintenanceForm,
+                                  activities: maintenanceForm.activities.filter(a => a !== activity)
+                                });
+                              }
+                            }}
+                            style={{ cursor: 'pointer' }}
+                          />
+                          <span>{activity}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Opis:</label>
                 <textarea
                   className="form-input"
                   value={maintenanceForm.notes}
                   onChange={(e) => setMaintenanceForm({ ...maintenanceForm, notes: e.target.value })}
                   rows={3}
+                  placeholder="Opcjonalny opis konserwacji..."
                 />
               </div>
               <div style={{ display: 'flex', gap: '1rem' }}>
-                <button type="submit" className="btn btn-primary">
-                  {editingMaintenance ? 'Zapisz' : 'Dodaj'}
+                <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>
+                  Zapisz konserwację
                 </button>
                 <button
                   type="button"
@@ -782,9 +995,11 @@ const MyWeaponsPage = () => {
                   onClick={() => {
                     setShowMaintenanceModal(false);
                     setEditingMaintenance(null);
+                    setShowActivitiesList(false);
                     setMaintenanceForm({ 
                       date: new Date().toISOString().split('T')[0], 
-                      notes: ''
+                      notes: '',
+                      activities: []
                     });
                   }}
                 >
