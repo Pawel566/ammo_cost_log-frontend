@@ -1049,10 +1049,11 @@ const MyWeaponsPage = () => {
                   </button>
                   {showActivitiesList && (
                     <div style={{ 
-                      padding: '0.5rem', 
+                      padding: '0.5rem 0.5rem 0.5rem 0', 
                       borderTop: '1px solid #555',
                       maxHeight: '200px',
-                      overflowY: 'auto'
+                      overflowY: 'auto',
+                      textAlign: 'left'
                     }}>
                       {maintenanceActivities.map((activity) => (
                         <label
@@ -1060,9 +1061,10 @@ const MyWeaponsPage = () => {
                           style={{
                             display: 'flex',
                             alignItems: 'center',
-                            padding: '0.5rem',
+                            padding: '0.5rem 0.5rem 0.5rem 0',
                             cursor: 'pointer',
-                            borderRadius: '4px'
+                            borderRadius: '4px',
+                            margin: 0
                           }}
                           onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
                           onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
@@ -1085,7 +1087,7 @@ const MyWeaponsPage = () => {
                             }}
                             style={{ cursor: 'pointer', margin: 0, marginRight: '1rem', flexShrink: 0 }}
                           />
-                          <span style={{ textAlign: 'left', flex: 1 }}>{activity}</span>
+                          <span style={{ textAlign: 'left' }}>{activity}</span>
                         </label>
                       ))}
                     </div>
