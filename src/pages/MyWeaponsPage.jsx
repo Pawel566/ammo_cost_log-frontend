@@ -126,27 +126,32 @@ const MyWeaponsPage = () => {
 
   useEffect(() => {
     const fetchWeaponImages = async () => {
+      if (guns.length === 0) return;
+      
       const imagePromises = guns.map(async (gun) => {
         try {
           const response = await gunsAPI.getImage(gun.id);
-          return { gunId: gun.id, url: response.data.url };
+          return { gunId: gun.id, url: response.data?.url || null };
         } catch (err) {
-          console.error(`Błąd pobierania zdjęcia dla broni ${gun.id}:`, err);
+          // Cicho ignoruj błędy - po prostu nie pokazuj zdjęcia
           return { gunId: gun.id, url: null };
         }
       });
       
-      const images = await Promise.all(imagePromises);
-      const imagesMap = {};
-      images.forEach(({ gunId, url }) => {
-        imagesMap[gunId] = url;
-      });
-      setWeaponImages(imagesMap);
+      try {
+        const images = await Promise.all(imagePromises);
+        const imagesMap = {};
+        images.forEach(({ gunId, url }) => {
+          imagesMap[gunId] = url;
+        });
+        setWeaponImages(imagesMap);
+      } catch (err) {
+        // Ignoruj błędy - nie blokuj renderowania strony
+        console.error('Błąd pobierania zdjęć broni:', err);
+      }
     };
     
-    if (guns.length > 0) {
-      fetchWeaponImages();
-    }
+    fetchWeaponImages();
   }, [guns]);
 
   useEffect(() => {
