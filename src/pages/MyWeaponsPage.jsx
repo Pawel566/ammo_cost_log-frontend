@@ -859,10 +859,12 @@ const MyWeaponsPage = () => {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
+                            setExpandedGun(gun.id);
                             setEditingMaintenance(null);
                             setMaintenanceForm({ 
                               date: new Date().toISOString().split('T')[0], 
-                              notes: ''
+                              notes: '',
+                              activities: []
                             });
                             setShowMaintenanceModal(true);
                           }}
