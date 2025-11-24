@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.3.8] – 2025-01-XX
+## [0.3.8] – 2025-11-24
 ### Dodano
 - Przerobiono stronę ustawień (SettingsPage) na 4 sekcje zgodnie z nowym designem:
   - **Ogólne**: wybór motywu (Jasny/Ciemny) i jednostek (Metry/Yardy)
