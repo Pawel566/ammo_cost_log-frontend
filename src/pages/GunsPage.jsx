@@ -339,22 +339,33 @@ const GunsPage = () => {
 
     const roundsLimit = userSettings.maintenance_rounds_limit || 500;
     const daysLimit = userSettings.maintenance_days_limit || 90;
-    const warningThresholdRounds = roundsLimit * 0.6;
-    const warningThresholdDays = daysLimit * 0.33;
 
-    let roundsStatus = 'green';
-    if (rounds >= roundsLimit) roundsStatus = 'red';
-    else if (rounds >= warningThresholdRounds) roundsStatus = 'yellow';
+    // Wybór kryterium: jeśli nie wystrzelaliśmy, to na podstawie dni; jeśli dni nie minęły, to na podstawie strzałów
+    let useRounds = true;
+    let percentage = 0;
+    let finalStatus = 'green';
 
-    let daysStatus = 'green';
-    if (days >= daysLimit) daysStatus = 'red';
-    else if (days >= warningThresholdDays) daysStatus = 'yellow';
+    if (rounds === 0) {
+      // Jeśli nie wystrzelaliśmy, używamy dni
+      useRounds = false;
+      percentage = (days / daysLimit) * 100;
+    } else if (days < daysLimit) {
+      // Jeśli dni nie minęły, używamy strzałów
+      useRounds = true;
+      percentage = (rounds / roundsLimit) * 100;
+    } else {
+      // Jeśli dni minęły, używamy dni
+      useRounds = false;
+      percentage = (days / daysLimit) * 100;
+    }
 
-    let finalStatus = roundsStatus;
-    if (daysStatus === 'red' || roundsStatus === 'red') {
+    // Status według procentów: zielona do 74%, żółta 75-99%, czerwona 100%+
+    if (percentage >= 100) {
       finalStatus = 'red';
-    } else if (daysStatus === 'yellow' || roundsStatus === 'yellow') {
+    } else if (percentage >= 75) {
       finalStatus = 'yellow';
+    } else {
+      finalStatus = 'green';
     }
 
     const colors = {
