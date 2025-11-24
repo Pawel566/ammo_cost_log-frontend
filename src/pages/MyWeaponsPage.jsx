@@ -458,19 +458,37 @@ const MyWeaponsPage = () => {
       finalStatus = 'green';
     }
 
-    let color, message;
+    let color, message, reason = '';
+    const roundsPercentage = Math.round((rounds / roundsLimit) * 100);
+    const daysPercentage = Math.round((days / daysLimit) * 100);
+
     if (finalStatus === 'red') {
       color = '#f44336';
       message = 'Wymagana';
+      if (useRounds && rounds >= roundsLimit) {
+        reason = `Wymagana konserwacja: przekroczono limit strzałów (${rounds}/${roundsLimit})`;
+      } else if (!useRounds && days >= daysLimit) {
+        reason = `Wymagana konserwacja: przekroczono limit czasu (${days}/${daysLimit} dni)`;
+      } else if (useRounds) {
+        reason = `Wymagana konserwacja: ${roundsPercentage}% limitu strzałów (${rounds}/${roundsLimit})`;
+      } else {
+        reason = `Wymagana konserwacja: ${daysPercentage}% limitu czasu (${days}/${daysLimit} dni)`;
+      }
     } else if (finalStatus === 'yellow') {
       color = '#ff9800';
       message = 'Wkrótce wymagana';
+      if (useRounds) {
+        reason = `${roundsPercentage}% limitu strzałów (${rounds}/${roundsLimit})`;
+      } else {
+        reason = `${daysPercentage}% limitu czasu (${days}/${daysLimit} dni)`;
+      }
     } else {
       color = '#4caf50';
       message = 'OK';
+      reason = '';
     }
 
-    return { status: finalStatus, color, message, rounds, days };
+    return { status: finalStatus, color, message, reason, rounds, days };
   };
 
   const getTotalShots = (gunId) => {
@@ -569,9 +587,16 @@ const MyWeaponsPage = () => {
                                   Ostatnia konserwacja: {new Date(lastMaintenance.date).toLocaleDateString('pl-PL')}
                                 </span>
                                 {userSettings.maintenance_notifications_enabled && (
-                                  <span style={{ color: maintenanceStatus.color, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                  <span style={{ color: maintenanceStatus.color, display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                                     <MaintenanceStatusIcon status={maintenanceStatus.status} />
-                                    {maintenanceStatus.message}
+                                    <span>
+                                      {maintenanceStatus.message}
+                                      {(maintenanceStatus.status === 'yellow' || maintenanceStatus.status === 'red') && maintenanceStatus.reason && (
+                                        <span style={{ marginLeft: '0.5rem', fontSize: '0.8rem', opacity: 0.9 }}>
+                                          ({maintenanceStatus.reason})
+                                        </span>
+                                      )}
+                                    </span>
                                   </span>
                                 )}
                               </span>
@@ -611,15 +636,25 @@ const MyWeaponsPage = () => {
                             Strzałów od ostatniej konserwacji: {calculateRoundsSinceLastMaintenance(gun.id)}
                           </li>
                           {userSettings.maintenance_notifications_enabled && (
-                            <li style={{ marginBottom: '0.75rem', paddingLeft: '1.5rem', position: 'relative', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <li style={{ marginBottom: '0.75rem', paddingLeft: '1.5rem', position: 'relative' }}>
                               <span style={{ position: 'absolute', left: 0 }}>•</span>
-                              Status: <span style={{ 
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                marginLeft: '0.5rem'
-                              }}>
-                                <MaintenanceStatusIcon status={maintenanceStatus.status} />
-                              </span> {maintenanceStatus.message}
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                Status: <span style={{ 
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  marginLeft: '0.5rem'
+                                }}>
+                                  <MaintenanceStatusIcon status={maintenanceStatus.status} />
+                                </span> 
+                                <span>
+                                  {maintenanceStatus.message}
+                                  {(maintenanceStatus.status === 'yellow' || maintenanceStatus.status === 'red') && maintenanceStatus.reason && (
+                                    <span style={{ marginLeft: '0.5rem', fontSize: '0.85rem', opacity: 0.9, display: 'block', marginTop: '0.25rem' }}>
+                                      {maintenanceStatus.reason}
+                                    </span>
+                                  )}
+                                </span>
+                              </div>
                             </li>
                           )}
                         </ul>

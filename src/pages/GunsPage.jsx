@@ -382,7 +382,29 @@ const GunsPage = () => {
       none: 'Nie dotyczy'
     };
 
-    return { status: finalStatus, color: colors[finalStatus], message: messages[finalStatus] };
+    let reason = '';
+    const roundsPercentage = Math.round((rounds / roundsLimit) * 100);
+    const daysPercentage = Math.round((days / daysLimit) * 100);
+
+    if (finalStatus === 'red') {
+      if (useRounds && rounds >= roundsLimit) {
+        reason = `Wymagana konserwacja: przekroczono limit strzałów (${rounds}/${roundsLimit})`;
+      } else if (!useRounds && days >= daysLimit) {
+        reason = `Wymagana konserwacja: przekroczono limit czasu (${days}/${daysLimit} dni)`;
+      } else if (useRounds) {
+        reason = `Wymagana konserwacja: ${roundsPercentage}% limitu strzałów (${rounds}/${roundsLimit})`;
+      } else {
+        reason = `Wymagana konserwacja: ${daysPercentage}% limitu czasu (${days}/${daysLimit} dni)`;
+      }
+    } else if (finalStatus === 'yellow') {
+      if (useRounds) {
+        reason = `${roundsPercentage}% limitu strzałów (${rounds}/${roundsLimit})`;
+      } else {
+        reason = `${daysPercentage}% limitu czasu (${days}/${daysLimit} dni)`;
+      }
+    }
+
+    return { status: finalStatus, color: colors[finalStatus], message: messages[finalStatus], reason, rounds, days };
   };
 
   const getAvailableCalibers = () => {
@@ -867,9 +889,16 @@ const GunsPage = () => {
                         <td style={{ padding: '0.75rem' }}>{gun.caliber || '-'}</td>
                         <td style={{ padding: '0.75rem' }}>
                           {userSettings.maintenance_notifications_enabled ? (
-                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
-                              <MaintenanceStatusIcon status={maintenanceStatus.status} />
-                              <span style={{ color: maintenanceStatus.color }}>{maintenanceStatus.message}</span>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <MaintenanceStatusIcon status={maintenanceStatus.status} />
+                                <span style={{ color: maintenanceStatus.color }}>{maintenanceStatus.message}</span>
+                              </div>
+                              {(maintenanceStatus.status === 'yellow' || maintenanceStatus.status === 'red') && maintenanceStatus.reason && (
+                                <span style={{ fontSize: '0.8rem', color: '#aaa', marginLeft: '1.5rem' }}>
+                                  {maintenanceStatus.reason}
+                                </span>
+                              )}
                             </div>
                           ) : (
                             <span style={{ color: '#888' }}>-</span>
