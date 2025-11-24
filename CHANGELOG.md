@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.3.8] – 2025-01-XX
+### Dodano
+- Przerobiono stronę ustawień (SettingsPage) na 4 sekcje zgodnie z nowym designem:
+  - **Ogólne**: wybór motywu (Jasny/Ciemny) i jednostek (Metry/Yardy)
+  - **Konserwacja**: edytowalne limity strzałów i czasu między konserwacjami
+  - **Powiadomienia**: toggle dla powiadomień o konserwacji i niskiej amunicji
+  - **Sztuczna inteligencja**: checkboxy dla intensywności analizy i automatycznych komentarzy
+
+### Zmieniono
+- MyWeaponsPage.jsx i GunsPage.jsx używają teraz ustawień użytkownika zamiast hardkodowanych wartości:
+  - Limit strzałów do konserwacji pobierany z ustawień użytkownika
+  - Limit czasu między konserwacjami pobierany z ustawień użytkownika
+  - Progi ostrzeżeń obliczane dynamicznie na podstawie limitów użytkownika (60% dla strzałów, 33% dla dni)
+- Dodano logikę ukrywania ikon statusu konserwacji, gdy powiadomienia o konserwacji są wyłączone
+- Status konserwacji jest teraz obliczany na podstawie indywidualnych ustawień użytkownika
+
+### Naprawiono
+- Poprawiono wyświetlanie statusu konserwacji - używa teraz limitów z ustawień zamiast stałych wartości (500 strzałów, 60/30 dni)
+
 ## [0.3.7.1] – 2025-11-22
 ### Naprawiono
 - Naprawiono błędy związane z edycją i usuwaniem sesji strzeleckich
