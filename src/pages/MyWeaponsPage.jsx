@@ -88,6 +88,7 @@ const MyWeaponsPage = () => {
     maintenance_notifications_enabled: true,
     low_ammo_notifications_enabled: true
   });
+  const [weaponImages, setWeaponImages] = useState({});
 
   const maintenanceActivities = [
     'Czyszczenie lufy',
@@ -122,6 +123,31 @@ const MyWeaponsPage = () => {
     
     loadData();
   }, []);
+
+  useEffect(() => {
+    const fetchWeaponImages = async () => {
+      const imagePromises = guns.map(async (gun) => {
+        try {
+          const response = await gunsAPI.getImage(gun.id);
+          return { gunId: gun.id, url: response.data.url };
+        } catch (err) {
+          console.error(`Błąd pobierania zdjęcia dla broni ${gun.id}:`, err);
+          return { gunId: gun.id, url: null };
+        }
+      });
+      
+      const images = await Promise.all(imagePromises);
+      const imagesMap = {};
+      images.forEach(({ gunId, url }) => {
+        imagesMap[gunId] = url;
+      });
+      setWeaponImages(imagesMap);
+    };
+    
+    if (guns.length > 0) {
+      fetchWeaponImages();
+    }
+  }, [guns]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -529,6 +555,40 @@ const MyWeaponsPage = () => {
     return totalShots > 0 ? (totalHits / totalShots) * 100 : 0;
   };
 
+  const handleImageUpload = async (gunId, e) => {
+    e.stopPropagation();
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setError('Plik musi być obrazem');
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      setError('Plik jest zbyt duży (max 10MB)');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      setError('');
+      await gunsAPI.uploadImage(gunId, formData);
+      
+      const response = await gunsAPI.getImage(gunId);
+      setWeaponImages({ ...weaponImages, [gunId]: response.data.url });
+      
+      await fetchGuns();
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Błąd podczas przesyłania zdjęcia');
+      console.error(err);
+    }
+    
+    e.target.value = '';
+  };
+
   if (loading) {
     return <div className="text-center">Ładowanie...</div>;
   }
@@ -580,17 +640,43 @@ const MyWeaponsPage = () => {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        flexShrink: 0
-                      }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        // Logika dodawania zdjęcia będzie dodana później
+                        flexShrink: 0,
+                        position: 'relative',
+                        overflow: 'hidden'
                       }}
                       >
-                        <AddGunImageIcon onClick={(e) => {
-                          e.stopPropagation();
-                          // Logika dodawania zdjęcia będzie dodana później
-                        }} />
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleImageUpload(gun.id, e)}
+                          style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            height: '100%',
+                            opacity: 0,
+                            cursor: 'pointer',
+                            zIndex: 1
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        {weaponImages[gun.id] ? (
+                          <img
+                            src={weaponImages[gun.id]}
+                            alt={gun.name}
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'cover',
+                              pointerEvents: 'none'
+                            }}
+                          />
+                        ) : (
+                          <AddGunImageIcon onClick={(e) => {
+                            e.stopPropagation();
+                          }} />
+                        )}
                       </div>
                       <div style={{ flex: 1 }}>
                         <h3 style={{ margin: 0, marginBottom: '0.25rem' }}>{gun.name}</h3>
