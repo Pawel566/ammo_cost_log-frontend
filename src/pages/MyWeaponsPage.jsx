@@ -312,6 +312,10 @@ const MyWeaponsPage = () => {
 
   const handleAddMaintenance = async (e) => {
     e.preventDefault();
+    if (!expandedGun && !editingMaintenance) {
+      setError('Brak wybranej broni');
+      return;
+    }
     try {
       let formData;
       if (editingMaintenance) {
@@ -330,7 +334,7 @@ const MyWeaponsPage = () => {
         formData = {
           date: maintenanceForm.date,
           notes: maintenanceForm.notes || null,
-          activities: maintenanceForm.activities.length > 0 ? maintenanceForm.activities : null
+          activities: (maintenanceForm.activities && Array.isArray(maintenanceForm.activities) && maintenanceForm.activities.length > 0) ? maintenanceForm.activities : null
         };
         await maintenanceAPI.create(expandedGun, formData);
       }
@@ -1088,8 +1092,10 @@ const MyWeaponsPage = () => {
                             setEditingMaintenance(null);
                             setMaintenanceForm({ 
                               date: new Date().toISOString().split('T')[0], 
-                              notes: ''
+                              notes: '',
+                              activities: []
                             });
+                            setShowActivitiesList(false);
                             setShowMaintenanceModal(true);
                           }}
                           style={{ 
@@ -1266,7 +1272,7 @@ const MyWeaponsPage = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            zIndex: 1000
+            zIndex: 2000
           }}
           onClick={() => {
             setShowMaintenanceModal(false);
@@ -1319,7 +1325,7 @@ const MyWeaponsPage = () => {
                     }}
                   >
                     <span>
-                      {maintenanceForm.activities.length > 0 
+                      {maintenanceForm.activities && Array.isArray(maintenanceForm.activities) && maintenanceForm.activities.length > 0 
                         ? `Wybrano: ${maintenanceForm.activities.length}` 
                         : 'Wybierz czynności'}
                     </span>
@@ -1351,17 +1357,18 @@ const MyWeaponsPage = () => {
                         >
                           <input
                             type="checkbox"
-                            checked={maintenanceForm.activities.includes(activity)}
+                            checked={maintenanceForm.activities && Array.isArray(maintenanceForm.activities) && maintenanceForm.activities.includes(activity)}
                             onChange={(e) => {
+                              const currentActivities = maintenanceForm.activities || [];
                               if (e.target.checked) {
                                 setMaintenanceForm({
                                   ...maintenanceForm,
-                                  activities: [...maintenanceForm.activities, activity]
+                                  activities: [...currentActivities, activity]
                                 });
                               } else {
                                 setMaintenanceForm({
                                   ...maintenanceForm,
-                                  activities: maintenanceForm.activities.filter(a => a !== activity)
+                                  activities: currentActivities.filter(a => a !== activity)
                                 });
                               }
                             }}
