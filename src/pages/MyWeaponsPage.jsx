@@ -44,27 +44,17 @@ const MaintenanceStatusIcon = ({ status }) => {
 
 const AddGunImageIcon = ({ onClick }) => {
   return (
-    <svg 
-      width="48" 
-      height="48" 
-      viewBox="0 0 48 48" 
-      fill="none" 
-      xmlns="http://www.w3.org/2000/svg"
+    <img 
+      src="/assets/Add_weapon_icon.png" 
+      alt="Dodaj zdjęcie broni"
       onClick={onClick}
-      style={{ cursor: 'pointer' }}
-    >
-      {/* Pistolet - szary kształt */}
-      {/* Slide/Górna część */}
-      <rect x="8" y="16" width="18" height="5" rx="0.5" fill="#666"/>
-      {/* Lufa */}
-      <rect x="26" y="17.5" width="8" height="2" rx="0.5" fill="#666"/>
-      {/* Grip */}
-      <rect x="10" y="21" width="6" height="10" rx="0.5" fill="#666"/>
-      {/* Trigger guard - okrągły */}
-      <circle cx="13" cy="25" r="3" fill="#2c2c2c" stroke="#666" strokeWidth="0.5"/>
-      {/* Plus w trigger guard */}
-      <path d="M13 23 L13 27 M11 25 L15 25" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
-    </svg>
+      style={{ 
+        cursor: 'pointer',
+        width: '100%',
+        height: '100%',
+        objectFit: 'contain'
+      }}
+    />
   );
 };
 
