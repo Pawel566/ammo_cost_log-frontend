@@ -64,6 +64,7 @@ export const gunsAPI = {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
   getImage: (id) => api.get(`/guns/${id}/image`),
+  deleteImage: (id) => api.delete(`/guns/${id}/image`),
 };
 
 // Ammo API

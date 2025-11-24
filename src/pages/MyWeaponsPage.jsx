@@ -89,6 +89,8 @@ const MyWeaponsPage = () => {
     low_ammo_notifications_enabled: true
   });
   const [weaponImages, setWeaponImages] = useState({});
+  const [openImageMenu, setOpenImageMenu] = useState(null);
+  const [expandedImage, setExpandedImage] = useState(null);
 
   const maintenanceActivities = [
     'Czyszczenie lufy',
@@ -159,16 +161,19 @@ const MyWeaponsPage = () => {
       if (openMaintenanceMenu && !event.target.closest('[data-maintenance-menu]')) {
         setOpenMaintenanceMenu(null);
       }
+      if (openImageMenu && !event.target.closest('[data-image-menu]')) {
+        setOpenImageMenu(null);
+      }
     };
 
-    if (openMaintenanceMenu) {
+    if (openMaintenanceMenu || openImageMenu) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [openMaintenanceMenu]);
+  }, [openMaintenanceMenu, openImageMenu]);
 
   useEffect(() => {
     if (expandedGun) {
@@ -586,12 +591,38 @@ const MyWeaponsPage = () => {
       setWeaponImages({ ...weaponImages, [gunId]: response.data.url });
       
       await fetchGuns();
+      setOpenImageMenu(null);
     } catch (err) {
       setError(err.response?.data?.detail || 'Błąd podczas przesyłania zdjęcia');
       console.error(err);
     }
     
     e.target.value = '';
+  };
+
+  const handleImageDelete = async (gunId) => {
+    if (!window.confirm('Czy na pewno chcesz usunąć zdjęcie?')) {
+      return;
+    }
+
+    try {
+      setError('');
+      await gunsAPI.deleteImage(gunId);
+      
+      setWeaponImages({ ...weaponImages, [gunId]: null });
+      await fetchGuns();
+      setOpenImageMenu(null);
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Błąd podczas usuwania zdjęcia');
+      console.error(err);
+    }
+  };
+
+  const handleImageClick = (gunId, e) => {
+    e.stopPropagation();
+    if (weaponImages[gunId]) {
+      setExpandedImage(weaponImages[gunId]);
+    }
   };
 
   if (loading) {
@@ -636,36 +667,23 @@ const MyWeaponsPage = () => {
                     onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
                     onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      <div style={{
-                        width: '80px',
-                        height: '80px',
-                        backgroundColor: '#2c2c2c',
-                        borderRadius: '8px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0,
-                        position: 'relative',
-                        overflow: 'hidden'
-                      }}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', position: 'relative' }}>
+                      <div 
+                        onClick={(e) => handleImageClick(gun.id, e)}
+                        style={{
+                          width: '80px',
+                          height: '80px',
+                          backgroundColor: '#2c2c2c',
+                          borderRadius: '8px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                          position: 'relative',
+                          overflow: 'hidden',
+                          cursor: weaponImages[gun.id] ? 'pointer' : 'default'
+                        }}
                       >
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => handleImageUpload(gun.id, e)}
-                          style={{
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            width: '100%',
-                            height: '100%',
-                            opacity: 0,
-                            cursor: 'pointer',
-                            zIndex: 1
-                          }}
-                          onClick={(e) => e.stopPropagation()}
-                        />
                         {weaponImages[gun.id] ? (
                           <img
                             src={weaponImages[gun.id]}
@@ -681,6 +699,99 @@ const MyWeaponsPage = () => {
                           <AddGunImageIcon onClick={(e) => {
                             e.stopPropagation();
                           }} />
+                        )}
+                      </div>
+                      <div style={{ position: 'relative' }} data-image-menu>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenImageMenu(openImageMenu === gun.id ? null : gun.id);
+                          }}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: '#aaa',
+                            cursor: 'pointer',
+                            fontSize: '1.2rem',
+                            padding: '0.5rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: '32px',
+                            height: '32px',
+                            borderRadius: '4px'
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                        >
+                          ⋯
+                        </button>
+                        {openImageMenu === gun.id && (
+                          <div
+                            style={{
+                              position: 'absolute',
+                              right: 0,
+                              top: '100%',
+                              marginTop: '0.25rem',
+                              backgroundColor: '#2c2c2c',
+                              border: '1px solid #555',
+                              borderRadius: '8px',
+                              minWidth: '150px',
+                              zIndex: 1000,
+                              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)',
+                              overflow: 'hidden'
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <label
+                              style={{
+                                width: '100%',
+                                padding: '0.75rem 1rem',
+                                background: 'none',
+                                border: 'none',
+                                color: '#fff',
+                                cursor: 'pointer',
+                                textAlign: 'left',
+                                fontSize: '0.9rem',
+                                display: 'block'
+                              }}
+                              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                            >
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => handleImageUpload(gun.id, e)}
+                                style={{ display: 'none' }}
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                              Dodaj zdjęcie
+                            </label>
+                            {weaponImages[gun.id] && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleImageDelete(gun.id);
+                                }}
+                                style={{
+                                  width: '100%',
+                                  padding: '0.75rem 1rem',
+                                  background: 'none',
+                                  border: 'none',
+                                  color: '#f44336',
+                                  cursor: 'pointer',
+                                  textAlign: 'left',
+                                  fontSize: '0.9rem',
+                                  display: 'block',
+                                  borderTop: '1px solid #555'
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                              >
+                                Usuń zdjęcie
+                              </button>
+                            )}
+                          </div>
                         )}
                       </div>
                       <div style={{ flex: 1 }}>
@@ -1411,6 +1522,54 @@ const MyWeaponsPage = () => {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {expandedImage && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.9)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 2000,
+            cursor: 'pointer'
+          }}
+          onClick={() => setExpandedImage(null)}
+        >
+          <img
+            src={expandedImage}
+            alt="Powiększone zdjęcie"
+            style={{
+              maxWidth: '90%',
+              maxHeight: '90%',
+              objectFit: 'contain',
+              borderRadius: '8px'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          />
+          <button
+            onClick={() => setExpandedImage(null)}
+            style={{
+              position: 'absolute',
+              top: '1rem',
+              right: '1rem',
+              background: 'rgba(0, 0, 0, 0.7)',
+              border: 'none',
+              color: '#fff',
+              cursor: 'pointer',
+              fontSize: '2rem',
+              padding: '0.5rem 1rem',
+              borderRadius: '4px'
+            }}
+          >
+            ×
+          </button>
         </div>
       )}
     </div>
