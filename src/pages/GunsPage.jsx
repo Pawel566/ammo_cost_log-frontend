@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { gunsAPI, maintenanceAPI, shootingSessionsAPI } from '../services/api';
+import { gunsAPI, maintenanceAPI, shootingSessionsAPI, settingsAPI } from '../services/api';
 
 const MaintenanceStatusIcon = ({ status }) => {
   const iconSize = 20;
@@ -141,11 +141,20 @@ const GunsPage = () => {
   
   // Menu akcji
   const [activeMenuId, setActiveMenuId] = useState(null);
+  
+  // Ustawienia użytkownika
+  const [userSettings, setUserSettings] = useState({
+    maintenance_rounds_limit: 500,
+    maintenance_days_limit: 90,
+    maintenance_notifications_enabled: true,
+    low_ammo_notifications_enabled: true
+  });
 
   useEffect(() => {
     fetchGuns();
     fetchAllMaintenance();
     fetchAllSessions();
+    fetchSettings();
   }, []);
 
   useEffect(() => {
@@ -303,6 +312,22 @@ const GunsPage = () => {
     return diffDays;
   };
 
+  const fetchSettings = async () => {
+    try {
+      const response = await settingsAPI.get();
+      setUserSettings({
+        maintenance_rounds_limit: response.data.maintenance_rounds_limit || 500,
+        maintenance_days_limit: response.data.maintenance_days_limit || 90,
+        maintenance_notifications_enabled: response.data.maintenance_notifications_enabled !== undefined 
+          ? response.data.maintenance_notifications_enabled : true,
+        low_ammo_notifications_enabled: response.data.low_ammo_notifications_enabled !== undefined 
+          ? response.data.low_ammo_notifications_enabled : true
+      });
+    } catch (err) {
+      console.error('Błąd podczas pobierania ustawień:', err);
+    }
+  };
+
   const getMaintenanceStatus = (gunId) => {
     const lastMaint = getLastMaintenance(gunId);
     if (!lastMaint) {
@@ -312,13 +337,18 @@ const GunsPage = () => {
     const rounds = calculateRoundsSinceLastMaintenance(gunId);
     const days = calculateDaysSinceLastMaintenance(gunId);
 
+    const roundsLimit = userSettings.maintenance_rounds_limit || 500;
+    const daysLimit = userSettings.maintenance_days_limit || 90;
+    const warningThresholdRounds = roundsLimit * 0.6;
+    const warningThresholdDays = daysLimit * 0.33;
+
     let roundsStatus = 'green';
-    if (rounds >= 500) roundsStatus = 'red';
-    else if (rounds >= 300) roundsStatus = 'yellow';
+    if (rounds >= roundsLimit) roundsStatus = 'red';
+    else if (rounds >= warningThresholdRounds) roundsStatus = 'yellow';
 
     let daysStatus = 'green';
-    if (days >= 60) daysStatus = 'red';
-    else if (days >= 30) daysStatus = 'yellow';
+    if (days >= daysLimit) daysStatus = 'red';
+    else if (days >= warningThresholdDays) daysStatus = 'yellow';
 
     let finalStatus = roundsStatus;
     if (daysStatus === 'red' || roundsStatus === 'red') {
@@ -825,10 +855,14 @@ const GunsPage = () => {
                         <td style={{ padding: '0.75rem' }}>{gun.type || '-'}</td>
                         <td style={{ padding: '0.75rem' }}>{gun.caliber || '-'}</td>
                         <td style={{ padding: '0.75rem' }}>
-                          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <MaintenanceStatusIcon status={maintenanceStatus.status} />
-                            <span style={{ color: maintenanceStatus.color }}>{maintenanceStatus.message}</span>
-                          </div>
+                          {userSettings.maintenance_notifications_enabled ? (
+                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <MaintenanceStatusIcon status={maintenanceStatus.status} />
+                              <span style={{ color: maintenanceStatus.color }}>{maintenanceStatus.message}</span>
+                            </div>
+                          ) : (
+                            <span style={{ color: '#888' }}>-</span>
+                          )}
                       </td>
                         <td style={{ padding: '0.75rem', position: 'relative' }}>
                           <div className="action-menu-container" style={{ position: 'relative' }}>

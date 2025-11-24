@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { gunsAPI, attachmentsAPI, shootingSessionsAPI, ammoAPI, maintenanceAPI } from '../services/api';
+import { gunsAPI, attachmentsAPI, shootingSessionsAPI, ammoAPI, maintenanceAPI, settingsAPI } from '../services/api';
 
 const MaintenanceStatusIcon = ({ status }) => {
   const iconSize = 20;
@@ -66,6 +66,12 @@ const MyWeaponsPage = () => {
     activities: []
   });
   const [showActivitiesList, setShowActivitiesList] = useState(false);
+  const [userSettings, setUserSettings] = useState({
+    maintenance_rounds_limit: 500,
+    maintenance_days_limit: 90,
+    maintenance_notifications_enabled: true,
+    low_ammo_notifications_enabled: true
+  });
 
   const maintenanceActivities = [
     'Czyszczenie lufy',
@@ -87,7 +93,8 @@ const MyWeaponsPage = () => {
         fetchGuns(),
         fetchAmmo(),
         fetchAllMaintenance(),
-        fetchAllSessions()
+        fetchAllSessions(),
+        fetchSettings()
       ]);
       
       // Sprawdź query param po załadowaniu danych
@@ -395,6 +402,22 @@ const MyWeaponsPage = () => {
     return diffDays;
   };
 
+  const fetchSettings = async () => {
+    try {
+      const response = await settingsAPI.get();
+      setUserSettings({
+        maintenance_rounds_limit: response.data.maintenance_rounds_limit || 500,
+        maintenance_days_limit: response.data.maintenance_days_limit || 90,
+        maintenance_notifications_enabled: response.data.maintenance_notifications_enabled !== undefined 
+          ? response.data.maintenance_notifications_enabled : true,
+        low_ammo_notifications_enabled: response.data.low_ammo_notifications_enabled !== undefined 
+          ? response.data.low_ammo_notifications_enabled : true
+      });
+    } catch (err) {
+      console.error('Błąd podczas pobierania ustawień:', err);
+    }
+  };
+
   const getMaintenanceStatus = (gunId) => {
     const lastMaint = getLastMaintenance(gunId);
     if (!lastMaint) {
@@ -404,15 +427,20 @@ const MyWeaponsPage = () => {
     const rounds = calculateRoundsSinceLastMaintenance(gunId);
     const days = calculateDaysSinceLastMaintenance(gunId);
 
+    const roundsLimit = userSettings.maintenance_rounds_limit || 500;
+    const daysLimit = userSettings.maintenance_days_limit || 90;
+    const warningThresholdRounds = roundsLimit * 0.6;
+    const warningThresholdDays = daysLimit * 0.33;
+
     // Status według strzałów
     let roundsStatus = 'green';
-    if (rounds >= 500) roundsStatus = 'red';
-    else if (rounds >= 300) roundsStatus = 'yellow';
+    if (rounds >= roundsLimit) roundsStatus = 'red';
+    else if (rounds >= warningThresholdRounds) roundsStatus = 'yellow';
 
     // Status według dni
     let daysStatus = 'green';
-    if (days >= 60) daysStatus = 'red';
-    else if (days >= 30) daysStatus = 'yellow';
+    if (days >= daysLimit) daysStatus = 'red';
+    else if (days >= warningThresholdDays) daysStatus = 'yellow';
 
     // Najgorszy status
     let finalStatus = roundsStatus;
@@ -532,10 +560,12 @@ const MyWeaponsPage = () => {
                                 <span style={{ color: '#007bff' }}>
                                   Ostatnia konserwacja: {new Date(lastMaintenance.date).toLocaleDateString('pl-PL')}
                                 </span>
-                                <span style={{ color: maintenanceStatus.color, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                  <MaintenanceStatusIcon status={maintenanceStatus.status} />
-                                  {maintenanceStatus.message}
-                                </span>
+                                {userSettings.maintenance_notifications_enabled && (
+                                  <span style={{ color: maintenanceStatus.color, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    <MaintenanceStatusIcon status={maintenanceStatus.status} />
+                                    {maintenanceStatus.message}
+                                  </span>
+                                )}
                               </span>
                             )}
                           </div>
@@ -593,16 +623,18 @@ const MyWeaponsPage = () => {
                             <span style={{ position: 'absolute', left: 0 }}>•</span>
                             Strzałów od ostatniej konserwacji: {calculateRoundsSinceLastMaintenance(gun.id)}
                           </li>
-                          <li style={{ marginBottom: '0.75rem', paddingLeft: '1.5rem', position: 'relative', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <span style={{ position: 'absolute', left: 0 }}>•</span>
-                            Status: <span style={{ 
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              marginLeft: '0.5rem'
-                            }}>
-                              <MaintenanceStatusIcon status={maintenanceStatus.status} />
-                            </span> {maintenanceStatus.message}
-                          </li>
+                          {userSettings.maintenance_notifications_enabled && (
+                            <li style={{ marginBottom: '0.75rem', paddingLeft: '1.5rem', position: 'relative', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <span style={{ position: 'absolute', left: 0 }}>•</span>
+                              Status: <span style={{ 
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                marginLeft: '0.5rem'
+                              }}>
+                                <MaintenanceStatusIcon status={maintenanceStatus.status} />
+                              </span> {maintenanceStatus.message}
+                            </li>
+                          )}
                         </ul>
                       </div>
 
