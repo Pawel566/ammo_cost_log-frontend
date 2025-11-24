@@ -667,7 +667,7 @@ const MyWeaponsPage = () => {
                     onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
                     onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', position: 'relative' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', position: 'relative', width: '100%' }}>
                       <div 
                         onClick={(e) => handleImageClick(gun.id, e)}
                         style={{
@@ -701,7 +701,43 @@ const MyWeaponsPage = () => {
                           }} />
                         )}
                       </div>
-                      <div style={{ position: 'relative' }} data-image-menu>
+                      <div style={{ flex: 1 }}>
+                        <h3 style={{ margin: 0, marginBottom: '0.25rem' }}>{gun.name}</h3>
+                        <p style={{ margin: '0.25rem 0', color: '#aaa', fontSize: '0.9rem' }}>
+                          {gun.caliber && gun.caliber}
+                        </p>
+                        <p style={{ margin: '0.25rem 0', color: '#888', fontSize: '0.85rem' }}>
+                          {getGunTypeLabel(gun.type)}
+                        </p>
+                        <div style={{ fontSize: '0.85rem', color: '#888', marginTop: '0.5rem', display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                            {attCount > 0 && (
+                              <span>{attCount} {attCount === 1 ? 'dodatek' : attCount < 5 ? 'dodatki' : 'dodatków'}</span>
+                            )}
+                            {lastMaintenance && (
+                              <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <span style={{ color: '#007bff' }}>
+                                  Ostatnia konserwacja: {new Date(lastMaintenance.date).toLocaleDateString('pl-PL')}
+                                </span>
+                                {userSettings.maintenance_notifications_enabled && (
+                                  <span style={{ color: maintenanceStatus.color, display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                    <MaintenanceStatusIcon status={maintenanceStatus.status} />
+                                    <span>
+                                      {maintenanceStatus.message}
+                                      {(maintenanceStatus.status === 'yellow' || maintenanceStatus.status === 'red') && maintenanceStatus.reason && (
+                                        <span style={{ marginLeft: '0.5rem', fontSize: '0.8rem', opacity: 0.9 }}>
+                                          ({maintenanceStatus.reason})
+                                        </span>
+                                      )}
+                                    </span>
+                                  </span>
+                                )}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div style={{ position: 'relative', flexShrink: 0 }} data-image-menu>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -793,42 +829,6 @@ const MyWeaponsPage = () => {
                             )}
                           </div>
                         )}
-                      </div>
-                      <div style={{ flex: 1 }}>
-                        <h3 style={{ margin: 0, marginBottom: '0.25rem' }}>{gun.name}</h3>
-                        <p style={{ margin: '0.25rem 0', color: '#aaa', fontSize: '0.9rem' }}>
-                          {gun.caliber && gun.caliber}
-                        </p>
-                        <p style={{ margin: '0.25rem 0', color: '#888', fontSize: '0.85rem' }}>
-                          {getGunTypeLabel(gun.type)}
-                        </p>
-                        <div style={{ fontSize: '0.85rem', color: '#888', marginTop: '0.5rem', display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
-                            {attCount > 0 && (
-                              <span>{attCount} {attCount === 1 ? 'dodatek' : attCount < 5 ? 'dodatki' : 'dodatków'}</span>
-                            )}
-                            {lastMaintenance && (
-                              <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <span style={{ color: '#007bff' }}>
-                                  Ostatnia konserwacja: {new Date(lastMaintenance.date).toLocaleDateString('pl-PL')}
-                                </span>
-                                {userSettings.maintenance_notifications_enabled && (
-                                  <span style={{ color: maintenanceStatus.color, display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                                    <MaintenanceStatusIcon status={maintenanceStatus.status} />
-                                    <span>
-                                      {maintenanceStatus.message}
-                                      {(maintenanceStatus.status === 'yellow' || maintenanceStatus.status === 'red') && maintenanceStatus.reason && (
-                                        <span style={{ marginLeft: '0.5rem', fontSize: '0.8rem', opacity: 0.9 }}>
-                                          ({maintenanceStatus.reason})
-                                        </span>
-                                      )}
-                                    </span>
-                                  </span>
-                                )}
-                              </span>
-                            )}
-                          </div>
-                        </div>
                       </div>
                     </div>
                   </div>
