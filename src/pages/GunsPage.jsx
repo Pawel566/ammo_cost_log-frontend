@@ -43,21 +43,6 @@ const MaintenanceStatusIcon = ({ status }) => {
   }
 };
 
-const AddGunImageIcon = ({ onClick }) => {
-  return (
-    <img 
-      src="/assets/Add_weapon_icon.png" 
-      alt="Dodaj zdjęcie broni"
-      onClick={onClick}
-      style={{ 
-        cursor: 'pointer',
-        width: '100%',
-        height: '100%',
-        objectFit: 'contain'
-      }}
-    />
-  );
-};
 
 // Mapowanie rodzajów broni do kalibrów
 const CALIBERS_BY_GUN_TYPE = {
@@ -165,7 +150,6 @@ const GunsPage = () => {
     maintenance_notifications_enabled: true,
     low_ammo_notifications_enabled: true
   });
-  const [weaponImages, setWeaponImages] = useState({});
 
   useEffect(() => {
     fetchGuns();
@@ -177,31 +161,6 @@ const GunsPage = () => {
   useEffect(() => {
     applyFilters();
   }, [guns, typeFilter, caliberFilter, sortColumn, sortDirection]);
-
-  useEffect(() => {
-    const fetchWeaponImages = async () => {
-      const imagePromises = guns.map(async (gun) => {
-        try {
-          const response = await gunsAPI.getImage(gun.id);
-          return { gunId: gun.id, url: response.data.url };
-        } catch (err) {
-          console.error(`Błąd pobierania zdjęcia dla broni ${gun.id}:`, err);
-          return { gunId: gun.id, url: null };
-        }
-      });
-      
-      const images = await Promise.all(imagePromises);
-      const imagesMap = {};
-      images.forEach(({ gunId, url }) => {
-        imagesMap[gunId] = url;
-      });
-      setWeaponImages(imagesMap);
-    };
-    
-    if (guns.length > 0) {
-      fetchWeaponImages();
-    }
-  }, [guns]);
 
   const fetchGuns = async () => {
     try {
@@ -312,41 +271,6 @@ const GunsPage = () => {
   const getUniqueCalibers = () => {
     const calibers = guns.map(gun => gun.caliber).filter(Boolean);
     return [...new Set(calibers)].sort();
-  };
-
-  const handleImageUpload = async (gunId, e) => {
-    e.stopPropagation();
-    const file = e.target.files[0];
-    if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
-      setError('Plik musi być obrazem');
-      return;
-    }
-
-    if (file.size > 10 * 1024 * 1024) {
-      setError('Plik jest zbyt duży (max 10MB)');
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-      setError(null);
-      await gunsAPI.uploadImage(gunId, formData);
-      
-      const response = await gunsAPI.getImage(gunId);
-      setWeaponImages({ ...weaponImages, [gunId]: response.data.url });
-      
-      await fetchGuns();
-      setSuccess('Zdjęcie zostało przesłane pomyślnie');
-    } catch (err) {
-      setError(err.response?.data?.detail || 'Błąd podczas przesyłania zdjęcia');
-      console.error(err);
-    }
-    
-    e.target.value = '';
   };
 
   const getLastMaintenance = (gunId) => {
@@ -907,9 +831,6 @@ const GunsPage = () => {
               <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid #555' }}>
-                    <th style={{ padding: '0.75rem', textAlign: 'left', color: '#aaa', fontWeight: 'normal', width: '80px' }}>
-                      Zdjęcie
-                    </th>
                     <th 
                       style={{ 
                         padding: '0.75rem', 
@@ -964,52 +885,6 @@ const GunsPage = () => {
                     const maintenanceStatus = getMaintenanceStatus(gun.id);
                     return (
                       <tr key={gun.id} style={{ borderBottom: '1px solid #333' }}>
-                        <td style={{ padding: '0.75rem' }}>
-                          <div style={{
-                            width: '60px',
-                            height: '60px',
-                            backgroundColor: '#2c2c2c',
-                            borderRadius: '8px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            position: 'relative',
-                            overflow: 'hidden'
-                          }}>
-                            <input
-                              type="file"
-                              accept="image/*"
-                              onChange={(e) => handleImageUpload(gun.id, e)}
-                              style={{
-                                position: 'absolute',
-                                top: 0,
-                                left: 0,
-                                width: '100%',
-                                height: '100%',
-                                opacity: 0,
-                                cursor: 'pointer',
-                                zIndex: 1
-                              }}
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                            {weaponImages[gun.id] ? (
-                              <img
-                                src={weaponImages[gun.id]}
-                                alt={gun.name}
-                                style={{
-                                  width: '100%',
-                                  height: '100%',
-                                  objectFit: 'cover',
-                                  pointerEvents: 'none'
-                                }}
-                              />
-                            ) : (
-                              <AddGunImageIcon onClick={(e) => {
-                                e.stopPropagation();
-                              }} />
-                            )}
-                          </div>
-                        </td>
                         <td style={{ padding: '0.75rem', fontWeight: '500' }}>{gun.name}</td>
                         <td style={{ padding: '0.75rem' }}>{gun.type || '-'}</td>
                         <td style={{ padding: '0.75rem' }}>{gun.caliber || '-'}</td>
