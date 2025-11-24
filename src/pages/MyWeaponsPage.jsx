@@ -1,6 +1,62 @@
-import React, { useState, useEffect } from 'react'; // test123
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { gunsAPI, attachmentsAPI, shootingSessionsAPI, ammoAPI, maintenanceAPI } from '../services/api';
+import { gunsAPI, attachmentsAPI, shootingSessionsAPI, ammoAPI, maintenanceAPI, settingsAPI } from '../services/api';
+
+const MaintenanceStatusIcon = ({ status }) => {
+  const iconSize = 20;
+  
+  if (status === 'green' || status === 'ok') {
+    // Zielona ikona z checkmarkiem - OK
+    return (
+      <svg width={iconSize} height={iconSize} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="10" cy="10" r="9" fill="#4caf50" stroke="none"/>
+        <path d="M6 10 L9 13 L14 7" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+      </svg>
+    );
+  } else if (status === 'yellow' || status === 'warning') {
+    // Żółta ikona z wykrzyknikiem - Wkrótce wymagana
+    return (
+      <svg width={iconSize} height={iconSize} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10 2 L18 18 L2 18 Z" fill="#ff9800" stroke="none"/>
+        <path d="M10 6 L10 11" stroke="black" strokeWidth="2" strokeLinecap="round"/>
+        <circle cx="10" cy="14" r="1" fill="black"/>
+      </svg>
+    );
+  } else if (status === 'red' || status === 'required') {
+    // Czerwona ikona z wykrzyknikiem - Wymagana
+    return (
+      <svg width={iconSize} height={iconSize} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="10" cy="10" r="9" fill="#f44336" stroke="none"/>
+        <path d="M10 5 L10 11" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+        <circle cx="10" cy="14" r="1" fill="white"/>
+      </svg>
+    );
+  } else {
+    // Szara ikona z przekreśleniem - Nie dotyczy
+    return (
+      <svg width={iconSize} height={iconSize} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="10" cy="10" r="9" fill="#888" stroke="none"/>
+        <path d="M6 6 L14 14 M14 6 L6 14" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+      </svg>
+    );
+  }
+};
+
+const AddGunImageIcon = ({ onClick }) => {
+  return (
+    <img 
+      src="/assets/Add_weapon_icon.png" 
+      alt="Dodaj zdjęcie broni"
+      onClick={onClick}
+      style={{ 
+        cursor: 'pointer',
+        width: '100%',
+        height: '100%',
+        objectFit: 'contain'
+      }}
+    />
+  );
+};
 
 const MyWeaponsPage = () => {
   const navigate = useNavigate();
@@ -15,12 +71,40 @@ const MyWeaponsPage = () => {
   const [ammo, setAmmo] = useState([]);
   const [showAttachmentModal, setShowAttachmentModal] = useState(false);
   const [showMaintenanceModal, setShowMaintenanceModal] = useState(false);
+  const [showMaintenanceDetailsModal, setShowMaintenanceDetailsModal] = useState(false);
+  const [selectedMaintenance, setSelectedMaintenance] = useState(null);
   const [editingMaintenance, setEditingMaintenance] = useState(null);
+  const [openMaintenanceMenu, setOpenMaintenanceMenu] = useState(null);
   const [attachmentForm, setAttachmentForm] = useState({ type: 'optic', name: '', notes: '' });
   const [maintenanceForm, setMaintenanceForm] = useState({ 
     date: new Date().toISOString().split('T')[0], 
-    notes: ''
+    notes: '',
+    activities: []
   });
+  const [showActivitiesList, setShowActivitiesList] = useState(false);
+  const [userSettings, setUserSettings] = useState({
+    maintenance_rounds_limit: 500,
+    maintenance_days_limit: 90,
+    maintenance_notifications_enabled: true,
+    low_ammo_notifications_enabled: true
+  });
+  const [weaponImages, setWeaponImages] = useState({});
+  const [openImageMenu, setOpenImageMenu] = useState(null);
+  const [expandedImage, setExpandedImage] = useState(null);
+
+  const maintenanceActivities = [
+    'Czyszczenie lufy',
+    'Czyszczenie suwadła',
+    'Czyszczenie zamka',
+    'Czyszczenie iglicy',
+    'Smarowanie prowadnic',
+    'Smarowanie zamka',
+    'Kontrola zużycia sprężyn',
+    'Kontrola zamka / rygli',
+    'Wymiana części',
+    'Sprawdzenie optyki',
+    'Czyszczenie magazynków'
+  ];
 
   useEffect(() => {
     const loadData = async () => {
@@ -28,12 +112,13 @@ const MyWeaponsPage = () => {
         fetchGuns(),
         fetchAmmo(),
         fetchAllMaintenance(),
-        fetchAllSessions()
+        fetchAllSessions(),
+        fetchSettings()
       ]);
       
       // Sprawdź query param po załadowaniu danych
       const gunIdFromQuery = searchParams.get('gun_id');
-      if (gunIdFromQuery && !expandedGun) {
+      if (gunIdFromQuery) {
         setExpandedGun(gunIdFromQuery);
       }
     };
@@ -42,12 +127,66 @@ const MyWeaponsPage = () => {
   }, []);
 
   useEffect(() => {
+    const fetchWeaponImages = async () => {
+      if (guns.length === 0) return;
+      
+      const imagePromises = guns.map(async (gun) => {
+        try {
+          const response = await gunsAPI.getImage(gun.id);
+          return { gunId: gun.id, url: response.data?.url || null };
+        } catch (err) {
+          // Cicho ignoruj błędy - po prostu nie pokazuj zdjęcia
+          return { gunId: gun.id, url: null };
+        }
+      });
+      
+      try {
+        const images = await Promise.all(imagePromises);
+        const imagesMap = {};
+        images.forEach(({ gunId, url }) => {
+          imagesMap[gunId] = url;
+        });
+        setWeaponImages(imagesMap);
+      } catch (err) {
+        // Ignoruj błędy - nie blokuj renderowania strony
+        console.error('Błąd pobierania zdjęć broni:', err);
+      }
+    };
+    
+    fetchWeaponImages();
+  }, [guns]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (openMaintenanceMenu && !event.target.closest('[data-maintenance-menu]')) {
+        setOpenMaintenanceMenu(null);
+      }
+      if (openImageMenu && !event.target.closest('[data-image-menu]')) {
+        setOpenImageMenu(null);
+      }
+    };
+
+    if (openMaintenanceMenu || openImageMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [openMaintenanceMenu, openImageMenu]);
+
+  useEffect(() => {
     if (expandedGun) {
       fetchGunDetails(expandedGun);
       // Aktualizuj URL bez przeładowania strony tylko jeśli się różni
       const currentGunId = searchParams.get('gun_id');
       if (currentGunId !== expandedGun) {
         setSearchParams({ gun_id: expandedGun }, { replace: true });
+      }
+    } else {
+      // Jeśli expandedGun jest null, usuń query param
+      if (searchParams.get('gun_id')) {
+        setSearchParams({}, { replace: true });
       }
     }
   }, [expandedGun]);
@@ -58,7 +197,11 @@ const MyWeaponsPage = () => {
       const response = await gunsAPI.getAll();
       const data = response.data;
       const items = Array.isArray(data) ? data : data?.items ?? [];
-      setGuns(items);
+      // Usuń duplikaty na podstawie ID
+      const uniqueGuns = items.filter((gun, index, self) => 
+        index === self.findIndex(g => g.id === gun.id)
+      );
+      setGuns(uniqueGuns);
       setError('');
     } catch (err) {
       setError('Błąd podczas pobierania listy broni');
@@ -169,6 +312,10 @@ const MyWeaponsPage = () => {
 
   const handleAddMaintenance = async (e) => {
     e.preventDefault();
+    if (!expandedGun && !editingMaintenance) {
+      setError('Brak wybranej broni');
+      return;
+    }
     try {
       let formData;
       if (editingMaintenance) {
@@ -179,19 +326,25 @@ const MyWeaponsPage = () => {
         if (maintenanceForm.notes !== undefined) {
           formData.notes = maintenanceForm.notes || null;
         }
+        if (maintenanceForm.activities !== undefined) {
+          formData.activities = maintenanceForm.activities.length > 0 ? maintenanceForm.activities : null;
+        }
         await maintenanceAPI.update(editingMaintenance.id, formData);
       } else {
         formData = {
           date: maintenanceForm.date,
-          notes: maintenanceForm.notes || null
+          notes: maintenanceForm.notes || null,
+          activities: (maintenanceForm.activities && Array.isArray(maintenanceForm.activities) && maintenanceForm.activities.length > 0) ? maintenanceForm.activities : null
         };
         await maintenanceAPI.create(expandedGun, formData);
       }
       setShowMaintenanceModal(false);
       setEditingMaintenance(null);
+      setShowActivitiesList(false);
       setMaintenanceForm({ 
         date: new Date().toISOString().split('T')[0], 
-        notes: ''
+        notes: '',
+        activities: []
       });
       await fetchGunDetails(expandedGun);
       await fetchAllMaintenance();
@@ -209,8 +362,10 @@ const MyWeaponsPage = () => {
       : maint.date.split('T')[0];
     setMaintenanceForm({
       date: dateValue,
-      notes: maint.notes || ''
+      notes: maint.notes || '',
+      activities: maint.activities || []
     });
+    setShowActivitiesList(maint.activities && maint.activities.length > 0);
     setShowMaintenanceModal(true);
   };
 
@@ -303,49 +458,175 @@ const MyWeaponsPage = () => {
     return diffDays;
   };
 
+  const fetchSettings = async () => {
+    try {
+      const response = await settingsAPI.get();
+      setUserSettings({
+        maintenance_rounds_limit: response.data.maintenance_rounds_limit || 500,
+        maintenance_days_limit: response.data.maintenance_days_limit || 90,
+        maintenance_notifications_enabled: response.data.maintenance_notifications_enabled !== undefined 
+          ? response.data.maintenance_notifications_enabled : true,
+        low_ammo_notifications_enabled: response.data.low_ammo_notifications_enabled !== undefined 
+          ? response.data.low_ammo_notifications_enabled : true
+      });
+    } catch (err) {
+      console.error('Błąd podczas pobierania ustawień:', err);
+    }
+  };
+
   const getMaintenanceStatus = (gunId) => {
     const lastMaint = getLastMaintenance(gunId);
     if (!lastMaint) {
-      return { status: 'none', color: '#888', icon: '', message: 'Brak konserwacji' };
+      return { status: 'none', color: '#888', message: 'Nie dotyczy' };
     }
 
     const rounds = calculateRoundsSinceLastMaintenance(gunId);
     const days = calculateDaysSinceLastMaintenance(gunId);
 
-    // Status według strzałów
-    let roundsStatus = 'green';
-    if (rounds >= 500) roundsStatus = 'red';
-    else if (rounds >= 300) roundsStatus = 'yellow';
+    const roundsLimit = userSettings.maintenance_rounds_limit || 500;
+    const daysLimit = userSettings.maintenance_days_limit || 90;
 
-    // Status według dni
-    let daysStatus = 'green';
-    if (days >= 60) daysStatus = 'red';
-    else if (days >= 30) daysStatus = 'yellow';
+    // Wybór kryterium: jeśli nie wystrzelaliśmy, to na podstawie dni; jeśli dni nie minęły, to na podstawie strzałów
+    let useRounds = true;
+    let percentage = 0;
+    let finalStatus = 'green';
 
-    // Najgorszy status
-    let finalStatus = roundsStatus;
-    if (daysStatus === 'red' || roundsStatus === 'red') {
-      finalStatus = 'red';
-    } else if (daysStatus === 'yellow' || roundsStatus === 'yellow') {
-      finalStatus = 'yellow';
+    if (rounds === 0) {
+      // Jeśli nie wystrzelaliśmy, używamy dni
+      useRounds = false;
+      percentage = (days / daysLimit) * 100;
+    } else if (days < daysLimit) {
+      // Jeśli dni nie minęły, używamy strzałów
+      useRounds = true;
+      percentage = (rounds / roundsLimit) * 100;
+    } else {
+      // Jeśli dni minęły, używamy dni
+      useRounds = false;
+      percentage = (days / daysLimit) * 100;
     }
 
-    let color, icon, message;
+    // Status według procentów: zielona do 74%, żółta 75-99%, czerwona 100%+
+    if (percentage >= 100) {
+      finalStatus = 'red';
+    } else if (percentage >= 75) {
+      finalStatus = 'yellow';
+    } else {
+      finalStatus = 'green';
+    }
+
+    let color, message, reason = '';
+    const roundsPercentage = Math.round((rounds / roundsLimit) * 100);
+    const daysPercentage = Math.round((days / daysLimit) * 100);
+
     if (finalStatus === 'red') {
       color = '#f44336';
-      icon = '🔴';
-      message = 'Wymagana konserwacja';
+      message = 'Wymagana';
+      if (useRounds && rounds >= roundsLimit) {
+        reason = `Wymagana konserwacja: przekroczono limit strzałów (${rounds}/${roundsLimit})`;
+      } else if (!useRounds && days >= daysLimit) {
+        reason = `Wymagana konserwacja: przekroczono limit czasu (${days}/${daysLimit} dni)`;
+      } else if (useRounds) {
+        reason = `Wymagana konserwacja: ${roundsPercentage}% limitu strzałów (${rounds}/${roundsLimit})`;
+      } else {
+        reason = `Wymagana konserwacja: ${daysPercentage}% limitu czasu (${days}/${daysLimit} dni)`;
+      }
     } else if (finalStatus === 'yellow') {
       color = '#ff9800';
-      icon = '🟡';
-      message = 'Zbliża się konserwacja';
+      message = 'Wkrótce wymagana';
+      if (useRounds) {
+        reason = `${roundsPercentage}% limitu strzałów (${rounds}/${roundsLimit})`;
+      } else {
+        reason = `${daysPercentage}% limitu czasu (${days}/${daysLimit} dni)`;
+      }
     } else {
       color = '#4caf50';
-      icon = '🟢';
       message = 'OK';
+      reason = '';
     }
 
-    return { status: finalStatus, color, icon, message, rounds, days };
+    return { status: finalStatus, color, message, reason, rounds, days };
+  };
+
+  const getTotalShots = (gunId) => {
+    const gunSessions = sessions[gunId];
+    if (!gunSessions || !Array.isArray(gunSessions)) return 0;
+    return gunSessions.reduce((total, session) => total + (session.shots || 0), 0);
+  };
+
+  const getAverageAccuracy = (gunId) => {
+    const gunSessions = sessions[gunId];
+    if (!gunSessions || !Array.isArray(gunSessions)) return 0;
+    
+    const accuracySessions = gunSessions.filter(s => 
+      s.hits !== null && s.hits !== undefined && s.distance_m
+    );
+    
+    if (accuracySessions.length === 0) return 0;
+    
+    const totalShots = accuracySessions.reduce((sum, session) => sum + (session.shots || 0), 0);
+    const totalHits = accuracySessions.reduce((sum, session) => sum + (session.hits || 0), 0);
+    
+    return totalShots > 0 ? (totalHits / totalShots) * 100 : 0;
+  };
+
+  const handleImageUpload = async (gunId, e) => {
+    e.stopPropagation();
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setError('Plik musi być obrazem');
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      setError('Plik jest zbyt duży (max 10MB)');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      setError('');
+      await gunsAPI.uploadImage(gunId, formData);
+      
+      const response = await gunsAPI.getImage(gunId);
+      setWeaponImages({ ...weaponImages, [gunId]: response.data.url });
+      
+      await fetchGuns();
+      setOpenImageMenu(null);
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Błąd podczas przesyłania zdjęcia');
+      console.error(err);
+    }
+    
+    e.target.value = '';
+  };
+
+  const handleImageDelete = async (gunId) => {
+    if (!window.confirm('Czy na pewno chcesz usunąć zdjęcie?')) {
+      return;
+    }
+
+    try {
+      setError('');
+      await gunsAPI.deleteImage(gunId);
+      
+      setWeaponImages({ ...weaponImages, [gunId]: null });
+      await fetchGuns();
+      setOpenImageMenu(null);
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Błąd podczas usuwania zdjęcia');
+      console.error(err);
+    }
+  };
+
+  const handleImageClick = (gunId, e) => {
+    e.stopPropagation();
+    if (weaponImages[gunId]) {
+      setExpandedImage(weaponImages[gunId]);
+    }
   };
 
   if (loading) {
@@ -379,10 +660,10 @@ const MyWeaponsPage = () => {
                       cursor: 'pointer',
                       transition: 'transform 0.2s',
                     }}
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       if (isExpanded) {
                         setExpandedGun(null);
-                        setSearchParams({}, { replace: true });
                       } else {
                         setExpandedGun(gun.id);
                       }
@@ -390,18 +671,39 @@ const MyWeaponsPage = () => {
                     onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
                     onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      <div style={{
-                        width: '80px',
-                        height: '80px',
-                        backgroundColor: '#2c2c2c',
-                        borderRadius: '8px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0
-                      }}>
-                        <span style={{ fontSize: '2rem' }}>🔫</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', position: 'relative', width: '100%' }}>
+                      <div 
+                        onClick={(e) => handleImageClick(gun.id, e)}
+                        style={{
+                          width: '80px',
+                          height: '80px',
+                          backgroundColor: '#2c2c2c',
+                          borderRadius: '8px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                          position: 'relative',
+                          overflow: 'hidden',
+                          cursor: weaponImages[gun.id] ? 'pointer' : 'default'
+                        }}
+                      >
+                        {weaponImages[gun.id] ? (
+                          <img
+                            src={weaponImages[gun.id]}
+                            alt={gun.name}
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'cover',
+                              pointerEvents: 'none'
+                            }}
+                          />
+                        ) : (
+                          <AddGunImageIcon onClick={(e) => {
+                            e.stopPropagation();
+                          }} />
+                        )}
                       </div>
                       <div style={{ flex: 1 }}>
                         <h3 style={{ margin: 0, marginBottom: '0.25rem' }}>{gun.name}</h3>
@@ -411,275 +713,442 @@ const MyWeaponsPage = () => {
                         <p style={{ margin: '0.25rem 0', color: '#888', fontSize: '0.85rem' }}>
                           {getGunTypeLabel(gun.type)}
                         </p>
-                        <div style={{ fontSize: '0.85rem', color: '#888', marginTop: '0.5rem', display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
-                          {attCount > 0 && (
-                            <span>{attCount} {attCount === 1 ? 'dodatek' : attCount < 5 ? 'dodatki' : 'dodatków'}</span>
-                          )}
-                          {lastMaintenance && (
-                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                              <span style={{ color: '#007bff' }}>
-                                Ostatnia konserwacja: {new Date(lastMaintenance.date).toLocaleDateString('pl-PL')}
+                        <div style={{ fontSize: '0.85rem', color: '#888', marginTop: '0.5rem', display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                            {attCount > 0 && (
+                              <span>{attCount} {attCount === 1 ? 'dodatek' : attCount < 5 ? 'dodatki' : 'dodatków'}</span>
+                            )}
+                            {lastMaintenance && (
+                              <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <span style={{ color: '#007bff' }}>
+                                  Ostatnia konserwacja: {new Date(lastMaintenance.date).toLocaleDateString('pl-PL')}
+                                </span>
+                                {userSettings.maintenance_notifications_enabled && (
+                                  <span style={{ color: maintenanceStatus.color, display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                    <MaintenanceStatusIcon status={maintenanceStatus.status} />
+                                    <span>
+                                      {maintenanceStatus.message}
+                                      {(maintenanceStatus.status === 'yellow' || maintenanceStatus.status === 'red') && maintenanceStatus.reason && (
+                                        <span style={{ marginLeft: '0.5rem', fontSize: '0.8rem', opacity: 0.9 }}>
+                                          ({maintenanceStatus.reason})
+                                        </span>
+                                      )}
+                                    </span>
+                                  </span>
+                                )}
                               </span>
-                              <span style={{ color: maintenanceStatus.color, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                                {maintenanceStatus.icon} {maintenanceStatus.message}
-                              </span>
-                            </span>
-                          )}
+                            )}
+                          </div>
                         </div>
+                      </div>
+                      <div style={{ position: 'relative', flexShrink: 0 }} data-image-menu>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenImageMenu(openImageMenu === gun.id ? null : gun.id);
+                          }}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: '#aaa',
+                            cursor: 'pointer',
+                            fontSize: '1.2rem',
+                            padding: '0.5rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: '32px',
+                            height: '32px',
+                            borderRadius: '4px'
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                        >
+                          ⋯
+                        </button>
+                        {openImageMenu === gun.id && (
+                          <div
+                            style={{
+                              position: 'absolute',
+                              right: 0,
+                              top: '100%',
+                              marginTop: '0.25rem',
+                              backgroundColor: '#2c2c2c',
+                              border: '1px solid #555',
+                              borderRadius: '8px',
+                              minWidth: '150px',
+                              zIndex: 1000,
+                              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)',
+                              overflow: 'hidden'
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <label
+                              style={{
+                                width: '100%',
+                                padding: '0.75rem 1rem',
+                                background: 'none',
+                                border: 'none',
+                                color: '#fff',
+                                cursor: 'pointer',
+                                textAlign: 'left',
+                                fontSize: '0.9rem',
+                                display: 'block'
+                              }}
+                              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                            >
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => handleImageUpload(gun.id, e)}
+                                style={{ display: 'none' }}
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                              Dodaj zdjęcie
+                            </label>
+                            {weaponImages[gun.id] && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleImageDelete(gun.id);
+                                }}
+                                style={{
+                                  width: '100%',
+                                  padding: '0.75rem 1rem',
+                                  background: 'none',
+                                  border: 'none',
+                                  color: '#f44336',
+                                  cursor: 'pointer',
+                                  textAlign: 'left',
+                                  fontSize: '0.9rem',
+                                  display: 'block',
+                                  borderTop: '1px solid #555'
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                              >
+                                Usuń zdjęcie
+                              </button>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
 
                   {isExpanded && (
-                    <div className="card" style={{ marginTop: '0.5rem', marginBottom: '1rem' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                        <h3 style={{ margin: 0 }}>{gun.name}</h3>
+                    
+                    <div>
+
+                      {/* Karta statystyk */}
+                      <div className="card">
+                        <h3 style={{ margin: 0, marginBottom: '1rem', fontSize: '1.2rem', fontWeight: 'bold' }}>
+                          Statystyki broni
+                        </h3>
+                        <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                          <li style={{ marginBottom: '0.75rem', paddingLeft: '1.5rem', position: 'relative' }}>
+                            <span style={{ position: 'absolute', left: 0 }}>•</span>
+                            Łączna liczba strzałów: {getTotalShots(gun.id)}
+                          </li>
+                          <li style={{ marginBottom: '0.75rem', paddingLeft: '1.5rem', position: 'relative' }}>
+                            <span style={{ position: 'absolute', left: 0 }}>•</span>
+                            Średnia celność: {getAverageAccuracy(gun.id).toFixed(1).replace('.', ',')}%
+                          </li>
+                          <li style={{ marginBottom: '0.75rem', paddingLeft: '1.5rem', position: 'relative' }}>
+                            <span style={{ position: 'absolute', left: 0 }}>•</span>
+                            Ostatnia konserwacja: {lastMaintenance 
+                              ? new Date(lastMaintenance.date).toLocaleDateString('pl-PL')
+                              : 'Brak'}
+                          </li>
+                          <li style={{ marginBottom: '0.75rem', paddingLeft: '1.5rem', position: 'relative' }}>
+                            <span style={{ position: 'absolute', left: 0 }}>•</span>
+                            Strzałów od ostatniej konserwacji: {calculateRoundsSinceLastMaintenance(gun.id)}
+                          </li>
+                          {userSettings.maintenance_notifications_enabled && (
+                            <li style={{ marginBottom: '0.75rem', paddingLeft: '1.5rem', position: 'relative' }}>
+                              <span style={{ position: 'absolute', left: 0 }}>•</span>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                Status: <span style={{ 
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  marginLeft: '0.5rem'
+                                }}>
+                                  <MaintenanceStatusIcon status={maintenanceStatus.status} />
+                                </span> 
+                                <span>
+                                  {maintenanceStatus.message}
+                                  {(maintenanceStatus.status === 'yellow' || maintenanceStatus.status === 'red') && maintenanceStatus.reason && (
+                                    <span style={{ marginLeft: '0.5rem', fontSize: '0.85rem', opacity: 0.9, display: 'block', marginTop: '0.25rem' }}>
+                                      {maintenanceStatus.reason}
+                                    </span>
+                                  )}
+                                </span>
+                              </div>
+                            </li>
+                          )}
+                        </ul>
+                      </div>
+
+                      {/* Karta dodatków */}
+                      <div className="card">
+                        <h3 style={{ margin: 0, marginBottom: '1rem', fontSize: '1.2rem', fontWeight: 'bold' }}>
+                          Dodatki
+                        </h3>
+                        {attachments[gun.id]?.length > 0 ? (
+                          <div style={{ marginBottom: '1rem' }}>
+                            {attachments[gun.id].map((att) => (
+                              <div key={att.id} style={{ marginBottom: '0.5rem' }}>
+                                {getAttachmentTypeLabel(att.type)} - {att.name}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p style={{ color: '#888', marginBottom: '1rem' }}>Brak dodatków</p>
+                        )}
                         <button
-                          className="btn btn-secondary"
                           onClick={(e) => {
                             e.stopPropagation();
-                            setExpandedGun(null);
-                            setSearchParams({}, { replace: true });
+                            setShowAttachmentModal(true);
                           }}
-                          style={{ padding: '0.5rem 1rem' }}
+                          style={{ 
+                            color: '#007bff', 
+                            textDecoration: 'none',
+                            padding: 0,
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            fontSize: '0.9rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.25rem'
+                          }}
                         >
-                          Zwiń
+                          <span>+</span> Dodaj dodatek
                         </button>
                       </div>
 
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                        <div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                            <h4 style={{ margin: 0 }}>Dodatki</h4>
-                          </div>
-                          {attachments[gun.id]?.length > 0 ? (
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
-                              {attachments[gun.id].map((att) => (
-                                <div
-                                  key={att.id}
-                                  style={{
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: '0.5rem',
-                                    padding: '0.5rem 1rem',
+                      {/* Karta konserwacji */}
+                      <div className="card">
+                        <h3 style={{ margin: 0, marginBottom: '1rem', fontSize: '1.2rem', fontWeight: 'bold' }}>
+                          Konserwacja
+                        </h3>
+                        {maintenance[gun.id] && Array.isArray(maintenance[gun.id]) && maintenance[gun.id].length > 0 ? (
+                          <div style={{ marginBottom: '1rem' }}>
+                            {maintenance[gun.id]
+                              .sort((a, b) => new Date(b.date) - new Date(a.date))
+                              .map((maint) => (
+                                <div 
+                                  key={maint.id} 
+                                  style={{ 
+                                    marginBottom: '0.75rem', 
+                                    padding: '0.75rem',
                                     backgroundColor: '#2c2c2c',
-                                    borderRadius: '20px',
-                                    fontSize: '0.9rem',
-                                    position: 'relative'
+                                    borderRadius: '8px',
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'flex-start',
+                                    gap: '1rem'
                                   }}
                                 >
-                                  <span>{getAttachmentTypeLabel(att.type)} - {att.name}</span>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleDeleteAttachment(att.id);
-                                    }}
-                                    style={{
-                                      marginLeft: '0.5rem',
-                                      background: 'none',
-                                      border: 'none',
-                                      color: '#f44336',
-                                      cursor: 'pointer',
-                                      fontSize: '1rem',
-                                      padding: 0,
-                                      width: '20px',
-                                      height: '20px',
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      justifyContent: 'center'
-                                    }}
-                                  >
-                                    ×
-                                  </button>
+                                  <div style={{ flex: 1 }}>
+                                    <div style={{ fontWeight: '500', marginBottom: '0.5rem', fontSize: '1rem' }}>
+                                      {new Date(maint.date).toLocaleDateString('pl-PL')}
+                                    </div>
+                                    {maint.activities && maint.activities.length > 0 && (
+                                      <div style={{ fontSize: '0.9rem', color: '#aaa' }}>
+                                        <div style={{ marginBottom: '0.25rem', fontWeight: '500' }}>Wykonane czynności:</div>
+                                        <ul style={{ margin: 0, paddingLeft: '1.25rem', listStyle: 'disc' }}>
+                                          {maint.activities.map((activity, idx) => (
+                                            <li key={idx} style={{ marginBottom: '0.15rem' }}>{activity}</li>
+                                          ))}
+                                        </ul>
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div style={{ position: 'relative' }} data-maintenance-menu>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setOpenMaintenanceMenu(openMaintenanceMenu === maint.id ? null : maint.id);
+                                      }}
+                                      style={{
+                                        background: 'none',
+                                        border: 'none',
+                                        color: '#aaa',
+                                        cursor: 'pointer',
+                                        fontSize: '1.2rem',
+                                        padding: '0.5rem',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        width: '32px',
+                                        height: '32px',
+                                        borderRadius: '4px'
+                                      }}
+                                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                    >
+                                      ⋯
+                                    </button>
+                                    {openMaintenanceMenu === maint.id && (
+                                      <div
+                                        style={{
+                                          position: 'absolute',
+                                          right: 0,
+                                          top: '100%',
+                                          marginTop: '0.25rem',
+                                          backgroundColor: '#2c2c2c',
+                                          border: '1px solid #555',
+                                          borderRadius: '8px',
+                                          minWidth: '150px',
+                                          zIndex: 1000,
+                                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)',
+                                          overflow: 'hidden'
+                                        }}
+                                        onClick={(e) => e.stopPropagation()}
+                                      >
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setOpenMaintenanceMenu(null);
+                                            setSelectedMaintenance(maint);
+                                            setShowMaintenanceDetailsModal(true);
+                                          }}
+                                          style={{
+                                            width: '100%',
+                                            padding: '0.75rem 1rem',
+                                            background: 'none',
+                                            border: 'none',
+                                            color: '#fff',
+                                            cursor: 'pointer',
+                                            textAlign: 'left',
+                                            fontSize: '0.9rem',
+                                            display: 'block'
+                                          }}
+                                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                        >
+                                          Szczegóły
+                                        </button>
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setOpenMaintenanceMenu(null);
+                                            handleEditMaintenance(maint);
+                                          }}
+                                          style={{
+                                            width: '100%',
+                                            padding: '0.75rem 1rem',
+                                            background: 'none',
+                                            border: 'none',
+                                            color: '#fff',
+                                            cursor: 'pointer',
+                                            textAlign: 'left',
+                                            fontSize: '0.9rem',
+                                            display: 'block',
+                                            borderTop: '1px solid #555'
+                                          }}
+                                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                        >
+                                          Edytuj
+                                        </button>
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setOpenMaintenanceMenu(null);
+                                            handleDeleteMaintenance(maint.id);
+                                          }}
+                                          style={{
+                                            width: '100%',
+                                            padding: '0.75rem 1rem',
+                                            background: 'none',
+                                            border: 'none',
+                                            color: '#f44336',
+                                            cursor: 'pointer',
+                                            textAlign: 'left',
+                                            fontSize: '0.9rem',
+                                            display: 'block',
+                                            borderTop: '1px solid #555'
+                                          }}
+                                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                        >
+                                          Usuń
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
                               ))}
-                            </div>
-                          ) : (
-                            <p style={{ color: '#888', marginBottom: '1rem' }}>Brak dodatków</p>
-                          )}
-                          <button
-                            className="btn btn-link"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setShowAttachmentModal(true);
-                            }}
-                            style={{ 
-                              color: '#007bff', 
-                              textDecoration: 'none',
-                              padding: 0,
-                              background: 'none',
-                              border: 'none',
-                              cursor: 'pointer',
-                              fontSize: '0.9rem'
-                            }}
-                          >
-                            + Dodaj dodatek
-                          </button>
-                        </div>
-
-                        <div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                            <h4 style={{ margin: 0 }}>Konserwacja</h4>
                           </div>
-                          {maintenance[gun.id]?.length > 0 ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1rem' }}>
-                              {maintenance[gun.id]
-                                .sort((a, b) => new Date(b.date) - new Date(a.date))
-                                .map((maint) => (
-                                  <div
-                                    key={maint.id}
-                                    style={{
-                                      padding: '0.75rem',
-                                      backgroundColor: '#2c2c2c',
-                                      borderRadius: '8px',
-                                      display: 'flex',
-                                      justifyContent: 'space-between',
-                                      alignItems: 'center'
-                                    }}
-                                  >
-                                    <div>
-                                      <div style={{ fontWeight: '500' }}>
-                                        {new Date(maint.date).toLocaleDateString('pl-PL')}
-                                      </div>
-                                      {maint.notes && (
-                                        <div style={{ fontSize: '0.85rem', color: '#888', marginTop: '0.25rem' }}>
-                                          {maint.notes}
-                                        </div>
-                                      )}
-                                    </div>
-                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          navigate(`/maintenance?gun_id=${gun.id}`);
-                                        }}
-                                        style={{
-                                          background: 'none',
-                                          border: 'none',
-                                          color: '#007bff',
-                                          cursor: 'pointer',
-                                          fontSize: '0.9rem',
-                                          padding: '0.25rem 0.5rem'
-                                        }}
-                                      >
-                                        Szczegóły
-                                      </button>
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleEditMaintenance(maint);
-                                        }}
-                                        style={{
-                                          background: 'none',
-                                          border: 'none',
-                                          color: '#007bff',
-                                          cursor: 'pointer',
-                                          fontSize: '0.9rem',
-                                          padding: '0.25rem 0.5rem'
-                                        }}
-                                      >
-                                        Edytuj
-                                      </button>
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleDeleteMaintenance(maint.id);
-                                        }}
-                                        style={{
-                                          background: 'none',
-                                          border: 'none',
-                                          color: '#f44336',
-                                          cursor: 'pointer',
-                                          fontSize: '1.2rem',
-                                          padding: '0.25rem 0.5rem'
-                                        }}
-                                      >
-                                        ×
-                                      </button>
-                                    </div>
-                                  </div>
-                                ))}
-                            </div>
-                          ) : (
-                            <p style={{ color: '#888', marginBottom: '1rem' }}>Brak konserwacji</p>
-                          )}
-                          <button
-                            className="btn btn-link"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setEditingMaintenance(null);
-                              setMaintenanceForm({ 
-                                date: new Date().toISOString().split('T')[0], 
-                                notes: ''
-                              });
-                              setShowMaintenanceModal(true);
-                            }}
-                            style={{ 
-                              color: '#007bff', 
-                              textDecoration: 'none',
-                              padding: 0,
-                              background: 'none',
-                              border: 'none',
-                              cursor: 'pointer',
-                              fontSize: '0.9rem'
-                            }}
-                          >
-                            + Dodaj konserwację
-                          </button>
-                        </div>
+                        ) : (
+                          <p style={{ color: '#888', marginBottom: '1rem' }}>Brak konserwacji</p>
+                        )}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingMaintenance(null);
+                            setMaintenanceForm({ 
+                              date: new Date().toISOString().split('T')[0], 
+                              notes: '',
+                              activities: []
+                            });
+                            setShowActivitiesList(false);
+                            setShowMaintenanceModal(true);
+                          }}
+                          style={{ 
+                            color: '#007bff', 
+                            textDecoration: 'none',
+                            padding: 0,
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            fontSize: '0.9rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.25rem'
+                          }}
+                        >
+                          <span>+</span> Dodaj konserwację
+                        </button>
+                      </div>
 
-                        <div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                            <h4 style={{ margin: 0 }}>Historia użytkowania</h4>
+                      {/* Karta historii użytkowania */}
+                      <div className="card">
+                        <h3 style={{ margin: 0, marginBottom: '1rem', fontSize: '1.2rem', fontWeight: 'bold' }}>
+                          Historia użytkowania
+                        </h3>
+                        {sessions[gun.id] && Array.isArray(sessions[gun.id]) && sessions[gun.id].length > 0 ? (
+                          <div style={{ overflowX: 'auto' }}>
+                            <table className="table" style={{ width: '100%' }}>
+                              <thead>
+                                <tr>
+                                  <th>Data</th>
+                                  <th>Amunicja</th>
+                                  <th>Strzały</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {sessions[gun.id]
+                                  .sort((a, b) => new Date(b.date) - new Date(a.date))
+                                  .map((session) => {
+                                    const sessionAmmo = ammo.find(a => a.id === session.ammo_id);
+                                    return (
+                                      <tr key={session.id}>
+                                        <td>{new Date(session.date).toLocaleDateString('pl-PL')}</td>
+                                        <td>{sessionAmmo ? sessionAmmo.name : '-'}</td>
+                                        <td>{session.shots}</td>
+                                      </tr>
+                                    );
+                                  })}
+                              </tbody>
+                            </table>
                           </div>
-                          {sessions[gun.id] && Array.isArray(sessions[gun.id]) && sessions[gun.id].length > 0 ? (
-                            <div style={{ overflowX: 'auto' }}>
-                              <table className="table" style={{ width: '100%' }}>
-                                <thead>
-                                  <tr>
-                                    <th>Data</th>
-                                    <th>Amunicja</th>
-                                    <th>Strzały</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {sessions[gun.id]
-                                    .sort((a, b) => new Date(b.date) - new Date(a.date))
-                                    .map((session) => {
-                                      const sessionAmmo = ammo.find(a => a.id === session.ammo_id);
-                                      return (
-                                        <tr key={session.id}>
-                                          <td>{new Date(session.date).toLocaleDateString('pl-PL')}</td>
-                                          <td>{sessionAmmo ? sessionAmmo.name : '-'}</td>
-                                          <td>{session.shots}</td>
-                                        </tr>
-                                      );
-                                    })}
-                                </tbody>
-                              </table>
-                            </div>
-                          ) : (
-                            <p style={{ color: '#888', marginBottom: '1rem' }}>Brak sesji</p>
-                          )}
-                          <button
-                            className="btn btn-link"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate('/cost-sessions');
-                            }}
-                            style={{ 
-                              color: '#007bff', 
-                              textDecoration: 'none',
-                              padding: 0,
-                              background: 'none',
-                              border: 'none',
-                              cursor: 'pointer',
-                              fontSize: '0.9rem'
-                            }}
-                          >
-                            + Dodaj sesję
-                          </button>
-                        </div>
+                        ) : (
+                          <p style={{ color: '#888' }}>Brak sesji</p>
+                        )}
                       </div>
                     </div>
                   )}
@@ -803,14 +1272,16 @@ const MyWeaponsPage = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            zIndex: 1000
+            zIndex: 2000
           }}
           onClick={() => {
             setShowMaintenanceModal(false);
             setEditingMaintenance(null);
+            setShowActivitiesList(false);
             setMaintenanceForm({ 
               date: new Date().toISOString().split('T')[0], 
-              notes: ''
+              notes: '',
+              activities: []
             });
           }}
         >
@@ -832,17 +1303,97 @@ const MyWeaponsPage = () => {
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">Notatki</label>
+                <label className="form-label">Lista czynności</label>
+                <div style={{ border: '1px solid #555', borderRadius: '4px', backgroundColor: '#2c2c2c' }}>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setShowActivitiesList(!showActivitiesList);
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      background: 'none',
+                      border: 'none',
+                      color: '#fff',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}
+                  >
+                    <span>
+                      {maintenanceForm.activities && Array.isArray(maintenanceForm.activities) && maintenanceForm.activities.length > 0 
+                        ? `Wybrano: ${maintenanceForm.activities.length}` 
+                        : 'Wybierz czynności'}
+                    </span>
+                    <span style={{ fontSize: '0.8rem' }}>
+                      {showActivitiesList ? '▼' : '▶'}
+                    </span>
+                  </button>
+                  {showActivitiesList && (
+                    <div style={{ 
+                      padding: '0.5rem 0.5rem 0.5rem 0', 
+                      borderTop: '1px solid #555',
+                      maxHeight: '200px',
+                      overflowY: 'auto',
+                      textAlign: 'left'
+                    }}>
+                      {maintenanceActivities.map((activity) => (
+                        <label
+                          key={activity}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            padding: '0.5rem 0.5rem 0.5rem 0',
+                            cursor: 'pointer',
+                            borderRadius: '4px',
+                            margin: 0
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={maintenanceForm.activities && Array.isArray(maintenanceForm.activities) && maintenanceForm.activities.includes(activity)}
+                            onChange={(e) => {
+                              const currentActivities = maintenanceForm.activities || [];
+                              if (e.target.checked) {
+                                setMaintenanceForm({
+                                  ...maintenanceForm,
+                                  activities: [...currentActivities, activity]
+                                });
+                              } else {
+                                setMaintenanceForm({
+                                  ...maintenanceForm,
+                                  activities: currentActivities.filter(a => a !== activity)
+                                });
+                              }
+                            }}
+                            style={{ cursor: 'pointer', margin: 0, marginRight: '1rem', flexShrink: 0 }}
+                          />
+                          <span style={{ textAlign: 'left' }}>{activity}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Opis:</label>
                 <textarea
                   className="form-input"
                   value={maintenanceForm.notes}
                   onChange={(e) => setMaintenanceForm({ ...maintenanceForm, notes: e.target.value })}
                   rows={3}
+                  placeholder="Opcjonalny opis konserwacji..."
                 />
               </div>
               <div style={{ display: 'flex', gap: '1rem' }}>
-                <button type="submit" className="btn btn-primary">
-                  {editingMaintenance ? 'Zapisz' : 'Dodaj'}
+                <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>
+                  Zapisz konserwację
                 </button>
                 <button
                   type="button"
@@ -850,9 +1401,11 @@ const MyWeaponsPage = () => {
                   onClick={() => {
                     setShowMaintenanceModal(false);
                     setEditingMaintenance(null);
+                    setShowActivitiesList(false);
                     setMaintenanceForm({ 
                       date: new Date().toISOString().split('T')[0], 
-                      notes: ''
+                      notes: '',
+                      activities: []
                     });
                   }}
                 >
@@ -861,6 +1414,169 @@ const MyWeaponsPage = () => {
               </div>
             </form>
           </div>
+        </div>
+      )}
+
+      {showMaintenanceDetailsModal && selectedMaintenance && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000
+          }}
+          onClick={() => {
+            setShowMaintenanceDetailsModal(false);
+            setSelectedMaintenance(null);
+          }}
+        >
+          <div
+            className="card"
+            style={{ maxWidth: '600px', width: '90%', maxHeight: '80vh', overflowY: 'auto' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h3 style={{ margin: 0 }}>Szczegóły konserwacji</h3>
+              <button
+                onClick={() => {
+                  setShowMaintenanceDetailsModal(false);
+                  setSelectedMaintenance(null);
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#aaa',
+                  cursor: 'pointer',
+                  fontSize: '1.5rem',
+                  padding: '0.25rem 0.5rem'
+                }}
+              >
+                ×
+              </button>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#aaa' }}>
+                  Data wykonania
+                </label>
+                <div style={{ padding: '0.75rem', backgroundColor: '#2c2c2c', borderRadius: '4px', color: '#fff' }}>
+                  {new Date(selectedMaintenance.date).toLocaleDateString('pl-PL')}
+                </div>
+              </div>
+
+              {selectedMaintenance.activities && selectedMaintenance.activities.length > 0 && (
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#aaa' }}>
+                    Lista czynności
+                  </label>
+                  <div style={{ padding: '0.75rem', backgroundColor: '#2c2c2c', borderRadius: '4px' }}>
+                    <ul style={{ margin: 0, paddingLeft: '1.25rem', listStyle: 'disc', color: '#fff' }}>
+                      {selectedMaintenance.activities.map((activity, idx) => (
+                        <li key={idx} style={{ marginBottom: '0.5rem' }}>{activity}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              )}
+
+              {selectedMaintenance.notes && (
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#aaa' }}>
+                    Opis
+                  </label>
+                  <div style={{ padding: '0.75rem', backgroundColor: '#2c2c2c', borderRadius: '4px', color: '#fff', whiteSpace: 'pre-wrap' }}>
+                    {selectedMaintenance.notes}
+                  </div>
+                </div>
+              )}
+
+              {!selectedMaintenance.notes && (!selectedMaintenance.activities || selectedMaintenance.activities.length === 0) && (
+                <div style={{ color: '#888', textAlign: 'center', padding: '1rem' }}>
+                  Brak dodatkowych informacji
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+              <button
+                onClick={() => {
+                  setShowMaintenanceDetailsModal(false);
+                  const maintToEdit = selectedMaintenance;
+                  setSelectedMaintenance(null);
+                  handleEditMaintenance(maintToEdit);
+                }}
+                className="btn btn-primary"
+                style={{ flex: 1 }}
+              >
+                Edytuj
+              </button>
+              <button
+                onClick={() => {
+                  setShowMaintenanceDetailsModal(false);
+                  setSelectedMaintenance(null);
+                }}
+                className="btn btn-secondary"
+                style={{ flex: 1 }}
+              >
+                Zamknij
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {expandedImage && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.9)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 2000,
+            cursor: 'pointer'
+          }}
+          onClick={() => setExpandedImage(null)}
+        >
+          <img
+            src={expandedImage}
+            alt="Powiększone zdjęcie"
+            style={{
+              maxWidth: '90%',
+              maxHeight: '90%',
+              objectFit: 'contain',
+              borderRadius: '8px'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          />
+          <button
+            onClick={() => setExpandedImage(null)}
+            style={{
+              position: 'absolute',
+              top: '1rem',
+              right: '1rem',
+              background: 'rgba(0, 0, 0, 0.7)',
+              border: 'none',
+              color: '#fff',
+              cursor: 'pointer',
+              fontSize: '2rem',
+              padding: '0.5rem 1rem',
+              borderRadius: '4px'
+            }}
+          >
+            ×
+          </button>
         </div>
       )}
     </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ammoAPI } from '../services/api';
+import { ammoAPI, settingsAPI } from '../services/api';
 
 const COMMON_CALIBERS = [
   '9×19',
@@ -68,10 +68,28 @@ const AmmoPage = () => {
   
   // Menu akcji
   const [activeMenuId, setActiveMenuId] = useState(null);
+  
+  // Ustawienia użytkownika
+  const [userSettings, setUserSettings] = useState({
+    low_ammo_notifications_enabled: true
+  });
 
   useEffect(() => {
     fetchAmmo();
+    fetchSettings();
   }, []);
+
+  const fetchSettings = async () => {
+    try {
+      const response = await settingsAPI.get();
+      setUserSettings({
+        low_ammo_notifications_enabled: response.data.low_ammo_notifications_enabled !== undefined 
+          ? response.data.low_ammo_notifications_enabled : true
+      });
+    } catch (err) {
+      console.error('Błąd podczas pobierania ustawień:', err);
+    }
+  };
 
   useEffect(() => {
     applyFilters();
@@ -343,7 +361,7 @@ const AmmoPage = () => {
           </div>
         )}
 
-        {lowStockItems.length > 0 && (
+        {lowStockItems.length > 0 && userSettings.low_ammo_notifications_enabled && (
           <div 
             style={{ 
               marginBottom: '1rem',
@@ -735,7 +753,7 @@ const AmmoPage = () => {
                     {paginatedAmmo.map((item) => {
                     const price = Number(item.price_per_unit || 0);
                       const units = item.units_in_package || 0;
-                      const lowStock = isLowStock(units);
+                      const lowStock = isLowStock(units) && userSettings.low_ammo_notifications_enabled;
                     return (
                         <tr 
                           key={item.id} 

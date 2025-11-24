@@ -1,7 +1,48 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { gunsAPI, maintenanceAPI, shootingSessionsAPI } from '../services/api';
+import { gunsAPI, maintenanceAPI, shootingSessionsAPI, settingsAPI } from '../services/api';
+
+const MaintenanceStatusIcon = ({ status }) => {
+  const iconSize = 20;
+  
+  if (status === 'green' || status === 'ok') {
+    // Zielona ikona z checkmarkiem - OK
+    return (
+      <svg width={iconSize} height={iconSize} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="10" cy="10" r="9" fill="#4caf50" stroke="none"/>
+        <path d="M6 10 L9 13 L14 7" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+      </svg>
+    );
+  } else if (status === 'yellow' || status === 'warning') {
+    // Żółta ikona z wykrzyknikiem - Wkrótce wymagana
+    return (
+      <svg width={iconSize} height={iconSize} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10 2 L18 18 L2 18 Z" fill="#ff9800" stroke="none"/>
+        <path d="M10 6 L10 11" stroke="black" strokeWidth="2" strokeLinecap="round"/>
+        <circle cx="10" cy="14" r="1" fill="black"/>
+      </svg>
+    );
+  } else if (status === 'red' || status === 'required') {
+    // Czerwona ikona z wykrzyknikiem - Wymagana
+    return (
+      <svg width={iconSize} height={iconSize} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="10" cy="10" r="9" fill="#f44336" stroke="none"/>
+        <path d="M10 5 L10 11" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+        <circle cx="10" cy="14" r="1" fill="white"/>
+      </svg>
+    );
+  } else {
+    // Szara ikona z przekreśleniem - Nie dotyczy
+    return (
+      <svg width={iconSize} height={iconSize} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="10" cy="10" r="9" fill="#888" stroke="none"/>
+        <path d="M6 6 L14 14 M14 6 L6 14" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+      </svg>
+    );
+  }
+};
+
 
 // Mapowanie rodzajów broni do kalibrów
 const CALIBERS_BY_GUN_TYPE = {
@@ -101,11 +142,20 @@ const GunsPage = () => {
   
   // Menu akcji
   const [activeMenuId, setActiveMenuId] = useState(null);
+  
+  // Ustawienia użytkownika
+  const [userSettings, setUserSettings] = useState({
+    maintenance_rounds_limit: 500,
+    maintenance_days_limit: 90,
+    maintenance_notifications_enabled: true,
+    low_ammo_notifications_enabled: true
+  });
 
   useEffect(() => {
     fetchGuns();
     fetchAllMaintenance();
     fetchAllSessions();
+    fetchSettings();
   }, []);
 
   useEffect(() => {
@@ -263,37 +313,99 @@ const GunsPage = () => {
     return diffDays;
   };
 
+  const fetchSettings = async () => {
+    try {
+      const response = await settingsAPI.get();
+      setUserSettings({
+        maintenance_rounds_limit: response.data.maintenance_rounds_limit || 500,
+        maintenance_days_limit: response.data.maintenance_days_limit || 90,
+        maintenance_notifications_enabled: response.data.maintenance_notifications_enabled !== undefined 
+          ? response.data.maintenance_notifications_enabled : true,
+        low_ammo_notifications_enabled: response.data.low_ammo_notifications_enabled !== undefined 
+          ? response.data.low_ammo_notifications_enabled : true
+      });
+    } catch (err) {
+      console.error('Błąd podczas pobierania ustawień:', err);
+    }
+  };
+
   const getMaintenanceStatus = (gunId) => {
     const lastMaint = getLastMaintenance(gunId);
     if (!lastMaint) {
-      return { status: 'green', color: '#4caf50' };
+      return { status: 'none', color: '#888', message: 'Nie dotyczy' };
     }
 
     const rounds = calculateRoundsSinceLastMaintenance(gunId);
     const days = calculateDaysSinceLastMaintenance(gunId);
 
-    let roundsStatus = 'green';
-    if (rounds >= 500) roundsStatus = 'red';
-    else if (rounds >= 300) roundsStatus = 'yellow';
+    const roundsLimit = userSettings.maintenance_rounds_limit || 500;
+    const daysLimit = userSettings.maintenance_days_limit || 90;
 
-    let daysStatus = 'green';
-    if (days >= 60) daysStatus = 'red';
-    else if (days >= 30) daysStatus = 'yellow';
+    // Wybór kryterium: jeśli nie wystrzelaliśmy, to na podstawie dni; jeśli dni nie minęły, to na podstawie strzałów
+    let useRounds = true;
+    let percentage = 0;
+    let finalStatus = 'green';
 
-    let finalStatus = roundsStatus;
-    if (daysStatus === 'red' || roundsStatus === 'red') {
+    if (rounds === 0) {
+      // Jeśli nie wystrzelaliśmy, używamy dni
+      useRounds = false;
+      percentage = (days / daysLimit) * 100;
+    } else if (days < daysLimit) {
+      // Jeśli dni nie minęły, używamy strzałów
+      useRounds = true;
+      percentage = (rounds / roundsLimit) * 100;
+    } else {
+      // Jeśli dni minęły, używamy dni
+      useRounds = false;
+      percentage = (days / daysLimit) * 100;
+    }
+
+    // Status według procentów: zielona do 74%, żółta 75-99%, czerwona 100%+
+    if (percentage >= 100) {
       finalStatus = 'red';
-    } else if (daysStatus === 'yellow' || roundsStatus === 'yellow') {
+    } else if (percentage >= 75) {
       finalStatus = 'yellow';
+    } else {
+      finalStatus = 'green';
     }
 
     const colors = {
       green: '#4caf50',
       yellow: '#ff9800',
-      red: '#f44336'
+      red: '#f44336',
+      none: '#888'
     };
 
-    return { status: finalStatus, color: colors[finalStatus] };
+    const messages = {
+      green: 'OK',
+      yellow: 'Wkrótce wymagana',
+      red: 'Wymagana',
+      none: 'Nie dotyczy'
+    };
+
+    let reason = '';
+    const roundsPercentage = Math.round((rounds / roundsLimit) * 100);
+    const daysPercentage = Math.round((days / daysLimit) * 100);
+
+    if (finalStatus === 'red') {
+      if (useRounds && rounds >= roundsLimit) {
+        reason = `Wymagana konserwacja: przekroczono limit strzałów (${rounds}/${roundsLimit})`;
+      } else if (!useRounds && days >= daysLimit) {
+        reason = `Wymagana konserwacja: przekroczono limit czasu (${days}/${daysLimit} dni)`;
+      } else if (useRounds) {
+        reason = `Wymagana konserwacja: ${roundsPercentage}% limitu strzałów (${rounds}/${roundsLimit})`;
+      } else {
+        reason = `Wymagana konserwacja: ${daysPercentage}% limitu czasu (${days}/${daysLimit} dni)`;
+      }
+    } else if (finalStatus === 'yellow') {
+      if (useRounds) {
+        reason = `${roundsPercentage}% limitu strzałów (${rounds}/${roundsLimit})`;
+      } else {
+        reason = `${daysPercentage}% limitu czasu (${days}/${daysLimit} dni)`;
+      }
+    }
+
+    return { status: finalStatus, color: colors[finalStatus], message: messages[finalStatus], reason, rounds, days };
   };
 
   const getAvailableCalibers = () => {
@@ -777,15 +889,21 @@ const GunsPage = () => {
                         <td style={{ padding: '0.75rem' }}>{gun.type || '-'}</td>
                         <td style={{ padding: '0.75rem' }}>{gun.caliber || '-'}</td>
                         <td style={{ padding: '0.75rem' }}>
-                          <div
-                            style={{
-                              width: '12px',
-                              height: '12px',
-                              borderRadius: '50%',
-                              backgroundColor: maintenanceStatus.color,
-                              display: 'inline-block'
-                            }}
-                          />
+                          {userSettings.maintenance_notifications_enabled ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <MaintenanceStatusIcon status={maintenanceStatus.status} />
+                                <span style={{ color: maintenanceStatus.color }}>{maintenanceStatus.message}</span>
+                              </div>
+                              {(maintenanceStatus.status === 'yellow' || maintenanceStatus.status === 'red') && maintenanceStatus.reason && (
+                                <span style={{ fontSize: '0.8rem', color: '#aaa', marginLeft: '1.5rem' }}>
+                                  {maintenanceStatus.reason}
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <span style={{ color: '#888' }}>-</span>
+                          )}
                       </td>
                         <td style={{ padding: '0.75rem', position: 'relative' }}>
                           <div className="action-menu-container" style={{ position: 'relative' }}>
