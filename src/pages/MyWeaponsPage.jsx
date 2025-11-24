@@ -577,27 +577,6 @@ const MyWeaponsPage = () => {
                               </span>
                             )}
                           </div>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setExpandedGun(gun.id);
-                              setEditingMaintenance(null);
-                              setMaintenanceForm({ 
-                                date: new Date().toISOString().split('T')[0], 
-                                notes: '',
-                                activities: []
-                              });
-                              setShowMaintenanceModal(true);
-                            }}
-                            className="btn btn-primary"
-                            style={{ 
-                              padding: '0.5rem 1rem',
-                              fontSize: '0.85rem',
-                              whiteSpace: 'nowrap'
-                            }}
-                          >
-                            + Dodaj konserwację
-                          </button>
                         </div>
                       </div>
                     </div>
