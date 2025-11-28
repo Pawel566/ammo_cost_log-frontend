@@ -100,8 +100,10 @@ const AddShootingSessionPage = () => {
         cost: fixedCost
       });
       
-      // Ustaw tryb zaawansowany jeśli są dane celności
-      if (session.distance_m || session.hits !== null) {
+      // Ustaw tryb sesji na podstawie session_type lub danych celności
+      if (session.session_type === 'advanced') {
+        setSessionMode('advanced');
+      } else if (session.distance_m || session.hits !== null) {
         setSessionMode('advanced');
       }
     } catch (err) {
@@ -240,6 +242,7 @@ const AddShootingSessionPage = () => {
         ammo_id: formData.ammo_id,
         date: formData.date,
         shots: Number(shots),
+        session_type: sessionMode,  // 'standard' or 'advanced'
       };
 
       // Dane celności (w obu trybach)
@@ -291,7 +294,8 @@ const AddShootingSessionPage = () => {
           shots: sessionData.shots,
           distance_m: normalize(sessionData.distance_m),
           hits: normalize(sessionData.hits),
-          cost: normalize(sessionData.cost)
+          cost: normalize(sessionData.cost),
+          session_type: sessionMode  // 'standard' or 'advanced'
         };
         // Tylko dodaj gun_id i ammo_id jeśli zostały zmienione
         if (sessionData.gun_id) {

@@ -125,8 +125,8 @@ const ShootingSessionsPage = () => {
             return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
           case 'type':
             // Sortowanie po typie: standardowa (0) vs zaawansowana (1)
-            aValue = a.ai_comment ? 1 : 0;
-            bValue = b.ai_comment ? 1 : 0;
+            aValue = (a.session_type === 'advanced') ? 1 : 0;
+            bValue = (b.session_type === 'advanced') ? 1 : 0;
             return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
           default:
             aValue = String(a[sortColumn] || '').toLowerCase();
@@ -400,8 +400,8 @@ const ShootingSessionsPage = () => {
                     <tr key={session.id}>
                       <td style={{ textAlign: 'center', padding: '0.75rem' }}>
                         <img 
-                          src={session.ai_comment ? "/assets/session_icon_AI_dark.png" : "/assets/session_icon_dark.png"}
-                          alt={session.ai_comment ? "Sesja zaawansowana" : "Sesja standardowa"}
+                          src={session.session_type === 'advanced' ? "/assets/session_icon_AI_dark.png" : "/assets/session_icon_dark.png"}
+                          alt={session.session_type === 'advanced' ? "Sesja zaawansowana" : "Sesja standardowa"}
                           style={{ 
                             width: '24px', 
                             height: '24px',
