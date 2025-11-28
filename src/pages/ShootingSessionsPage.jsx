@@ -277,6 +277,7 @@ const ShootingSessionsPage = () => {
               <table className="table">
                 <thead>
                   <tr>
+                    <th style={{ padding: '0.75rem' }}>Typ</th>
                     <th 
                       style={{ 
                         cursor: 'pointer',
@@ -380,6 +381,17 @@ const ShootingSessionsPage = () => {
                 <tbody>
                   {filteredSessions.map((session) => (
                     <tr key={session.id}>
+                      <td style={{ textAlign: 'center', padding: '0.75rem' }}>
+                        <img 
+                          src={session.ai_comment ? "/assets/session_icon_AI_dark.png" : "/assets/session_icon_dark.png"}
+                          alt={session.ai_comment ? "Sesja zaawansowana" : "Sesja standardowa"}
+                          style={{ 
+                            width: '24px', 
+                            height: '24px',
+                            objectFit: 'contain'
+                          }}
+                        />
+                      </td>
                       <td>{new Date(session.date).toLocaleDateString('pl-PL')}</td>
                       <td>{getGunName(session.gun_id)}</td>
                       <td>{getAmmoName(session.ammo_id)}</td>
