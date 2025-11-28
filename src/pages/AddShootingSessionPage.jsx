@@ -100,11 +100,11 @@ const AddShootingSessionPage = () => {
         cost: fixedCost
       });
       
-      // Ustaw tryb sesji na podstawie session_type lub danych celności
+      // Ustaw tryb sesji na podstawie session_type
       if (session.session_type === 'advanced') {
         setSessionMode('advanced');
-      } else if (session.distance_m || session.hits !== null) {
-        setSessionMode('advanced');
+      } else {
+        setSessionMode('standard');
       }
     } catch (err) {
       setError('Błąd podczas ładowania sesji');
