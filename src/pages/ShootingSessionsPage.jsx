@@ -15,6 +15,8 @@ const ShootingSessionsPage = () => {
   const [filterValue, setFilterValue] = useState('');
   const [openMenuId, setOpenMenuId] = useState(null);
   const [selectedSession, setSelectedSession] = useState(null);
+  const [regeneratingComment, setRegeneratingComment] = useState(false);
+  const [sessionToDelete, setSessionToDelete] = useState(null);
 
   // Sortowanie
   const [sortColumn, setSortColumn] = useState(null);
@@ -168,27 +170,34 @@ const ShootingSessionsPage = () => {
     return ammoItem ? ammoItem.name : 'Nieznana amunicja';
   };
 
-  const handleDelete = async (sessionId) => {
-    const sessionToDelete = sessions.find(s => s.id === sessionId);
-    const gun = guns.find(g => g.id === sessionToDelete?.gun_id);
+  const handleDeleteClick = (sessionId) => {
+    setSessionToDelete(sessionId);
+    setOpenMenuId(null);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!sessionToDelete) return;
+
+    const session = sessions.find(s => s.id === sessionToDelete);
+    const gun = guns.find(g => g.id === session?.gun_id);
     const gunName = gun ? gun.name : '';
     const gunType = gun ? (gun.type || '') : '';
-    const gunDisplayName = `${gunType ? gunType + ' ' : ''}${gunName}`;
-    
-    if (!window.confirm(`Czy na pewno chcesz usunąć sesję dla ${gunDisplayName}?`)) {
-      return;
-    }
 
     try {
-      await shootingSessionsAPI.delete(sessionId);
-      setSessions(sessions.filter(s => s.id !== sessionId));
-      setOpenMenuId(null);
+      await shootingSessionsAPI.delete(sessionToDelete);
+      setSessions(sessions.filter(s => s.id !== sessionToDelete));
+      setSessionToDelete(null);
       setSuccess(`Sesja dla ${gunType ? gunType + ' ' : ''}${gunName} usunięta!`);
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       setError(err.response?.data?.detail || 'Błąd podczas usuwania sesji');
       console.error(err);
+      setSessionToDelete(null);
     }
+  };
+
+  const handleDeleteCancel = () => {
+    setSessionToDelete(null);
   };
 
   const handleEdit = (sessionId) => {
@@ -210,6 +219,38 @@ const ShootingSessionsPage = () => {
 
   const handleCloseModal = () => {
     setSelectedSession(null);
+    setRegeneratingComment(false);
+  };
+
+  const handleRegenerateAIComment = async () => {
+    if (!selectedSession) return;
+    
+    setRegeneratingComment(true);
+    try {
+      const response = await shootingSessionsAPI.generateAIComment(selectedSession.id);
+      // Zaktualizuj sesję w stanie
+      setSelectedSession({
+        ...selectedSession,
+        ai_comment: response.data.ai_comment
+      });
+      // Zaktualizuj również w liście sesji
+      setSessions(sessions.map(s => 
+        s.id === selectedSession.id 
+          ? { ...s, ai_comment: response.data.ai_comment }
+          : s
+      ));
+      setFilteredSessions(filteredSessions.map(s => 
+        s.id === selectedSession.id 
+          ? { ...s, ai_comment: response.data.ai_comment }
+          : s
+      ));
+      setSuccess('Komentarz AI został wygenerowany!');
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Błąd podczas generowania komentarza AI');
+      console.error('Błąd generowania komentarza AI:', err);
+    } finally {
+      setRegeneratingComment(false);
+    }
   };
 
   // Zamknij menu po kliknięciu poza nim
@@ -520,7 +561,7 @@ const ShootingSessionsPage = () => {
                                 Edytuj
                               </button>
                               <button
-                                onClick={() => handleDelete(session.id)}
+                                onClick={() => handleDeleteClick(session.id)}
                                 style={{
                                   width: '100%',
                                   padding: '0.75rem 1rem',
@@ -683,7 +724,22 @@ const ShootingSessionsPage = () => {
               )}
 
               <div>
-                <strong>Komentarz AI:</strong>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <strong>Komentarz AI:</strong>
+                  {selectedSession.session_type === 'advanced' && selectedSession.distance_m && selectedSession.hits !== null && selectedSession.hits !== undefined && (
+                    <button
+                      className="btn btn-secondary"
+                      onClick={handleRegenerateAIComment}
+                      disabled={regeneratingComment}
+                      style={{
+                        padding: '0.5rem 1rem',
+                        fontSize: '0.9rem'
+                      }}
+                    >
+                      {regeneratingComment ? 'Generowanie...' : 'Wygeneruj komentarz AI'}
+                    </button>
+                  )}
+                </div>
                 <div style={{ 
                   marginTop: '0.5rem', 
                   padding: '0.75rem', 
@@ -700,19 +756,82 @@ const ShootingSessionsPage = () => {
 
             <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
               <button
-                className="btn btn-secondary"
-                onClick={() => {
-                  handleCloseModal();
-                  handleEdit(selectedSession.id);
-                }}
-              >
-                Edytuj
-              </button>
-              <button
                 className="btn btn-primary"
                 onClick={handleCloseModal}
               >
                 Zamknij
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal potwierdzenia usunięcia sesji */}
+      {sessionToDelete && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 2000,
+            padding: '1rem'
+          }}
+          onClick={handleDeleteCancel}
+        >
+          <div
+            className="card"
+            style={{
+              maxWidth: '400px',
+              width: '100%',
+              position: 'relative'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 style={{ marginTop: 0, marginBottom: '1rem' }}>
+              Potwierdzenie usunięcia
+            </h2>
+            
+            <p style={{ marginBottom: '1.5rem', lineHeight: '1.6' }}>
+              {(() => {
+                const session = sessions.find(s => s.id === sessionToDelete);
+                const gun = guns.find(g => g.id === session?.gun_id);
+                const gunName = gun ? gun.name : '';
+                const gunType = gun ? (gun.type || '') : '';
+                const gunDisplayName = `${gunType ? gunType + ' ' : ''}${gunName}`;
+                return `Czy na pewno chcesz usunąć sesję dla ${gunDisplayName}? Ta operacja jest nieodwracalna.`;
+              })()}
+            </p>
+
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+              <button
+                className="btn btn-secondary"
+                onClick={handleDeleteCancel}
+              >
+                Anuluj
+              </button>
+              <button
+                className="btn btn-danger"
+                onClick={handleDeleteConfirm}
+                style={{
+                  backgroundColor: '#dc3545',
+                  borderColor: '#dc3545'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = '#c82333';
+                  e.target.style.borderColor = '#c82333';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = '#dc3545';
+                  e.target.style.borderColor = '#dc3545';
+                }}
+              >
+                Usuń
               </button>
             </div>
           </div>
