@@ -55,7 +55,6 @@ const AddShootingSessionPage = () => {
       const ammoItems = Array.isArray(ammoData) ? ammoData : ammoData?.items ?? [];
       
       const selectedAmmo = session.ammo_id ? ammoItems.find(a => a.id === session.ammo_id) : null;
-      const pricePerUnit = selectedAmmo ? selectedAmmo.price_per_unit.toFixed(2).replace('.', ',') + ' zł' : '';
       
       // Oblicz koszt stały: session.cost to suma kosztu stałego + (shots * price_per_unit)
       // Musimy odjąć koszt amunicji od całkowitego kosztu, aby uzyskać tylko koszt stały
@@ -88,22 +87,6 @@ const AddShootingSessionPage = () => {
           distanceDisplay = `${distanceInYards} yd`;
         } else {
           distanceDisplay = `${distanceInMeters} m`;
-        }
-      }
-      
-      // Oblicz koszt stały
-      let fixedCost = '';
-      if (session.cost && selectedAmmo && session.shots) {
-        const totalCost = parseFloat(session.cost);
-        const ammoCost = session.shots * selectedAmmo.price_per_unit;
-        const fixedCostValue = totalCost - ammoCost;
-        if (fixedCostValue > 0) {
-          fixedCost = fixedCostValue.toFixed(2).replace('.', ',');
-        }
-      } else if (session.cost) {
-        const totalCost = parseFloat(session.cost);
-        if (totalCost > 0) {
-          fixedCost = totalCost.toFixed(2).replace('.', ',');
         }
       }
       
@@ -261,13 +244,13 @@ const AddShootingSessionPage = () => {
       // Koszt stały + koszt amunicji
       const selectedAmmo = ammo.find(a => a.id === formData.ammo_id);
       if (selectedAmmo) {
-        const baseCost = parseFloat(formData.cost.replace(',', '.').replace(' zł', '').trim()) || 0;
+        const baseCost = formData.cost ? parseFloat(formData.cost.replace(',', '.').replace(' zł', '').trim()) || 0 : 0;
         const ammoPrice = selectedAmmo.price_per_unit || 0;
         const totalCost = baseCost + (shots * ammoPrice);
         if (totalCost > 0) {
           sessionData.cost = Number(totalCost.toFixed(2));
         }
-      } else if (formData.cost) {
+      } else if (formData.cost && formData.cost.trim()) {
         const baseCost = parseFloat(formData.cost.replace(',', '.').replace(' zł', '').trim()) || 0;
         if (baseCost > 0) {
           sessionData.cost = Number(baseCost.toFixed(2));

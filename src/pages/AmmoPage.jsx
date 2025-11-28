@@ -79,6 +79,15 @@ const AmmoPage = () => {
     fetchSettings();
   }, []);
 
+  // Odśwież dane amunicji gdy strona staje się aktywna (np. po powrocie z innej strony)
+  useEffect(() => {
+    const handleFocus = () => {
+      fetchAmmo();
+    };
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, []);
+
   const fetchSettings = async () => {
     try {
       const response = await settingsAPI.get();
@@ -282,7 +291,12 @@ const AmmoPage = () => {
   };
 
   const isLowStock = (units) => {
-    return units !== null && units !== undefined && units < 20;
+    // Sprawdź czy units jest liczbą i czy jest mniejsza niż 20
+    if (units === null || units === undefined || units === '') {
+      return false; // Jeśli nie ma danych o ilości, nie pokazuj ostrzeżenia
+    }
+    const unitsNum = typeof units === 'number' ? units : parseInt(units, 10);
+    return !isNaN(unitsNum) && unitsNum > 0 && unitsNum < 20;
   };
 
   // Paginacja
