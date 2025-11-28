@@ -391,7 +391,7 @@ const ShootingSessionsPage = () => {
                     >
                       Celność %
                     </th>
-                    <th style={{ padding: '0.75rem' }}>Notatki</th>
+                    <th style={{ padding: '0.75rem' }}>Komentarz</th>
                     <th style={{ width: '50px', padding: '0.75rem' }}></th>
                   </tr>
                 </thead>
@@ -426,7 +426,9 @@ const ShootingSessionsPage = () => {
                           </span>
                         ) : '-'}
                       </td>
-                      <td>{session.notes || '-'}</td>
+                      <td style={{ maxWidth: '300px', wordWrap: 'break-word' }}>
+                        {session.ai_comment || '-'}
+                      </td>
                       <td>
                         <div className="session-menu-container" style={{ position: 'relative' }}>
                           <button
