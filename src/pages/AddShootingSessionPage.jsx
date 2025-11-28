@@ -311,6 +311,17 @@ const AddShootingSessionPage = () => {
         }, 1500);
       } else {
         const response = await shootingSessionsAPI.create(sessionData);
+        const sessionId = response.data.id;
+        
+        // Jeśli to sesja zaawansowana z danymi celności, wygeneruj komentarz AI
+        if (sessionMode === 'advanced' && formData.distance_m && formData.hits && formData.shots) {
+          try {
+            await shootingSessionsAPI.generateAIComment(sessionId);
+          } catch (err) {
+            // Nie blokuj zapisu sesji, jeśli generowanie komentarza się nie powiodło
+            console.error('Błąd podczas generowania komentarza AI:', err);
+          }
+        }
         
         let successMessage = `Sesja dla ${gunType ? gunType + ' ' : ''}${gunName} dodana!`;
         if (response.data && response.data.remaining_ammo !== undefined) {
