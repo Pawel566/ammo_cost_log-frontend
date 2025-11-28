@@ -14,6 +14,7 @@ const ShootingSessionsPage = () => {
   const [filterType, setFilterType] = useState('');
   const [filterValue, setFilterValue] = useState('');
   const [openMenuId, setOpenMenuId] = useState(null);
+  const [selectedSession, setSelectedSession] = useState(null);
 
   // Sortowanie
   const [sortColumn, setSortColumn] = useState(null);
@@ -195,8 +196,20 @@ const ShootingSessionsPage = () => {
     setOpenMenuId(null);
   };
 
-  const handleMenuToggle = (sessionId) => {
+  const handleMenuToggle = (sessionId, e) => {
+    if (e) {
+      e.stopPropagation();
+    }
     setOpenMenuId(openMenuId === sessionId ? null : sessionId);
+  };
+
+  const handleRowClick = (session) => {
+    setSelectedSession(session);
+    setOpenMenuId(null);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedSession(null);
   };
 
   // Zamknij menu po kliknięciu poza nim
@@ -397,7 +410,21 @@ const ShootingSessionsPage = () => {
                 </thead>
                 <tbody>
                   {filteredSessions.map((session) => (
-                    <tr key={session.id}>
+                    <tr 
+                      key={session.id}
+                      onClick={() => handleRowClick(session)}
+                      style={{
+                        cursor: 'pointer'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!e.target.closest('.session-menu-container')) {
+                          e.currentTarget.style.backgroundColor = '#3c3c3c';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }}
+                    >
                       <td style={{ textAlign: 'center', padding: '0.75rem' }}>
                         <img 
                           src={session.session_type === 'advanced' ? "/assets/session_icon_AI_dark.png" : "/assets/session_icon_dark.png"}
@@ -426,7 +453,15 @@ const ShootingSessionsPage = () => {
                           </span>
                         ) : '-'}
                       </td>
-                      <td style={{ maxWidth: '300px', wordWrap: 'break-word' }}>
+                      <td 
+                        style={{ 
+                          maxWidth: '300px',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         {session.ai_comment || '-'}
                       </td>
                       <td>
@@ -434,7 +469,7 @@ const ShootingSessionsPage = () => {
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleMenuToggle(session.id);
+                              handleMenuToggle(session.id, e);
                             }}
                             style={{
                               background: 'none',
@@ -514,6 +549,175 @@ const ShootingSessionsPage = () => {
           )}
         </div>
       </div>
+
+      {/* Modal ze szczegółami sesji */}
+      {selectedSession && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 2000,
+            padding: '1rem'
+          }}
+          onClick={handleCloseModal}
+        >
+          <div
+            className="card"
+            style={{
+              maxWidth: '600px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              position: 'relative'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={handleCloseModal}
+              style={{
+                position: 'absolute',
+                top: '1rem',
+                right: '1rem',
+                background: 'none',
+                border: 'none',
+                color: '#fff',
+                fontSize: '1.5rem',
+                cursor: 'pointer',
+                padding: '0.25rem 0.5rem',
+                lineHeight: 1
+              }}
+              onMouseEnter={(e) => e.target.style.color = '#dc3545'}
+              onMouseLeave={(e) => e.target.style.color = '#fff'}
+            >
+              ×
+            </button>
+
+            <h2 style={{ marginTop: 0, marginBottom: '1.5rem' }}>
+              Szczegóły sesji strzeleckiej
+            </h2>
+
+            <div style={{ display: 'grid', gap: '1rem' }}>
+              <div>
+                <strong>Typ sesji:</strong>{' '}
+                <img 
+                  src={selectedSession.session_type === 'advanced' ? "/assets/session_icon_AI_dark.png" : "/assets/session_icon_dark.png"}
+                  alt={selectedSession.session_type === 'advanced' ? "Sesja zaawansowana" : "Sesja standardowa"}
+                  style={{ 
+                    width: '20px', 
+                    height: '20px',
+                    objectFit: 'contain',
+                    verticalAlign: 'middle',
+                    marginLeft: '0.5rem'
+                  }}
+                />
+                <span style={{ marginLeft: '0.5rem' }}>
+                  {selectedSession.session_type === 'advanced' ? 'Zaawansowana' : 'Standardowa'}
+                </span>
+              </div>
+
+              <div>
+                <strong>Data:</strong> {new Date(selectedSession.date).toLocaleDateString('pl-PL')}
+              </div>
+
+              <div>
+                <strong>Broń:</strong> {getGunName(selectedSession.gun_id)}
+              </div>
+
+              <div>
+                <strong>Amunicja:</strong> {getAmmoName(selectedSession.ammo_id)}
+              </div>
+
+              <div>
+                <strong>Liczba strzałów:</strong> {selectedSession.shots || '-'}
+              </div>
+
+              <div>
+                <strong>Koszt:</strong> {selectedSession.cost ? `${parseFloat(selectedSession.cost).toFixed(2).replace('.', ',')} zł` : '-'}
+              </div>
+
+              {selectedSession.distance_m && (
+                <div>
+                  <strong>Dystans:</strong> {selectedSession.distance_m} m
+                </div>
+              )}
+
+              {selectedSession.hits !== null && selectedSession.hits !== undefined && (
+                <div>
+                  <strong>Liczba trafień:</strong> {selectedSession.hits}
+                </div>
+              )}
+
+              {selectedSession.accuracy_percent !== null && selectedSession.accuracy_percent !== undefined && (
+                <div>
+                  <strong>Celność:</strong>{' '}
+                  <span style={{ 
+                    color: parseFloat(selectedSession.accuracy_percent) >= 80 ? '#4caf50' : parseFloat(selectedSession.accuracy_percent) >= 60 ? '#ffc107' : '#dc3545',
+                    fontWeight: 'bold'
+                  }}>
+                    {parseFloat(selectedSession.accuracy_percent).toFixed(1)}%
+                  </span>
+                </div>
+              )}
+
+              {selectedSession.notes && (
+                <div>
+                  <strong>Notatki:</strong>
+                  <div style={{ 
+                    marginTop: '0.5rem', 
+                    padding: '0.75rem', 
+                    backgroundColor: '#2c2c2c', 
+                    borderRadius: '4px',
+                    whiteSpace: 'pre-wrap',
+                    wordWrap: 'break-word'
+                  }}>
+                    {selectedSession.notes}
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <strong>Komentarz AI:</strong>
+                <div style={{ 
+                  marginTop: '0.5rem', 
+                  padding: '0.75rem', 
+                  backgroundColor: '#2c2c2c', 
+                  borderRadius: '4px',
+                  whiteSpace: 'pre-wrap',
+                  wordWrap: 'break-word',
+                  minHeight: '100px'
+                }}>
+                  {selectedSession.ai_comment || '-'}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+              <button
+                className="btn btn-secondary"
+                onClick={() => {
+                  handleCloseModal();
+                  handleEdit(selectedSession.id);
+                }}
+              >
+                Edytuj
+              </button>
+              <button
+                className="btn btn-primary"
+                onClick={handleCloseModal}
+              >
+                Zamknij
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
