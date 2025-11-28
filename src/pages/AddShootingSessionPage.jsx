@@ -147,6 +147,29 @@ const AddShootingSessionPage = () => {
     return '0';
   };
 
+  const calculateTotalCost = () => {
+    let total = 0;
+    
+    // Koszt stały
+    if (formData.cost && formData.cost.trim()) {
+      const fixedCost = parseFloat(formData.cost.replace(',', '.').trim()) || 0;
+      total += fixedCost;
+    }
+    
+    // Koszt amunicji: liczba strzałów × cena za sztukę
+    if (formData.ammo_id && formData.shots) {
+      const selectedAmmo = ammo.find(a => a.id === formData.ammo_id);
+      if (selectedAmmo && selectedAmmo.price_per_unit) {
+        const shots = parseInt(formData.shots, 10);
+        if (!isNaN(shots) && shots > 0) {
+          total += shots * selectedAmmo.price_per_unit;
+        }
+      }
+    }
+    
+    return total.toFixed(2).replace('.', ',');
+  };
+
   const normalize = (v) => {
     if (v === "" || v === null || v === undefined) return null;
     return v;
@@ -434,17 +457,6 @@ const AddShootingSessionPage = () => {
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Liczba strzałów *</label>
-                  <input
-                    type="number"
-                    min="1"
-                    className="form-input"
-                    value={formData.shots}
-                    onChange={(e) => setFormData({ ...formData, shots: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="form-group">
                   <label className="form-label">Koszt stały (np. opłata za tor)</label>
                   <input
                     type="text"
@@ -470,6 +482,17 @@ const AddShootingSessionPage = () => {
                     value={formData.distance_m}
                     onChange={(e) => setFormData({ ...formData, distance_m: e.target.value })}
                     placeholder={distanceUnit === 'yd' ? '20 yd' : '20 m'}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Liczba strzałów *</label>
+                  <input
+                    type="number"
+                    min="1"
+                    className="form-input"
+                    value={formData.shots}
+                    onChange={(e) => setFormData({ ...formData, shots: e.target.value })}
+                    required
                   />
                 </div>
                 <div className="form-group">
@@ -507,6 +530,52 @@ const AddShootingSessionPage = () => {
                       Funkcje zaawansowane (zdjęcie, komentarz AI) - wkrótce
                     </p>
                   </div>
+                )}
+              </div>
+            </div>
+
+            {/* Koszt całkowity */}
+            <div style={{ 
+              marginTop: '2rem', 
+              padding: '1rem', 
+              backgroundColor: '#1a1a1a', 
+              borderRadius: '8px',
+              border: '1px solid #333'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <label style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#fff' }}>Koszt całkowity:</label>
+                <div style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#4caf50' }}>
+                  {calculateTotalCost()} zł
+                </div>
+              </div>
+              <div style={{ marginTop: '0.5rem', fontSize: '0.9rem', color: '#888' }}>
+                {formData.cost && formData.cost.trim() ? (
+                  <>
+                    Koszt stały: {parseFloat(formData.cost.replace(',', '.').trim()) || 0} zł
+                    {formData.ammo_id && formData.shots && (() => {
+                      const selectedAmmo = ammo.find(a => a.id === formData.ammo_id);
+                      if (selectedAmmo && selectedAmmo.price_per_unit) {
+                        const shots = parseInt(formData.shots, 10);
+                        if (!isNaN(shots) && shots > 0) {
+                          return ` + (${shots} × ${selectedAmmo.price_per_unit.toFixed(2).replace('.', ',')} zł)`;
+                        }
+                      }
+                      return null;
+                    })()}
+                  </>
+                ) : formData.ammo_id && formData.shots ? (
+                  (() => {
+                    const selectedAmmo = ammo.find(a => a.id === formData.ammo_id);
+                    if (selectedAmmo && selectedAmmo.price_per_unit) {
+                      const shots = parseInt(formData.shots, 10);
+                      if (!isNaN(shots) && shots > 0) {
+                        return `${shots} × ${selectedAmmo.price_per_unit.toFixed(2).replace('.', ',')} zł`;
+                      }
+                    }
+                    return '0,00 zł';
+                  })()
+                ) : (
+                  '0,00 zł'
                 )}
               </div>
             </div>
