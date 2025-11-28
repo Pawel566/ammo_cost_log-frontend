@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { shootingSessionsAPI, gunsAPI, ammoAPI } from '../services/api';
+import { shootingSessionsAPI, gunsAPI, ammoAPI, accountAPI } from '../services/api';
 
 const ShootingSessionsPage = () => {
   const navigate = useNavigate();
@@ -16,6 +16,7 @@ const ShootingSessionsPage = () => {
   const [openMenuId, setOpenMenuId] = useState(null);
   const [selectedSession, setSelectedSession] = useState(null);
   const [sessionToDelete, setSessionToDelete] = useState(null);
+  const [userSkillLevel, setUserSkillLevel] = useState(null);
 
   // Sortowanie
   const [sortColumn, setSortColumn] = useState(null);
@@ -23,7 +24,28 @@ const ShootingSessionsPage = () => {
 
   useEffect(() => {
     fetchData();
+    fetchSkillLevel();
   }, []);
+
+  const fetchSkillLevel = async () => {
+    try {
+      const response = await accountAPI.getSkillLevel();
+      setUserSkillLevel(response.data.skill_level || 'beginner');
+    } catch (err) {
+      console.error('Błąd pobierania poziomu zaawansowania:', err);
+      setUserSkillLevel('beginner');
+    }
+  };
+
+  const getSkillLevelLabel = (level) => {
+    if (!level) return '-';
+    const levelLower = level.toLowerCase();
+    if (levelLower === 'beginner' || levelLower === 'początkujący') return 'Początkujący';
+    if (levelLower === 'intermediate' || levelLower === 'średniozaawansowany') return 'Średniozaawansowany';
+    if (levelLower === 'advanced' || levelLower === 'zaawansowany') return 'Zaawansowany';
+    if (levelLower === 'expert' || levelLower === 'ekspert') return 'Ekspert';
+    return level;
+  };
 
   useEffect(() => {
     applyFilters();
@@ -672,6 +694,12 @@ const ShootingSessionsPage = () => {
                   }}>
                     {parseFloat(selectedSession.accuracy_percent).toFixed(1)}%
                   </span>
+                </div>
+              )}
+
+              {userSkillLevel && (
+                <div>
+                  <strong>Poziom doświadczenia:</strong> {getSkillLevelLabel(userSkillLevel)}
                 </div>
               )}
 
