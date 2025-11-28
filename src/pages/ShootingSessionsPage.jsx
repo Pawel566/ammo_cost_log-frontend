@@ -15,7 +15,6 @@ const ShootingSessionsPage = () => {
   const [filterValue, setFilterValue] = useState('');
   const [openMenuId, setOpenMenuId] = useState(null);
   const [selectedSession, setSelectedSession] = useState(null);
-  const [regeneratingComment, setRegeneratingComment] = useState(false);
   const [sessionToDelete, setSessionToDelete] = useState(null);
 
   // Sortowanie
@@ -219,39 +218,8 @@ const ShootingSessionsPage = () => {
 
   const handleCloseModal = () => {
     setSelectedSession(null);
-    setRegeneratingComment(false);
   };
 
-  const handleRegenerateAIComment = async () => {
-    if (!selectedSession) return;
-    
-    setRegeneratingComment(true);
-    try {
-      const response = await shootingSessionsAPI.generateAIComment(selectedSession.id);
-      // Zaktualizuj sesję w stanie
-      setSelectedSession({
-        ...selectedSession,
-        ai_comment: response.data.ai_comment
-      });
-      // Zaktualizuj również w liście sesji
-      setSessions(sessions.map(s => 
-        s.id === selectedSession.id 
-          ? { ...s, ai_comment: response.data.ai_comment }
-          : s
-      ));
-      setFilteredSessions(filteredSessions.map(s => 
-        s.id === selectedSession.id 
-          ? { ...s, ai_comment: response.data.ai_comment }
-          : s
-      ));
-      setSuccess('Komentarz AI został wygenerowany!');
-    } catch (err) {
-      setError(err.response?.data?.detail || 'Błąd podczas generowania komentarza AI');
-      console.error('Błąd generowania komentarza AI:', err);
-    } finally {
-      setRegeneratingComment(false);
-    }
-  };
 
   // Zamknij menu po kliknięciu poza nim
   useEffect(() => {
@@ -724,21 +692,8 @@ const ShootingSessionsPage = () => {
               )}
 
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <div style={{ marginBottom: '0.5rem' }}>
                   <strong>Komentarz AI:</strong>
-                  {selectedSession.session_type === 'advanced' && selectedSession.distance_m && selectedSession.hits !== null && selectedSession.hits !== undefined && (
-                    <button
-                      className="btn btn-secondary"
-                      onClick={handleRegenerateAIComment}
-                      disabled={regeneratingComment}
-                      style={{
-                        padding: '0.5rem 1rem',
-                        fontSize: '0.9rem'
-                      }}
-                    >
-                      {regeneratingComment ? 'Generowanie...' : 'Wygeneruj komentarz AI'}
-                    </button>
-                  )}
                 </div>
                 <div style={{ 
                   marginTop: '0.5rem', 
