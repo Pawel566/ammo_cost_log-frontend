@@ -123,6 +123,11 @@ const ShootingSessionsPage = () => {
             aValue = a.accuracy_percent !== null && a.accuracy_percent !== undefined ? a.accuracy_percent : 0;
             bValue = b.accuracy_percent !== null && b.accuracy_percent !== undefined ? b.accuracy_percent : 0;
             return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+          case 'type':
+            // Sortowanie po typie: standardowa (0) vs zaawansowana (1)
+            aValue = a.ai_comment ? 1 : 0;
+            bValue = b.ai_comment ? 1 : 0;
+            return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
           default:
             aValue = String(a[sortColumn] || '').toLowerCase();
             bValue = String(b[sortColumn] || '').toLowerCase();
@@ -277,7 +282,19 @@ const ShootingSessionsPage = () => {
               <table className="table">
                 <thead>
                   <tr>
-                    <th style={{ padding: '0.75rem' }}>Typ</th>
+                    <th 
+                      style={{ 
+                        cursor: 'pointer',
+                        userSelect: 'none',
+                        padding: '0.75rem',
+                        textAlign: 'center'
+                      }}
+                      onClick={() => handleSort('type')}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    >
+                      Typ
+                    </th>
                     <th 
                       style={{ 
                         cursor: 'pointer',
