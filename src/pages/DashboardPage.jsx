@@ -224,19 +224,22 @@ const DashboardPage = () => {
                   justifyContent: 'center',
                   marginBottom: '1rem',
                   width: '100%',
-                  height: '120px',
+                  height: '180px',
                   backgroundColor: '#2c2c2c',
                   borderRadius: '8px',
-                  overflow: 'hidden'
+                  overflow: 'hidden',
+                  padding: '0.5rem'
                 }}>
                   {mostUsedGunImage ? (
                     <img 
                       src={mostUsedGunImage}
                       alt={mostUsedGun.name}
                       style={{ 
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover'
+                        maxWidth: '100%',
+                        maxHeight: '100%',
+                        width: 'auto',
+                        height: 'auto',
+                        objectFit: 'contain'
                       }}
                     />
                   ) : (
@@ -244,8 +247,10 @@ const DashboardPage = () => {
                       src="/assets/Add_weapon_icon.png" 
                       alt="Brak zdjęcia"
                       style={{ 
-                        width: '100%',
-                        height: '100%',
+                        maxWidth: '100%',
+                        maxHeight: '100%',
+                        width: 'auto',
+                        height: 'auto',
                         objectFit: 'contain',
                         opacity: 0.5
                       }}
