@@ -249,10 +249,30 @@ const ShootingSessionsPage = () => {
             ...prev,
             [session.id]: response.data.url
           }));
+        } else {
+          // Jeśli nie ma URL, usuń z cache
+          setTargetImageUrls(prev => {
+            const newUrls = { ...prev };
+            delete newUrls[session.id];
+            return newUrls;
+          });
         }
       } catch (err) {
         console.error('Błąd podczas pobierania zdjęcia tarczy:', err);
+        // W przypadku błędu, usuń z cache
+        setTargetImageUrls(prev => {
+          const newUrls = { ...prev };
+          delete newUrls[session.id];
+          return newUrls;
+        });
       }
+    } else {
+      // Jeśli nie ma target_image_path, usuń z cache
+      setTargetImageUrls(prev => {
+        const newUrls = { ...prev };
+        delete newUrls[session.id];
+        return newUrls;
+      });
     }
   };
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { shootingSessionsAPI, gunsAPI, ammoAPI, settingsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -15,10 +15,10 @@ const AddShootingSessionPage = () => {
   const [success, setSuccess] = useState(null);
   const [distanceUnit, setDistanceUnit] = useState('m');
   const [sessionMode, setSessionMode] = useState('standard'); // 'standard' lub 'advanced'
-  const [showTargetImageUpload, setShowTargetImageUpload] = useState(false);
   const [targetImageFile, setTargetImageFile] = useState(null);
   const [targetImageUrl, setTargetImageUrl] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const fileInputRef = useRef(null);
   const [formData, setFormData] = useState({
     gun_id: '',
     ammo_id: '',
@@ -113,10 +113,12 @@ const AddShootingSessionPage = () => {
         setSessionMode('standard');
       }
       
-      // Załaduj zdjęcie tarczy jeśli istnieje
+      // Załaduj zdjęcie tarczy jeśli istnieje, w przeciwnym razie wyczyść stan
       if (session.target_image_path && user && !user.is_guest) {
         loadTargetImage();
-        setShowTargetImageUpload(true);
+      } else {
+        setTargetImageUrl(null);
+        setTargetImageFile(null);
       }
     } catch (err) {
       setError('Błąd podczas ładowania sesji');
@@ -191,11 +193,56 @@ const AddShootingSessionPage = () => {
       const response = await shootingSessionsAPI.getTargetImage(id);
       if (response.data && response.data.url) {
         setTargetImageUrl(response.data.url);
-        setShowTargetImageUpload(true);
       }
     } catch (err) {
       console.error('Błąd podczas pobierania zdjęcia tarczy:', err);
     }
+  };
+
+  const compressImage = (file, maxWidth = 1600, quality = 0.7) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+
+          // Oblicz nowe wymiary zachowując proporcje
+          if (width > maxWidth) {
+            height = (height * maxWidth) / width;
+            width = maxWidth;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                const compressedFile = new File([blob], file.name, {
+                  type: 'image/jpeg',
+                  lastModified: Date.now()
+                });
+                resolve(compressedFile);
+              } else {
+                reject(new Error('Błąd podczas kompresji obrazu'));
+              }
+            },
+            'image/jpeg',
+            quality
+          );
+        };
+        img.onerror = () => reject(new Error('Błąd podczas wczytywania obrazu'));
+        img.src = e.target.result;
+      };
+      reader.onerror = () => reject(new Error('Błąd podczas odczytu pliku'));
+      reader.readAsDataURL(file);
+    });
   };
 
   const handleTargetImageUpload = async (e) => {
@@ -212,24 +259,27 @@ const AddShootingSessionPage = () => {
       return;
     }
     
-    setTargetImageFile(file);
     setUploadingImage(true);
     setError(null);
     
     try {
+      // Kompresuj obraz przed przesłaniem
+      const compressedFile = await compressImage(file, 1600, 0.7);
+      setTargetImageFile(compressedFile);
+      
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', compressedFile);
       
       if (isEditMode && id) {
         await shootingSessionsAPI.uploadTargetImage(id, formData);
         await loadTargetImage();
         setSuccess('Zdjęcie tarczy zostało przesłane');
       } else {
-        setTargetImageUrl(URL.createObjectURL(file));
+        setTargetImageUrl(URL.createObjectURL(compressedFile));
         setSuccess('Zdjęcie zostanie przesłane po zapisaniu sesji');
       }
     } catch (err) {
-      setError(err.response?.data?.detail || 'Błąd podczas przesyłania zdjęcia');
+      setError(err.response?.data?.detail || err.message || 'Błąd podczas przesyłania zdjęcia');
       setTargetImageFile(null);
       setTargetImageUrl(null);
     } finally {
@@ -244,10 +294,17 @@ const AddShootingSessionPage = () => {
       await shootingSessionsAPI.deleteTargetImage(id);
       setTargetImageUrl(null);
       setTargetImageFile(null);
-      setShowTargetImageUpload(false);
       setSuccess('Zdjęcie tarczy zostało usunięte');
+      // Odśwież dane sesji, żeby usunąć zdjęcie z widoku
+      await loadSessionData();
     } catch (err) {
       setError(err.response?.data?.detail || 'Błąd podczas usuwania zdjęcia');
+    }
+  };
+
+  const handleTargetIconClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
     }
   };
 
@@ -632,100 +689,91 @@ const AddShootingSessionPage = () => {
                 {sessionMode === 'advanced' && user && !user.is_guest && (
                   <div style={{ marginTop: '1.5rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleTargetImageUpload}
+                        style={{ display: 'none' }}
+                      />
                       <img
                         src="/assets/target_icon.png"
                         alt="Dodaj zdjęcie tarczy"
-                        onClick={() => setShowTargetImageUpload(!showTargetImageUpload)}
+                        onClick={handleTargetIconClick}
                         style={{
                           width: '24px',
                           height: '24px',
                           cursor: 'pointer',
-                          opacity: showTargetImageUpload || targetImageUrl ? 1 : 0.6,
+                          opacity: targetImageUrl ? 1 : 0.6,
                           transition: 'opacity 0.2s'
                         }}
                         title="Dodaj zdjęcie tarczy"
                       />
-                      <label style={{ cursor: 'pointer', fontSize: '0.9rem' }} onClick={() => setShowTargetImageUpload(!showTargetImageUpload)}>
+                      <label 
+                        style={{ cursor: 'pointer', fontSize: '0.9rem' }} 
+                        onClick={handleTargetIconClick}
+                      >
                         Dodaj zdjęcie tarczy
                       </label>
                     </div>
                     
-                    {showTargetImageUpload && (
+                    {targetImageUrl && (
                       <div style={{ padding: '1rem', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid #333' }}>
-                        {targetImageUrl ? (
-                          <div>
-                            <img 
-                              src={targetImageUrl} 
-                              alt="Zdjęcie tarczy" 
-                              style={{ 
-                                maxWidth: '100%', 
-                                maxHeight: '300px', 
-                                borderRadius: '4px',
-                                marginBottom: '1rem',
-                                display: 'block'
-                              }} 
-                            />
-                            {isEditMode && (
-                              <button
-                                type="button"
-                                onClick={handleDeleteTargetImage}
-                                style={{
-                                  padding: '0.5rem 1rem',
-                                  backgroundColor: '#dc3545',
-                                  color: 'white',
-                                  border: 'none',
-                                  borderRadius: '4px',
-                                  cursor: 'pointer',
-                                  fontSize: '0.9rem'
-                                }}
-                              >
-                                Usuń zdjęcie
-                              </button>
-                            )}
-                            {!isEditMode && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setTargetImageFile(null);
-                                  setTargetImageUrl(null);
-                                }}
-                                style={{
-                                  padding: '0.5rem 1rem',
-                                  backgroundColor: '#dc3545',
-                                  color: 'white',
-                                  border: 'none',
-                                  borderRadius: '4px',
-                                  cursor: 'pointer',
-                                  fontSize: '0.9rem'
-                                }}
-                              >
-                                Usuń zdjęcie
-                              </button>
-                            )}
-                          </div>
-                        ) : (
-                          <div>
-                            <input
-                              type="file"
-                              accept="image/*"
-                              onChange={handleTargetImageUpload}
-                              disabled={uploadingImage}
-                              style={{
-                                width: '100%',
-                                padding: '0.5rem',
-                                backgroundColor: '#2c2c2c',
-                                color: '#fff',
-                                border: '1px solid #555',
-                                borderRadius: '4px',
-                                cursor: 'pointer'
-                              }}
-                            />
-                            {uploadingImage && (
-                              <p style={{ color: '#888', fontSize: '0.9rem', marginTop: '0.5rem' }}>
-                                Przesyłanie...
-                              </p>
-                            )}
-                          </div>
+                        <img 
+                          src={targetImageUrl} 
+                          alt="Zdjęcie tarczy" 
+                          style={{ 
+                            maxWidth: '100%', 
+                            maxHeight: '300px', 
+                            borderRadius: '4px',
+                            marginBottom: '1rem',
+                            display: 'block'
+                          }} 
+                        />
+                        {isEditMode && (
+                          <button
+                            type="button"
+                            onClick={handleDeleteTargetImage}
+                            style={{
+                              padding: '0.5rem 1rem',
+                              backgroundColor: '#dc3545',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              fontSize: '0.9rem'
+                            }}
+                          >
+                            Usuń zdjęcie
+                          </button>
+                        )}
+                        {!isEditMode && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setTargetImageFile(null);
+                              setTargetImageUrl(null);
+                              if (fileInputRef.current) {
+                                fileInputRef.current.value = '';
+                              }
+                            }}
+                            style={{
+                              padding: '0.5rem 1rem',
+                              backgroundColor: '#dc3545',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              fontSize: '0.9rem'
+                            }}
+                          >
+                            Usuń zdjęcie
+                          </button>
+                        )}
+                        {uploadingImage && (
+                          <p style={{ color: '#888', fontSize: '0.9rem', marginTop: '0.5rem' }}>
+                            Przesyłanie...
+                          </p>
                         )}
                       </div>
                     )}
