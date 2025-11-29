@@ -126,14 +126,8 @@ const DashboardPage = () => {
         cost: totalCost
       });
 
-      // Alerty o niskiej amunicji
-      if (userSettings.low_ammo_notifications_enabled) {
-        const lowAmmo = ammo.filter(item => {
-          const quantity = item.units_in_package || 0;
-          return quantity > 0 && quantity < 20; // Próg niskiej amunicji (jak w AmmoPage)
-        });
-        setLowAmmoAlerts(lowAmmo);
-      }
+      // Stan amunicji - wszystkie pozycje
+      setLowAmmoAlerts(ammo.filter(item => (item.units_in_package || 0) > 0));
 
       // Alerty o konserwacji
       if (userSettings.maintenance_notifications_enabled) {
@@ -373,7 +367,17 @@ const DashboardPage = () => {
                 }}>
                   {rankInfo.passed_sessions || 0} zaliczonych sesji
                 </div>
-                {rankInfo.next_rank && (
+                {rankInfo.is_max_rank ? (
+                  <div style={{ 
+                    textAlign: 'center',
+                    fontSize: '0.85rem',
+                    color: '#4caf50',
+                    marginTop: '0.5rem',
+                    fontWeight: 'bold'
+                  }}>
+                    Osiągnięto maksymalną rangę!
+                  </div>
+                ) : rankInfo.next_rank && rankInfo.next_rank_min !== null && rankInfo.next_rank_min !== undefined ? (
                   <>
                     <div style={{ marginBottom: '0.5rem' }}>
                       <div style={{ 
@@ -384,7 +388,7 @@ const DashboardPage = () => {
                         marginBottom: '0.25rem'
                       }}>
                         <span>Do następnej rangi:</span>
-                        <span>{rankInfo.next_rank_min - rankInfo.passed_sessions} sesji</span>
+                        <span>{Math.max(0, rankInfo.next_rank_min - rankInfo.passed_sessions)} sesji</span>
                       </div>
                       <div style={{
                         width: '100%',
@@ -411,18 +415,7 @@ const DashboardPage = () => {
                       Następna: {rankInfo.next_rank}
                     </div>
                   </>
-                )}
-                {!rankInfo.next_rank && (
-                  <div style={{ 
-                    textAlign: 'center',
-                    fontSize: '0.85rem',
-                    color: '#4caf50',
-                    marginTop: '0.5rem',
-                    fontWeight: 'bold'
-                  }}>
-                    Osiągnięto maksymalną rangę!
-                  </div>
-                )}
+                ) : null}
               </div>
             ) : (
               <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', padding: '2rem' }}>
@@ -438,7 +431,7 @@ const DashboardPage = () => {
           gridTemplateColumns: 'repeat(2, 1fr)', 
           gap: '1.5rem'
         }}>
-          {/* Mało amunicji */}
+          {/* Stan amunicji */}
           <div className="card" style={{ padding: '1.5rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -447,7 +440,7 @@ const DashboardPage = () => {
                 <path d="M2 12L12 17L22 12" stroke="#ff9800" strokeWidth="2" fill="none"/>
               </svg>
               <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 'bold' }}>
-                Mało amunicji
+                Stan amunicji
               </h3>
             </div>
             {lowAmmoAlerts.length > 0 ? (
@@ -455,35 +448,24 @@ const DashboardPage = () => {
                 {lowAmmoAlerts.slice(0, 3).map((item, index) => (
                   <div key={item.id} style={{ marginBottom: index < lowAmmoAlerts.length - 1 ? '1rem' : '0' }}>
                     <div style={{ 
-                      color: '#ff9800', 
                       fontWeight: 'bold',
+                      marginBottom: '0.25rem'
+                    }}>
+                      {item.name}
+                    </div>
+                    <div style={{ 
+                      fontSize: '0.9rem',
+                      color: 'var(--text-tertiary)',
                       marginBottom: '0.5rem'
                     }}>
-                      {item.name} {item.caliber ? `(${item.caliber})` : ''}
-                    </div>
-                    <div style={{ marginBottom: '0.5rem' }}>
-                      Pozostało: {item.units_in_package} szt
-                    </div>
-                    <div style={{
-                      width: '100%',
-                      height: '8px',
-                      backgroundColor: 'var(--bg-secondary)',
-                      borderRadius: '4px',
-                      overflow: 'hidden'
-                    }}>
-                      <div style={{
-                        width: `${Math.min((item.units_in_package / 20) * 100, 100)}%`,
-                        height: '100%',
-                        backgroundColor: '#ff9800',
-                        transition: 'width 0.3s'
-                      }} />
+                      {item.caliber ? `${item.caliber} - ` : ''}{item.units_in_package} szt z magazynu
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
               <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', padding: '1rem' }}>
-                Wszystko w porządku
+                Brak amunicji w magazynie
               </div>
             )}
           </div>
