@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { shootingSessionsAPI, gunsAPI, ammoAPI, accountAPI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const ShootingSessionsPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [sessions, setSessions] = useState([]);
   const [filteredSessions, setFilteredSessions] = useState([]);
   const [guns, setGuns] = useState([]);
@@ -17,10 +19,15 @@ const ShootingSessionsPage = () => {
   const [selectedSession, setSelectedSession] = useState(null);
   const [sessionToDelete, setSessionToDelete] = useState(null);
   const [userSkillLevel, setUserSkillLevel] = useState(null);
+  const [targetImageUrls, setTargetImageUrls] = useState({});
 
  
   const [sortColumn, setSortColumn] = useState(null);
-  const [sortDirection, setSortDirection] = useState('asc'); 
+  const [sortDirection, setSortDirection] = useState('asc');
+  
+  // Paginacja
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1); 
 
   useEffect(() => {
     fetchData();
@@ -49,6 +56,7 @@ const ShootingSessionsPage = () => {
 
   useEffect(() => {
     applyFilters();
+    setCurrentPage(1); // Resetuj do pierwszej strony przy zmianie filtrów
   }, [filterType, filterValue, sessions, sortColumn, sortDirection]);
 
   const fetchData = async () => {
@@ -233,9 +241,44 @@ const ShootingSessionsPage = () => {
     setOpenMenuId(openMenuId === sessionId ? null : sessionId);
   };
 
-  const handleRowClick = (session) => {
+  const handleRowClick = async (session) => {
     setSelectedSession(session);
     setOpenMenuId(null);
+    
+    // Załaduj zdjęcie tarczy jeśli istnieje i użytkownik jest właścicielem
+    if (session.target_image_path && user && !user.is_guest && session.user_id === user.user_id) {
+      try {
+        const response = await shootingSessionsAPI.getTargetImage(session.id);
+        if (response.data && response.data.url) {
+          setTargetImageUrls(prev => ({
+            ...prev,
+            [session.id]: response.data.url
+          }));
+        } else {
+          // Jeśli nie ma URL, usuń z cache
+          setTargetImageUrls(prev => {
+            const newUrls = { ...prev };
+            delete newUrls[session.id];
+            return newUrls;
+          });
+        }
+      } catch (err) {
+        console.error('Błąd podczas pobierania zdjęcia tarczy:', err);
+        // W przypadku błędu, usuń z cache
+        setTargetImageUrls(prev => {
+          const newUrls = { ...prev };
+          delete newUrls[session.id];
+          return newUrls;
+        });
+      }
+    } else {
+      // Jeśli nie ma target_image_path, usuń z cache
+      setTargetImageUrls(prev => {
+        const newUrls = { ...prev };
+        delete newUrls[session.id];
+        return newUrls;
+      });
+    }
   };
 
   const handleCloseModal = () => {
@@ -317,8 +360,47 @@ const ShootingSessionsPage = () => {
             )}
           </div>
 
+          {/* Paginacja - wybór liczby elementów */}
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            marginBottom: '1rem',
+            flexWrap: 'wrap',
+            gap: '1rem'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ color: 'var(--text-tertiary)', fontSize: '0.9rem' }}>Pokaż:</span>
+              <select
+                value={itemsPerPage}
+                onChange={(e) => {
+                  setItemsPerPage(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                style={{
+                  padding: '0.5rem',
+                  backgroundColor: 'var(--input-bg)',
+                  color: 'var(--text-primary)',
+                  border: `1px solid var(--border-color)`,
+                  borderRadius: '4px',
+                  fontSize: '0.9rem'
+                }}
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+            </div>
+            {filteredSessions.length > 0 && (
+              <div style={{ color: 'var(--text-tertiary)', fontSize: '0.9rem' }}>
+                Strona {currentPage} z {Math.ceil(filteredSessions.length / itemsPerPage)} ({filteredSessions.length} sesji)
+              </div>
+            )}
+          </div>
+
           {filteredSessions.length === 0 ? (
-            <p className="text-center" style={{ color: '#888', padding: '2rem' }}>
+            <p className="text-center" style={{ color: 'var(--text-tertiary)', padding: '2rem' }}>
               Brak zarejestrowanych sesji strzeleckich
             </p>
           ) : (
@@ -334,7 +416,7 @@ const ShootingSessionsPage = () => {
                         textAlign: 'center'
                       }}
                       onClick={() => handleSort('type')}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
                       Typ
@@ -346,7 +428,7 @@ const ShootingSessionsPage = () => {
                         padding: '0.75rem'
                       }}
                       onClick={() => handleSort('date')}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
                       Data
@@ -358,7 +440,7 @@ const ShootingSessionsPage = () => {
                         padding: '0.75rem'
                       }}
                       onClick={() => handleSort('gun')}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
                       Broń
@@ -370,7 +452,7 @@ const ShootingSessionsPage = () => {
                         padding: '0.75rem'
                       }}
                       onClick={() => handleSort('ammo')}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
                       Amunicja
@@ -382,7 +464,7 @@ const ShootingSessionsPage = () => {
                         padding: '0.75rem'
                       }}
                       onClick={() => handleSort('shots')}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
                       Strzały
@@ -394,7 +476,7 @@ const ShootingSessionsPage = () => {
                         padding: '0.75rem'
                       }}
                       onClick={() => handleSort('cost')}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
                       Koszt
@@ -406,7 +488,7 @@ const ShootingSessionsPage = () => {
                         padding: '0.75rem'
                       }}
                       onClick={() => handleSort('distance')}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
                       Dystans
@@ -418,7 +500,7 @@ const ShootingSessionsPage = () => {
                         padding: '0.75rem'
                       }}
                       onClick={() => handleSort('hits')}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
                       Trafienia
@@ -430,7 +512,7 @@ const ShootingSessionsPage = () => {
                         padding: '0.75rem'
                       }}
                       onClick={() => handleSort('accuracy')}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
                       Celność %
@@ -440,7 +522,9 @@ const ShootingSessionsPage = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredSessions.map((session) => (
+                  {filteredSessions
+                    .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                    .map((session) => (
                     <tr 
                       key={session.id}
                       onClick={() => handleRowClick(session)}
@@ -449,7 +533,7 @@ const ShootingSessionsPage = () => {
                       }}
                       onMouseEnter={(e) => {
                         if (!e.target.closest('.session-menu-container')) {
-                          e.currentTarget.style.backgroundColor = '#3c3c3c';
+                          e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)';
                         }
                       }}
                       onMouseLeave={(e) => {
@@ -507,7 +591,7 @@ const ShootingSessionsPage = () => {
                               border: 'none',
                               cursor: 'pointer',
                               fontSize: '1.2rem',
-                              color: '#fff',
+                              color: 'var(--text-primary)',
                               padding: '0.25rem 0.5rem',
                               display: 'flex',
                               alignItems: 'center',
@@ -523,8 +607,8 @@ const ShootingSessionsPage = () => {
                                 position: 'absolute',
                                 right: 0,
                                 top: '100%',
-                                backgroundColor: '#2c2c2c',
-                                border: '1px solid #444',
+                                backgroundColor: 'var(--bg-secondary)',
+                                border: `1px solid var(--border-color)`,
                                 borderRadius: '4px',
                                 boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
                                 zIndex: 1000,
@@ -540,12 +624,12 @@ const ShootingSessionsPage = () => {
                                   padding: '0.75rem 1rem',
                                   background: 'none',
                                   border: 'none',
-                                  color: '#fff',
+                                  color: 'var(--text-primary)',
                                   textAlign: 'left',
                                   cursor: 'pointer',
                                   fontSize: '0.9rem'
                                 }}
-                                onMouseEnter={(e) => e.target.style.backgroundColor = '#3c3c3c'}
+                                onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--table-hover-bg)'}
                                 onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
                               >
                                 Edytuj
@@ -561,9 +645,9 @@ const ShootingSessionsPage = () => {
                                   textAlign: 'left',
                                   cursor: 'pointer',
                                   fontSize: '0.9rem',
-                                  borderTop: '1px solid #444'
+                                  borderTop: `1px solid var(--border-color)`
                                 }}
-                                onMouseEnter={(e) => e.target.style.backgroundColor = '#3c3c3c'}
+                                onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--table-hover-bg)'}
                                 onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
                               >
                                 Usuń
@@ -576,6 +660,51 @@ const ShootingSessionsPage = () => {
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+
+          {/* Nawigacja paginacji */}
+          {filteredSessions.length > itemsPerPage && (
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              alignItems: 'center', 
+              gap: '0.5rem',
+              marginTop: '1rem',
+              paddingTop: '1rem',
+              borderTop: `1px solid var(--border-color)`
+            }}>
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: currentPage === 1 ? 'var(--text-tertiary)' : 'var(--text-primary)',
+                  cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                  fontSize: '1.2rem',
+                  padding: '0.25rem 0.5rem'
+                }}
+              >
+                ←
+              </button>
+              <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', padding: '0 1rem' }}>
+                Strona {currentPage} z {Math.ceil(filteredSessions.length / itemsPerPage)}
+              </span>
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(Math.ceil(filteredSessions.length / itemsPerPage), prev + 1))}
+                disabled={currentPage === Math.ceil(filteredSessions.length / itemsPerPage)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: currentPage === Math.ceil(filteredSessions.length / itemsPerPage) ? 'var(--text-tertiary)' : 'var(--text-primary)',
+                  cursor: currentPage === Math.ceil(filteredSessions.length / itemsPerPage) ? 'not-allowed' : 'pointer',
+                  fontSize: '1.2rem',
+                  padding: '0.25rem 0.5rem'
+                }}
+              >
+                →
+              </button>
             </div>
           )}
         </div>
@@ -726,15 +855,48 @@ const ShootingSessionsPage = () => {
                 <div style={{ 
                   marginTop: '0.5rem', 
                   padding: '0.75rem', 
-                  backgroundColor: '#2c2c2c', 
+                  backgroundColor: 'var(--bg-secondary)', 
                   borderRadius: '4px',
                   whiteSpace: 'pre-wrap',
                   wordWrap: 'break-word',
-                  minHeight: '100px'
+                  minHeight: '100px',
+                  color: 'var(--text-primary)'
                 }}>
                   {selectedSession.ai_comment || '-'}
                 </div>
               </div>
+
+              {/* Zdjęcie tarczy - tylko dla właściciela sesji */}
+              {selectedSession.target_image_path && user && !user.is_guest && selectedSession.user_id === user.user_id && (
+                <div>
+                  <div style={{ marginBottom: '0.5rem' }}>
+                    <strong>Zdjęcie tarczy:</strong>
+                  </div>
+                  {targetImageUrls[selectedSession.id] ? (
+                    <img 
+                      src={targetImageUrls[selectedSession.id]} 
+                      alt="Zdjęcie tarczy" 
+                      style={{ 
+                        maxWidth: '100%', 
+                        maxHeight: '400px', 
+                        borderRadius: '4px',
+                        border: '1px solid #444',
+                        display: 'block'
+                      }} 
+                    />
+                  ) : (
+                    <div style={{ 
+                      padding: '1rem', 
+                      backgroundColor: '#2c2c2c', 
+                      borderRadius: '4px',
+                      color: '#888',
+                      textAlign: 'center'
+                    }}>
+                      Ładowanie zdjęcia...
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>

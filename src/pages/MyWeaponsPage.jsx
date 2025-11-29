@@ -682,7 +682,7 @@ const MyWeaponsPage = () => {
                         style={{
                           width: '80px',
                           height: '80px',
-                          backgroundColor: '#2c2c2c',
+                          backgroundColor: 'var(--bg-secondary)',
                           borderRadius: '8px',
                           display: 'flex',
                           alignItems: 'center',
@@ -766,7 +766,7 @@ const MyWeaponsPage = () => {
                             height: '32px',
                             borderRadius: '4px'
                           }}
-                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
                           onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                         >
                           ⋯
@@ -778,8 +778,8 @@ const MyWeaponsPage = () => {
                               right: 0,
                               top: '100%',
                               marginTop: '0.25rem',
-                              backgroundColor: '#2c2c2c',
-                              border: '1px solid #555',
+                              backgroundColor: 'var(--bg-secondary)',
+                              border: `1px solid var(--border-color)`,
                               borderRadius: '8px',
                               minWidth: '150px',
                               zIndex: 1000,
@@ -794,13 +794,13 @@ const MyWeaponsPage = () => {
                                 padding: '0.75rem 1rem',
                                 background: 'none',
                                 border: 'none',
-                                color: '#fff',
+                                color: 'var(--text-primary)',
                                 cursor: 'pointer',
                                 textAlign: 'left',
                                 fontSize: '0.9rem',
                                 display: 'block'
                               }}
-                              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
                               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                             >
                               <input
@@ -828,9 +828,9 @@ const MyWeaponsPage = () => {
                                   textAlign: 'left',
                                   fontSize: '0.9rem',
                                   display: 'block',
-                                  borderTop: '1px solid #555'
+                                  borderTop: `1px solid var(--border-color)`
                                 }}
-                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
                                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                               >
                                 Usuń zdjęcie
@@ -948,7 +948,7 @@ const MyWeaponsPage = () => {
                                   style={{ 
                                     marginBottom: '0.75rem', 
                                     padding: '0.75rem',
-                                    backgroundColor: '#2c2c2c',
+                                    backgroundColor: 'var(--bg-secondary)',
                                     borderRadius: '8px',
                                     display: 'flex',
                                     justifyContent: 'space-between',
@@ -961,7 +961,7 @@ const MyWeaponsPage = () => {
                                       {new Date(maint.date).toLocaleDateString('pl-PL')}
                                     </div>
                                     {maint.activities && maint.activities.length > 0 && (
-                                      <div style={{ fontSize: '0.9rem', color: '#aaa' }}>
+                                      <div style={{ fontSize: '0.9rem', color: 'var(--text-tertiary)' }}>
                                         <div style={{ marginBottom: '0.25rem', fontWeight: '500' }}>Wykonane czynności:</div>
                                         <ul style={{ margin: 0, paddingLeft: '1.25rem', listStyle: 'disc' }}>
                                           {maint.activities.map((activity, idx) => (
@@ -1003,8 +1003,8 @@ const MyWeaponsPage = () => {
                                           right: 0,
                                           top: '100%',
                                           marginTop: '0.25rem',
-                                          backgroundColor: '#2c2c2c',
-                                          border: '1px solid #555',
+                                          backgroundColor: 'var(--bg-secondary)',
+                                          border: `1px solid var(--border-color)`,
                                           borderRadius: '8px',
                                           minWidth: '150px',
                                           zIndex: 1000,
@@ -1025,13 +1025,13 @@ const MyWeaponsPage = () => {
                                             padding: '0.75rem 1rem',
                                             background: 'none',
                                             border: 'none',
-                                            color: '#fff',
+                                            color: 'var(--text-primary)',
                                             cursor: 'pointer',
                                             textAlign: 'left',
                                             fontSize: '0.9rem',
                                             display: 'block'
                                           }}
-                                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
                                           onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                                         >
                                           Szczegóły
@@ -1047,14 +1047,14 @@ const MyWeaponsPage = () => {
                                             padding: '0.75rem 1rem',
                                             background: 'none',
                                             border: 'none',
-                                            color: '#fff',
+                                            color: 'var(--text-primary)',
                                             cursor: 'pointer',
                                             textAlign: 'left',
                                             fontSize: '0.9rem',
                                             display: 'block',
-                                            borderTop: '1px solid #555'
+                                            borderTop: `1px solid var(--border-color)`
                                           }}
-                                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
                                           onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                                         >
                                           Edytuj
@@ -1075,9 +1075,9 @@ const MyWeaponsPage = () => {
                                             textAlign: 'left',
                                             fontSize: '0.9rem',
                                             display: 'block',
-                                            borderTop: '1px solid #555'
+                                            borderTop: `1px solid var(--border-color)`
                                           }}
-                                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
                                           onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                                         >
                                           Usuń
@@ -1167,17 +1167,17 @@ const MyWeaponsPage = () => {
                 cursor: 'pointer',
                 textAlign: 'center',
                 padding: '2rem',
-                border: '2px dashed #555',
-                backgroundColor: '#1a1a1a'
+                border: `2px dashed var(--border-color)`,
+                backgroundColor: 'var(--bg-primary)'
               }}
               onClick={() => navigate('/guns')}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#2c2c2c';
+                e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
                 e.currentTarget.style.borderColor = '#007bff';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#1a1a1a';
-                e.currentTarget.style.borderColor = '#555';
+                e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+                e.currentTarget.style.borderColor = 'var(--border-color)';
               }}
             >
               <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>+</div>
@@ -1309,7 +1309,7 @@ const MyWeaponsPage = () => {
               </div>
               <div className="form-group">
                 <label className="form-label">Lista czynności</label>
-                <div style={{ border: '1px solid #555', borderRadius: '4px', backgroundColor: '#2c2c2c' }}>
+                <div style={{ border: `1px solid var(--border-color)`, borderRadius: '4px', backgroundColor: 'var(--bg-secondary)' }}>
                   <button
                     type="button"
                     onClick={(e) => {
@@ -1321,7 +1321,7 @@ const MyWeaponsPage = () => {
                       padding: '0.75rem',
                       background: 'none',
                       border: 'none',
-                      color: '#fff',
+                      color: 'var(--text-primary)',
                       textAlign: 'left',
                       cursor: 'pointer',
                       display: 'flex',
@@ -1341,7 +1341,7 @@ const MyWeaponsPage = () => {
                   {showActivitiesList && (
                     <div style={{ 
                       padding: '0.5rem 0.5rem 0.5rem 0', 
-                      borderTop: '1px solid #555',
+                      borderTop: `1px solid var(--border-color)`,
                       maxHeight: '200px',
                       overflowY: 'auto',
                       textAlign: 'left'
@@ -1357,7 +1357,7 @@ const MyWeaponsPage = () => {
                             borderRadius: '4px',
                             margin: 0
                           }}
-                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
                           onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                         >
                           <input
@@ -1471,7 +1471,7 @@ const MyWeaponsPage = () => {
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#aaa' }}>
                   Data wykonania
                 </label>
-                <div style={{ padding: '0.75rem', backgroundColor: '#2c2c2c', borderRadius: '4px', color: '#fff' }}>
+                <div style={{ padding: '0.75rem', backgroundColor: 'var(--bg-secondary)', borderRadius: '4px', color: 'var(--text-primary)' }}>
                   {new Date(selectedMaintenance.date).toLocaleDateString('pl-PL')}
                 </div>
               </div>
@@ -1482,7 +1482,7 @@ const MyWeaponsPage = () => {
                     Lista czynności
                   </label>
                   <div style={{ padding: '0.75rem', backgroundColor: '#2c2c2c', borderRadius: '4px' }}>
-                    <ul style={{ margin: 0, paddingLeft: '1.25rem', listStyle: 'disc', color: '#fff' }}>
+                    <ul style={{ margin: 0, paddingLeft: '1.25rem', listStyle: 'disc', color: 'var(--text-primary)' }}>
                       {selectedMaintenance.activities.map((activity, idx) => (
                         <li key={idx} style={{ marginBottom: '0.5rem' }}>{activity}</li>
                       ))}

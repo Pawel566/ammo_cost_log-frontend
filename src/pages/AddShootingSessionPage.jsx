@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { shootingSessionsAPI, gunsAPI, ammoAPI, settingsAPI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const AddShootingSessionPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { user } = useAuth();
   const isEditMode = !!id;
   const [guns, setGuns] = useState([]);
   const [ammo, setAmmo] = useState([]);
@@ -13,6 +15,11 @@ const AddShootingSessionPage = () => {
   const [success, setSuccess] = useState(null);
   const [distanceUnit, setDistanceUnit] = useState('m');
   const [sessionMode, setSessionMode] = useState('standard'); // 'standard' lub 'advanced'
+  const [targetImageFile, setTargetImageFile] = useState(null);
+  const [targetImageUrl, setTargetImageUrl] = useState(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [analyzingAI, setAnalyzingAI] = useState(false);
+  const fileInputRef = useRef(null);
   const [formData, setFormData] = useState({
     gun_id: '',
     ammo_id: '',
@@ -106,6 +113,14 @@ const AddShootingSessionPage = () => {
       } else {
         setSessionMode('standard');
       }
+      
+      // Załaduj zdjęcie tarczy jeśli istnieje, w przeciwnym razie wyczyść stan
+      if (session.target_image_path && user && !user.is_guest) {
+        loadTargetImage();
+      } else {
+        setTargetImageUrl(null);
+        setTargetImageFile(null);
+      }
     } catch (err) {
       setError('Błąd podczas ładowania sesji');
       console.error(err);
@@ -170,6 +185,128 @@ const AddShootingSessionPage = () => {
     }
     
     return total.toFixed(2).replace('.', ',');
+  };
+
+  const loadTargetImage = async () => {
+    if (!id || !user || user.is_guest) return;
+    
+    try {
+      const response = await shootingSessionsAPI.getTargetImage(id);
+      if (response.data && response.data.url) {
+        setTargetImageUrl(response.data.url);
+      }
+    } catch (err) {
+      console.error('Błąd podczas pobierania zdjęcia tarczy:', err);
+    }
+  };
+
+  const compressImage = (file, maxWidth = 1600, quality = 0.7) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+
+          // Oblicz nowe wymiary zachowując proporcje
+          if (width > maxWidth) {
+            height = (height * maxWidth) / width;
+            width = maxWidth;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                const compressedFile = new File([blob], file.name, {
+                  type: 'image/jpeg',
+                  lastModified: Date.now()
+                });
+                resolve(compressedFile);
+              } else {
+                reject(new Error('Błąd podczas kompresji obrazu'));
+              }
+            },
+            'image/jpeg',
+            quality
+          );
+        };
+        img.onerror = () => reject(new Error('Błąd podczas wczytywania obrazu'));
+        img.src = e.target.result;
+      };
+      reader.onerror = () => reject(new Error('Błąd podczas odczytu pliku'));
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleTargetImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    if (!file.type.startsWith('image/')) {
+      setError('Plik musi być obrazem');
+      return;
+    }
+    
+    if (file.size > 10 * 1024 * 1024) {
+      setError('Plik jest zbyt duży (max 10MB)');
+      return;
+    }
+    
+    setUploadingImage(true);
+    setError(null);
+    
+    try {
+      // Kompresuj obraz przed przesłaniem
+      const compressedFile = await compressImage(file, 1600, 0.7);
+      setTargetImageFile(compressedFile);
+      
+      const formData = new FormData();
+      formData.append('file', compressedFile);
+      
+      if (isEditMode && id) {
+        await shootingSessionsAPI.uploadTargetImage(id, formData);
+        await loadTargetImage();
+        setSuccess('Zdjęcie tarczy zostało przesłane');
+      } else {
+        setTargetImageUrl(URL.createObjectURL(compressedFile));
+        setSuccess('Zdjęcie zostanie przesłane po zapisaniu sesji');
+      }
+    } catch (err) {
+      setError(err.response?.data?.detail || err.message || 'Błąd podczas przesyłania zdjęcia');
+      setTargetImageFile(null);
+      setTargetImageUrl(null);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleDeleteTargetImage = async () => {
+    if (!id || !user || user.is_guest) return;
+    
+    try {
+      await shootingSessionsAPI.deleteTargetImage(id);
+      setTargetImageUrl(null);
+      setTargetImageFile(null);
+      setSuccess('Zdjęcie tarczy zostało usunięte');
+      // Odśwież dane sesji, żeby usunąć zdjęcie z widoku
+      await loadSessionData();
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Błąd podczas usuwania zdjęcia');
+    }
+  };
+
+  const handleTargetIconClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
   };
 
   const normalize = (v) => {
@@ -305,6 +442,50 @@ const AddShootingSessionPage = () => {
           normalizedData.ammo_id = sessionData.ammo_id;
         }
         await shootingSessionsAPI.update(id, normalizedData);
+        
+        // Prześlij zdjęcie tarczy jeśli zostało dodane w edycji
+        if (targetImageFile && user && !user.is_guest) {
+          try {
+            const imageFormData = new FormData();
+            imageFormData.append('file', targetImageFile);
+            await shootingSessionsAPI.uploadTargetImage(id, imageFormData);
+          } catch (err) {
+            console.error('Błąd podczas przesyłania zdjęcia tarczy:', err);
+          }
+        }
+        
+        // Wygeneruj komentarz AI jeśli są wymagane dane (także po edycji)
+        if (sessionMode === 'advanced' && formData.distance_m && formData.shots && user && !user.is_guest) {
+          const hasHits = formData.hits && formData.hits.trim() !== '';
+          const hasTargetImage = targetImageUrl !== null || (targetImageFile !== null);
+          const shouldGenerateAI = hasHits || hasTargetImage;
+          
+          if (shouldGenerateAI) {
+            try {
+              setAnalyzingAI(true);
+              const result = await shootingSessionsAPI.generateAIComment(id);
+              // Jeśli Vision policzyło trafienia (przypadek A), zaktualizuj widok
+              if (result.data && result.data.hits !== undefined && !hasHits) {
+                setFormData(prev => ({
+                  ...prev,
+                  hits: result.data.hits.toString()
+                }));
+              }
+            } catch (err) {
+              // Nie blokuj zapisu sesji, jeśli generowanie komentarza się nie powiodło
+              console.error('Błąd podczas generowania komentarza AI:', err);
+              // Pokaż użytkownikowi informację o błędzie
+              if (err.response?.data?.detail) {
+                setError(`Błąd analizy AI: ${err.response.data.detail}`);
+              } else {
+                setError('Nie udało się wygenerować komentarza AI. Sprawdź czy masz ustawiony klucz OpenAI API.');
+              }
+            } finally {
+              setAnalyzingAI(false);
+            }
+          }
+        }
+        
         setSuccess(`Sesja dla ${gunType ? gunType + ' ' : ''}${gunName} zaktualizowana!`);
         setTimeout(() => {
           navigate('/shooting-sessions');
@@ -313,13 +494,50 @@ const AddShootingSessionPage = () => {
         const response = await shootingSessionsAPI.create(sessionData);
         const sessionId = response.data.id;
         
-        // Jeśli to sesja zaawansowana z danymi celności, wygeneruj komentarz AI
-        if (sessionMode === 'advanced' && formData.distance_m && formData.hits && formData.shots) {
+        // Prześlij zdjęcie tarczy jeśli zostało wybrane
+        let hasTargetImage = false;
+        if (targetImageFile && user && !user.is_guest) {
           try {
-            await shootingSessionsAPI.generateAIComment(sessionId);
+            const imageFormData = new FormData();
+            imageFormData.append('file', targetImageFile);
+            await shootingSessionsAPI.uploadTargetImage(sessionId, imageFormData);
+            hasTargetImage = true;
+          } catch (err) {
+            console.error('Błąd podczas przesyłania zdjęcia tarczy:', err);
+          }
+        }
+        
+        // Wygeneruj komentarz AI jeśli są wymagane dane
+        // Wymagania: dystans + strzały + (trafienia LUB zdjęcie) + użytkownik zalogowany
+        if (sessionMode === 'advanced' && formData.distance_m && formData.shots && user && !user.is_guest) {
+          const hasHits = formData.hits && formData.hits.trim() !== '';
+          // Sprawdź czy jest zdjęcie (przesłane lub wybrane przez użytkownika)
+          const hasTargetImageFinal = hasTargetImage || (targetImageFile !== null);
+          const shouldGenerateAI = hasHits || hasTargetImageFinal;
+          
+          if (shouldGenerateAI) {
+          try {
+              setAnalyzingAI(true);
+              const result = await shootingSessionsAPI.generateAIComment(sessionId);
+              // Jeśli Vision policzyło trafienia (przypadek A), zaktualizuj widok
+              if (result.data && result.data.hits !== undefined && !hasHits) {
+                setFormData(prev => ({
+                  ...prev,
+                  hits: result.data.hits.toString()
+                }));
+              }
           } catch (err) {
             // Nie blokuj zapisu sesji, jeśli generowanie komentarza się nie powiodło
             console.error('Błąd podczas generowania komentarza AI:', err);
+              // Pokaż użytkownikowi informację o błędzie
+              if (err.response?.data?.detail) {
+                setError(`Błąd analizy AI: ${err.response.data.detail}`);
+              } else {
+                setError('Nie udało się wygenerować komentarza AI. Sprawdź czy masz ustawiony klucz OpenAI API.');
+              }
+            } finally {
+              setAnalyzingAI(false);
+            }
           }
         }
         
@@ -364,6 +582,34 @@ const AddShootingSessionPage = () => {
           </div>
         )}
 
+        {analyzingAI && (
+          <div className="alert alert-info" style={{ 
+            marginBottom: '1rem', 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '0.5rem',
+            backgroundColor: '#1a5490',
+            border: '1px solid #2d6fb8',
+            color: '#fff'
+          }}>
+            <div style={{
+              width: '16px',
+              height: '16px',
+              border: `2px solid var(--text-primary)`,
+              borderTop: `2px solid transparent`,
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite'
+            }}></div>
+            <span>Trwa analiza AI...</span>
+            <style>{`
+              @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+              }
+            `}</style>
+          </div>
+        )}
+
         {guns.length === 0 && (
           <div className="alert alert-info" style={{ marginBottom: '1rem' }}>
             Najpierw dodaj broń w sekcji "Broń"
@@ -382,7 +628,7 @@ const AddShootingSessionPage = () => {
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '2rem' }}>
               <div style={{ 
                 display: 'flex', 
-                backgroundColor: '#2c2c2c', 
+                backgroundColor: 'var(--bg-secondary)', 
                 borderRadius: '8px', 
                 padding: '4px',
                 gap: '4px'
@@ -396,7 +642,7 @@ const AddShootingSessionPage = () => {
                     border: 'none',
                     cursor: 'pointer',
                     backgroundColor: sessionMode === 'standard' ? '#007bff' : 'transparent',
-                    color: sessionMode === 'standard' ? '#fff' : '#aaa',
+                    color: sessionMode === 'standard' ? '#fff' : 'var(--text-tertiary)',
                     fontWeight: sessionMode === 'standard' ? 'bold' : 'normal',
                     transition: 'all 0.2s'
                   }}
@@ -412,7 +658,7 @@ const AddShootingSessionPage = () => {
                     border: 'none',
                     cursor: 'pointer',
                     backgroundColor: sessionMode === 'advanced' ? '#007bff' : 'transparent',
-                    color: sessionMode === 'advanced' ? '#fff' : '#aaa',
+                    color: sessionMode === 'advanced' ? '#fff' : 'var(--text-tertiary)',
                     fontWeight: sessionMode === 'advanced' ? 'bold' : 'normal',
                     transition: 'all 0.2s'
                   }}
@@ -433,7 +679,7 @@ const AddShootingSessionPage = () => {
                     value={formData.gun_id}
                     onChange={(e) => setFormData({ ...formData, gun_id: e.target.value })}
                     required
-                    style={{ appearance: 'none', backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'%3E%3Cpath fill=\'%23fff\' d=\'M6 9L1 4h10z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', paddingRight: '2.5rem' }}
+                    style={{ appearance: 'none', backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'%3E%3Cpath fill=\'%23aaa\' d=\'M6 9L1 4h10z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', paddingRight: '2.5rem' }}
                   >
                     <option value="">Wybierz broń</option>
                     {guns.map((gun) => (
@@ -450,7 +696,7 @@ const AddShootingSessionPage = () => {
                     value={formData.ammo_id}
                     onChange={(e) => setFormData({ ...formData, ammo_id: e.target.value })}
                     required
-                    style={{ appearance: 'none', backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'%3E%3Cpath fill=\'%23fff\' d=\'M6 9L1 4h10z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', paddingRight: '2.5rem' }}
+                    style={{ appearance: 'none', backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'%3E%3Cpath fill=\'%23aaa\' d=\'M6 9L1 4h10z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', paddingRight: '2.5rem' }}
                   >
                     <option value="">Wybierz amunicję</option>
                     {ammo.map((item) => (
@@ -530,7 +776,7 @@ const AddShootingSessionPage = () => {
                       value={`${calculateAccuracy()}%`}
                       readOnly
                       style={{ 
-                        backgroundColor: '#2c2c2c',
+                        backgroundColor: 'var(--bg-secondary)',
                         color: parseFloat(calculateAccuracy()) >= 80 ? '#4caf50' : parseFloat(calculateAccuracy()) >= 60 ? '#ffc107' : parseFloat(calculateAccuracy()) > 0 ? '#dc3545' : '#4caf50',
                         fontWeight: 'bold'
                       }}
@@ -538,12 +784,98 @@ const AddShootingSessionPage = () => {
                   </div>
                 )}
                 
-                {/* Funkcje zaawansowane - tylko w trybie zaawansowanym */}
-                {sessionMode === 'advanced' && (
-                  <div style={{ marginTop: '1.5rem', padding: '1rem', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px dashed #555' }}>
-                    <p style={{ color: '#888', fontSize: '0.9rem', margin: 0, textAlign: 'center' }}>
-                      Funkcje zaawansowane (zdjęcie, komentarz AI) - wkrótce
-                    </p>
+                {/* Zdjęcie tarczy - tylko w trybie zaawansowanym i dla zalogowanych użytkowników */}
+                {sessionMode === 'advanced' && user && !user.is_guest && (
+                  <div style={{ marginTop: '1.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleTargetImageUpload}
+                        style={{ display: 'none' }}
+                      />
+                      <img
+                        src="/assets/target_icon.png"
+                        alt="Dodaj zdjęcie tarczy"
+                        onClick={handleTargetIconClick}
+                        style={{
+                          width: '24px',
+                          height: '24px',
+                          cursor: 'pointer',
+                          opacity: targetImageUrl ? 1 : 0.6,
+                          transition: 'opacity 0.2s'
+                        }}
+                        title="Dodaj zdjęcie tarczy"
+                      />
+                      <label 
+                        style={{ cursor: 'pointer', fontSize: '0.9rem' }} 
+                        onClick={handleTargetIconClick}
+                      >
+                        Dodaj zdjęcie tarczy
+                      </label>
+                    </div>
+                    
+                    {targetImageUrl && (
+                      <div style={{ padding: '1rem', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid #333' }}>
+                        <img 
+                          src={targetImageUrl} 
+                          alt="Zdjęcie tarczy" 
+                          style={{ 
+                            maxWidth: '100%', 
+                            maxHeight: '300px', 
+                            borderRadius: '4px',
+                            marginBottom: '1rem',
+                            display: 'block'
+                          }} 
+                        />
+                        {isEditMode && (
+                          <button
+                            type="button"
+                            onClick={handleDeleteTargetImage}
+                            style={{
+                              padding: '0.5rem 1rem',
+                              backgroundColor: '#dc3545',
+                              color: 'var(--text-primary)',
+                              border: 'none',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              fontSize: '0.9rem'
+                            }}
+                          >
+                            Usuń zdjęcie
+                          </button>
+                        )}
+                        {!isEditMode && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setTargetImageFile(null);
+                              setTargetImageUrl(null);
+                              if (fileInputRef.current) {
+                                fileInputRef.current.value = '';
+                              }
+                            }}
+                            style={{
+                              padding: '0.5rem 1rem',
+                              backgroundColor: '#dc3545',
+                              color: 'var(--text-primary)',
+                              border: 'none',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              fontSize: '0.9rem'
+                            }}
+                          >
+                            Usuń zdjęcie
+                          </button>
+                        )}
+                        {uploadingImage && (
+                          <p style={{ color: '#888', fontSize: '0.9rem', marginTop: '0.5rem' }}>
+                            Przesyłanie...
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -553,17 +885,17 @@ const AddShootingSessionPage = () => {
             <div style={{ 
               marginTop: '2rem', 
               padding: '1rem', 
-              backgroundColor: '#1a1a1a', 
+              backgroundColor: 'var(--bg-primary)', 
               borderRadius: '8px',
-              border: '1px solid #333'
+              border: `1px solid var(--border-color)`
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <label style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#fff' }}>Koszt całkowity:</label>
+                <label style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>Koszt całkowity:</label>
                 <div style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#4caf50' }}>
                   {calculateTotalCost()} zł
                 </div>
               </div>
-              <div style={{ marginTop: '0.5rem', fontSize: '0.9rem', color: '#888' }}>
+              <div style={{ marginTop: '0.5rem', fontSize: '0.9rem', color: 'var(--text-tertiary)' }}>
                 {formData.cost && formData.cost.trim() ? (
                   <>
                     Koszt stały: {parseFloat(formData.cost.replace(',', '.').trim()) || 0} zł
@@ -603,7 +935,7 @@ const AddShootingSessionPage = () => {
                   padding: '0.75rem 2rem', 
                   fontSize: '1.1rem', 
                   backgroundColor: '#6c757d', 
-                  color: 'white',
+                  color: 'var(--text-primary)',
                   border: 'none',
                   borderRadius: '4px',
                   cursor: 'pointer'
@@ -615,17 +947,19 @@ const AddShootingSessionPage = () => {
               <button 
                 type="submit" 
                 className="btn btn-primary" 
+                disabled={analyzingAI}
                 style={{ 
                   padding: '0.75rem 2rem', 
                   fontSize: '1.1rem',
-                  backgroundColor: '#007bff',
-                  color: 'white',
+                  backgroundColor: analyzingAI ? '#6c757d' : '#007bff',
+                  color: 'var(--text-primary)',
                   border: 'none',
                   borderRadius: '4px',
-                  cursor: 'pointer'
+                  cursor: analyzingAI ? 'not-allowed' : 'pointer',
+                  opacity: analyzingAI ? 0.6 : 1
                 }}
               >
-                Zapisz
+                {analyzingAI ? 'Analiza AI...' : 'Zapisz'}
               </button>
             </div>
           </form>

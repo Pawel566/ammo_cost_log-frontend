@@ -32,7 +32,7 @@ const Login = () => {
     } else {
       setSuccess('Zalogowano pomyślnie!');
       setTimeout(() => {
-        navigate('/guns');
+        navigate('/dashboard');
       }, 1000);
     }
   };

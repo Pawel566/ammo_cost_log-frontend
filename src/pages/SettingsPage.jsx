@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { settingsAPI } from '../services/api';
+import { useTheme } from '../context/ThemeContext';
 
 const SettingsPage = () => {
+  const { theme, changeTheme } = useTheme();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [settings, setSettings] = useState({
-    theme: 'dark',
+    theme: theme,
     distance_unit: 'm',
     maintenance_rounds_limit: 500,
     maintenance_days_limit: 90,
@@ -19,6 +21,13 @@ const SettingsPage = () => {
   useEffect(() => {
     fetchSettings();
   }, []);
+
+  useEffect(() => {
+    // Synchronizuj motyw z kontekstem
+    if (settings.theme !== theme) {
+      setSettings(prev => ({ ...prev, theme: theme }));
+    }
+  }, [theme]);
 
   const fetchSettings = async () => {
     try {
@@ -51,6 +60,7 @@ const SettingsPage = () => {
     setError('');
     setSuccess('');
     try {
+      // Zapisz wszystkie ustawienia (motyw już został zapisany przez changeTheme w handleChange)
       await settingsAPI.update(settings);
       setSuccess('Ustawienia zostały zapisane');
       setTimeout(() => setSuccess(''), 3000);
@@ -59,8 +69,19 @@ const SettingsPage = () => {
     }
   };
 
-  const handleChange = (field, value) => {
-    setSettings({ ...settings, [field]: value });
+  const handleChange = async (field, value) => {
+    const newSettings = { ...settings, [field]: value };
+    setSettings(newSettings);
+    if (field === 'theme') {
+      // Zmień motyw natychmiast w kontekście
+      changeTheme(value);
+      // Zapisz motyw od razu w bazie
+      try {
+        await settingsAPI.update({ theme: value });
+      } catch (err) {
+        console.error('Błąd podczas zapisywania motywu:', err);
+      }
+    }
   };
 
   if (loading) {
@@ -98,9 +119,9 @@ const SettingsPage = () => {
                   style={{
                     padding: '0.5rem 1rem',
                     borderRadius: '4px',
-                    border: '1px solid #555',
-                    backgroundColor: settings.theme === 'light' ? '#007bff' : '#2c2c2c',
-                    color: settings.theme === 'light' ? '#fff' : '#aaa',
+                    border: `1px solid var(--border-color)`,
+                    backgroundColor: settings.theme === 'light' ? '#007bff' : 'var(--bg-secondary)',
+                    color: settings.theme === 'light' ? '#fff' : 'var(--text-tertiary)',
                     cursor: 'pointer',
                     transition: 'all 0.2s'
                   }}
@@ -113,9 +134,9 @@ const SettingsPage = () => {
                   style={{
                     padding: '0.5rem 1rem',
                     borderRadius: '4px',
-                    border: '1px solid #555',
-                    backgroundColor: settings.theme === 'dark' ? '#007bff' : '#2c2c2c',
-                    color: settings.theme === 'dark' ? '#fff' : '#aaa',
+                    border: `1px solid var(--border-color)`,
+                    backgroundColor: settings.theme === 'dark' ? '#007bff' : 'var(--bg-secondary)',
+                    color: settings.theme === 'dark' ? '#fff' : 'var(--text-tertiary)',
                     cursor: 'pointer',
                     transition: 'all 0.2s'
                   }}
@@ -136,9 +157,9 @@ const SettingsPage = () => {
                   style={{
                     padding: '0.5rem 1rem',
                     borderRadius: '4px',
-                    border: '1px solid #555',
-                    backgroundColor: settings.distance_unit === 'm' ? '#007bff' : '#2c2c2c',
-                    color: settings.distance_unit === 'm' ? '#fff' : '#aaa',
+                    border: `1px solid var(--border-color)`,
+                    backgroundColor: settings.distance_unit === 'm' ? '#007bff' : 'var(--bg-secondary)',
+                    color: settings.distance_unit === 'm' ? '#fff' : 'var(--text-tertiary)',
                     cursor: 'pointer',
                     transition: 'all 0.2s'
                   }}
@@ -151,9 +172,9 @@ const SettingsPage = () => {
                   style={{
                     padding: '0.5rem 1rem',
                     borderRadius: '4px',
-                    border: '1px solid #555',
-                    backgroundColor: settings.distance_unit === 'yd' ? '#007bff' : '#2c2c2c',
-                    color: settings.distance_unit === 'yd' ? '#fff' : '#aaa',
+                    border: `1px solid var(--border-color)`,
+                    backgroundColor: settings.distance_unit === 'yd' ? '#007bff' : 'var(--bg-secondary)',
+                    color: settings.distance_unit === 'yd' ? '#fff' : 'var(--text-tertiary)',
                     cursor: 'pointer',
                     transition: 'all 0.2s'
                   }}
@@ -194,7 +215,7 @@ const SettingsPage = () => {
                 min="1"
                 style={{ maxWidth: '200px' }}
               />
-              <span style={{ marginLeft: '0.5rem', color: '#aaa' }}>dni</span>
+              <span style={{ marginLeft: '0.5rem', color: 'var(--text-tertiary)' }}>dni</span>
             </div>
           </div>
 

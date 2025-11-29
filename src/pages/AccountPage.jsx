@@ -132,7 +132,7 @@ const AccountPage = () => {
             <h3 style={{ marginBottom: '1rem' }}>Informacje o koncie</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               <div>
-                <div style={{ fontSize: '0.9rem', color: '#aaa', marginBottom: '0.25rem' }}>
+                <div style={{ fontSize: '0.9rem', color: 'var(--text-tertiary)', marginBottom: '0.25rem' }}>
                   Email
                 </div>
                 <div style={{ fontSize: '1rem', fontWeight: '500' }}>
@@ -140,7 +140,7 @@ const AccountPage = () => {
                 </div>
               </div>
               <div>
-                <div style={{ fontSize: '0.9rem', color: '#aaa', marginBottom: '0.25rem' }}>
+                <div style={{ fontSize: '0.9rem', color: 'var(--text-tertiary)', marginBottom: '0.25rem' }}>
                   Nazwa użytkownika
                 </div>
                 <div style={{ fontSize: '1rem', fontWeight: '500' }}>
@@ -172,7 +172,7 @@ const AccountPage = () => {
         <div className="card" style={{ marginBottom: '1.5rem' }}>
           <h3 style={{ marginBottom: '1.5rem' }}>Bezpieczeństwo</h3>
           
-          <div style={{ marginBottom: '2rem', paddingBottom: '2rem', borderBottom: '1px solid #404040' }}>
+          <div style={{ marginBottom: '2rem', paddingBottom: '2rem', borderBottom: `1px solid var(--border-color)` }}>
             <h4 style={{ marginBottom: '1rem', fontSize: '1.1rem' }}>Zmiana hasła</h4>
             <form onSubmit={handlePasswordSubmit}>
               <div className="form-group">
@@ -235,7 +235,7 @@ const AccountPage = () => {
 
         <div className="card" style={{ borderColor: '#f44336', border: '1px solid #f44336' }}>
           <h3 style={{ marginBottom: '1rem', color: '#f44336' }}>Usuń konto</h3>
-          <p style={{ marginBottom: '1rem', color: '#aaa', fontSize: '0.9rem' }}>
+          <p style={{ marginBottom: '1rem', color: 'var(--text-tertiary)', fontSize: '0.9rem' }}>
             Usunięcie konta jest nieodwracalne. Wszystkie Twoje dane zostaną trwale usunięte.
           </p>
           <button
@@ -273,7 +273,7 @@ const AccountPage = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <h3 style={{ color: '#f44336', marginBottom: '1rem' }}>Potwierdź usunięcie konta</h3>
-            <p style={{ marginBottom: '1rem', color: '#aaa' }}>
+            <p style={{ marginBottom: '1rem', color: 'var(--text-tertiary)' }}>
               To działanie jest nieodwracalne. Wprowadź hasło aby potwierdzić usunięcie konta.
             </p>
             <div className="form-group">
