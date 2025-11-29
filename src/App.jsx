@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider, useTheme } from './context/ThemeContext';
 import HomePage from './pages/HomePage';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -81,39 +82,45 @@ const NavbarUser = () => {
 };
 
 function AppContent() {
+  const location = useLocation();
+  const { theme } = useTheme();
+  const isHomePage = location.pathname === '/' || location.pathname === '/login' || location.pathname === '/register';
+  
   return (
-    <div className="App">
-      <nav className="navbar">
-        <div className="container">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Link to="/" className="navbar-brand">
-              🎯 Ammo Cost Log
-            </Link>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-              <ul className="navbar-nav">
-                <li>
-                  <Link to="/dashboard">Pulpit</Link>
-                </li>
-                <li>
-                  <Link to="/guns">Broń</Link>
-                </li>
-                <li>
-                  <Link to="/ammo">Amunicja</Link>
-                </li>
-                <li>
-                  <Link to="/shooting-sessions">Sesje strzeleckie</Link>
-                </li>
-                <li>
-                  <Link to="/summary">Podsumowanie</Link>
-                </li>
-              </ul>
-              <NavbarUser />
+    <div className={`App ${!isHomePage ? `theme-${theme}` : ''}`}>
+      {!isHomePage && (
+        <nav className="navbar">
+          <div className="container">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Link to="/" className="navbar-brand">
+                🎯 Ammo Cost Log
+              </Link>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+                <ul className="navbar-nav">
+                  <li>
+                    <Link to="/dashboard">Pulpit</Link>
+                  </li>
+                  <li>
+                    <Link to="/guns">Broń</Link>
+                  </li>
+                  <li>
+                    <Link to="/ammo">Amunicja</Link>
+                  </li>
+                  <li>
+                    <Link to="/shooting-sessions">Sesje strzeleckie</Link>
+                  </li>
+                  <li>
+                    <Link to="/summary">Podsumowanie</Link>
+                  </li>
+                </ul>
+                <NavbarUser />
+              </div>
             </div>
           </div>
-        </div>
-      </nav>
+        </nav>
+      )}
 
-      <main className="container">
+      <main className={!isHomePage ? "container" : ""}>
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<Login />} />
@@ -137,11 +144,13 @@ function AppContent() {
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <AppContent />
-      </Router>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <Router>
+          <AppContent />
+        </Router>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

@@ -227,8 +227,7 @@ const DashboardPage = () => {
                   height: '180px',
                   backgroundColor: '#2c2c2c',
                   borderRadius: '8px',
-                  overflow: 'hidden',
-                  padding: '0.5rem'
+                  overflow: 'hidden'
                 }}>
                   {mostUsedGunImage ? (
                     <img 
