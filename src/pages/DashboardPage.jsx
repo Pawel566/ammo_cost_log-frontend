@@ -16,6 +16,7 @@ const DashboardPage = () => {
   const [lowAmmoAlerts, setLowAmmoAlerts] = useState([]);
   const [maintenanceAlerts, setMaintenanceAlerts] = useState([]);
   const [rankInfo, setRankInfo] = useState(null);
+  const [skillLevel, setSkillLevel] = useState('beginner');
   const [userSettings, setUserSettings] = useState({
     low_ammo_notifications_enabled: true,
     maintenance_notifications_enabled: true,
@@ -30,7 +31,7 @@ const DashboardPage = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const [gunsRes, sessionsRes, ammoRes, maintenanceRes, settingsRes, rankRes] = await Promise.all([
+      const [gunsRes, sessionsRes, ammoRes, maintenanceRes, settingsRes, rankRes, skillLevelRes] = await Promise.all([
         gunsAPI.getAll(),
         shootingSessionsAPI.getAll(),
         ammoAPI.getAll(),
@@ -39,7 +40,8 @@ const DashboardPage = () => {
         accountAPI.getRank().catch((err) => {
           console.error('Błąd pobierania rangi:', err);
           return { data: null };
-        })
+        }),
+        accountAPI.getSkillLevel().catch(() => ({ data: { skill_level: 'beginner' } }))
       ]);
 
       const guns = Array.isArray(gunsRes.data) ? gunsRes.data : gunsRes.data?.items ?? [];
@@ -64,6 +66,11 @@ const DashboardPage = () => {
         setRankInfo(rankRes.data);
       } else {
         setRankInfo({ rank: "Nowicjusz", passed_sessions: 0, progress_percent: 0 });
+      }
+
+      // Poziom zaawansowania
+      if (skillLevelRes && skillLevelRes.data) {
+        setSkillLevel(skillLevelRes.data.skill_level || 'beginner');
       }
 
       // Najczęściej używana broń
@@ -350,13 +357,24 @@ const DashboardPage = () => {
             </h3>
             {rankInfo ? (
               <div>
-                <div style={{ 
-                  textAlign: 'center', 
-                  marginBottom: '1rem',
-                  fontSize: '1.3rem',
-                  fontWeight: 'bold',
-                  color: '#007bff'
-                }}>
+                <div 
+                  style={{ 
+                    textAlign: 'center', 
+                    marginBottom: '1rem',
+                    fontSize: '1.3rem',
+                    fontWeight: 'bold',
+                    color: '#007bff',
+                    cursor: 'help',
+                    position: 'relative'
+                  }}
+                  title={
+                    skillLevel === 'beginner' 
+                      ? 'Ranga naliczana na podstawie sesji z celnością ≥75%'
+                      : skillLevel === 'intermediate'
+                      ? 'Ranga naliczana na podstawie sesji z celnością ≥85%'
+                      : 'Ranga naliczana na podstawie sesji z celnością ≥95%'
+                  }
+                >
                   {rankInfo.rank || "Nowicjusz"}
                 </div>
                 <div style={{ 
