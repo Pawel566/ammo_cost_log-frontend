@@ -18,9 +18,9 @@ const ShootingSessionsPage = () => {
   const [sessionToDelete, setSessionToDelete] = useState(null);
   const [userSkillLevel, setUserSkillLevel] = useState(null);
 
-  // Sortowanie
+ 
   const [sortColumn, setSortColumn] = useState(null);
-  const [sortDirection, setSortDirection] = useState('asc'); // 'asc' lub 'desc'
+  const [sortDirection, setSortDirection] = useState('asc'); 
 
   useEffect(() => {
     fetchData();
@@ -80,7 +80,7 @@ const ShootingSessionsPage = () => {
   const applyFilters = () => {
     let filtered = [...sessions];
 
-    // Filtrowanie
+    
     if (filterType && filterValue) {
       filtered = filtered.filter(session => {
       const value = filterValue.toLowerCase();
@@ -105,7 +105,7 @@ const ShootingSessionsPage = () => {
     });
     }
 
-    // Sortowanie
+    
     if (sortColumn) {
       filtered.sort((a, b) => {
         let aValue, bValue;
@@ -148,7 +148,7 @@ const ShootingSessionsPage = () => {
             bValue = b.accuracy_percent !== null && b.accuracy_percent !== undefined ? b.accuracy_percent : 0;
             return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
           case 'type':
-            // Sortowanie po typie: standardowa (0) vs zaawansowana (1)
+            
             aValue = (a.session_type === 'advanced') ? 1 : 0;
             bValue = (b.session_type === 'advanced') ? 1 : 0;
             return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
@@ -157,7 +157,7 @@ const ShootingSessionsPage = () => {
             bValue = String(b[sortColumn] || '').toLowerCase();
         }
         
-        // Sortowanie tekstowe
+        
         if (typeof aValue === 'string' && typeof bValue === 'string') {
           if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
           if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
