@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { gunsAPI, attachmentsAPI, shootingSessionsAPI, ammoAPI, maintenanceAPI, settingsAPI } from '../services/api';
+import imageCompression from 'browser-image-compression';
 
 const MaintenanceStatusIcon = ({ status }) => {
   const iconSize = 20;
@@ -579,16 +580,20 @@ const MyWeaponsPage = () => {
       return;
     }
 
-    if (file.size > 10 * 1024 * 1024) {
-      setError('Plik jest zbyt duży (max 10MB)');
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append('file', file);
-
     try {
       setError('');
+      
+      const options = {
+        maxSizeMB: 0.4,
+        maxWidthOrHeight: 1024,
+        useWebWorker: true,
+      };
+      
+      const compressedFile = await imageCompression(file, options);
+      
+      const formData = new FormData();
+      formData.append('file', compressedFile, file.name);
+
       await gunsAPI.uploadImage(gunId, formData);
       
       const response = await gunsAPI.getImage(gunId);
