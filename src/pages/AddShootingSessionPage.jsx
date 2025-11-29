@@ -516,7 +516,7 @@ const AddShootingSessionPage = () => {
           const shouldGenerateAI = hasHits || hasTargetImageFinal;
           
           if (shouldGenerateAI) {
-            try {
+          try {
               setAnalyzingAI(true);
               const result = await shootingSessionsAPI.generateAIComment(sessionId);
               // Jeśli Vision policzyło trafienia (przypadek A), zaktualizuj widok
@@ -526,9 +526,9 @@ const AddShootingSessionPage = () => {
                   hits: result.data.hits.toString()
                 }));
               }
-            } catch (err) {
-              // Nie blokuj zapisu sesji, jeśli generowanie komentarza się nie powiodło
-              console.error('Błąd podczas generowania komentarza AI:', err);
+          } catch (err) {
+            // Nie blokuj zapisu sesji, jeśli generowanie komentarza się nie powiodło
+            console.error('Błąd podczas generowania komentarza AI:', err);
               // Pokaż użytkownikowi informację o błędzie
               if (err.response?.data?.detail) {
                 setError(`Błąd analizy AI: ${err.response.data.detail}`);

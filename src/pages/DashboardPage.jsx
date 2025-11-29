@@ -1,0 +1,438 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { gunsAPI, ammoAPI, shootingSessionsAPI, maintenanceAPI, settingsAPI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
+
+const DashboardPage = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+  // Dane do wyświetlenia
+  const [mostUsedGun, setMostUsedGun] = useState(null);
+  const [monthlyStats, setMonthlyStats] = useState(null);
+  const [lowAmmoAlerts, setLowAmmoAlerts] = useState([]);
+  const [maintenanceAlerts, setMaintenanceAlerts] = useState([]);
+  const [userSettings, setUserSettings] = useState({
+    low_ammo_notifications_enabled: true,
+    maintenance_notifications_enabled: true,
+    maintenance_rounds_limit: 500,
+    maintenance_days_limit: 90
+  });
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      const [gunsRes, sessionsRes, ammoRes, maintenanceRes, settingsRes] = await Promise.all([
+        gunsAPI.getAll(),
+        shootingSessionsAPI.getAll(),
+        ammoAPI.getAll(),
+        maintenanceAPI.getAll(),
+        settingsAPI.get()
+      ]);
+
+      const guns = Array.isArray(gunsRes.data) ? gunsRes.data : gunsRes.data?.items ?? [];
+      const sessions = Array.isArray(sessionsRes.data) ? sessionsRes.data : [];
+      const ammo = Array.isArray(ammoRes.data) ? ammoRes.data : ammoRes.data?.items ?? [];
+      const maintenance = maintenanceRes.data || [];
+      
+      // Ustawienia użytkownika
+      if (settingsRes.data) {
+        setUserSettings({
+          low_ammo_notifications_enabled: settingsRes.data.low_ammo_notifications_enabled !== undefined 
+            ? settingsRes.data.low_ammo_notifications_enabled : true,
+          maintenance_notifications_enabled: settingsRes.data.maintenance_notifications_enabled !== undefined
+            ? settingsRes.data.maintenance_notifications_enabled : true,
+          maintenance_rounds_limit: settingsRes.data.maintenance_rounds_limit || 500,
+          maintenance_days_limit: settingsRes.data.maintenance_days_limit || 90
+        });
+      }
+
+      // Najczęściej używana broń
+      const gunUsage = {};
+      sessions.forEach(session => {
+        if (session.gun_id) {
+          gunUsage[session.gun_id] = (gunUsage[session.gun_id] || 0) + (session.shots || 0);
+        }
+      });
+      
+      let maxShots = 0;
+      let mostUsedGunId = null;
+      Object.entries(gunUsage).forEach(([gunId, shots]) => {
+        if (shots > maxShots) {
+          maxShots = shots;
+          mostUsedGunId = gunId;
+        }
+      });
+      
+      if (mostUsedGunId) {
+        const gun = guns.find(g => g.id === mostUsedGunId);
+        if (gun) {
+          setMostUsedGun(gun);
+        }
+      }
+
+      // Statystyki miesięczne (bieżący miesiąc)
+      const now = new Date();
+      const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      const monthSessions = sessions.filter(s => {
+        const sessionDate = new Date(s.date);
+        const sessionMonth = `${sessionDate.getFullYear()}-${String(sessionDate.getMonth() + 1).padStart(2, '0')}`;
+        return sessionMonth === currentMonth;
+      });
+
+      const totalShots = monthSessions.reduce((sum, s) => sum + (s.shots || 0), 0);
+      const totalCost = monthSessions.reduce((sum, s) => sum + (parseFloat(s.cost) || 0), 0);
+      const accuracySessions = monthSessions.filter(s => s.hits !== null && s.hits !== undefined && s.distance_m);
+      const totalHits = accuracySessions.reduce((sum, s) => sum + (s.hits || 0), 0);
+      const accuracyShots = accuracySessions.reduce((sum, s) => sum + (s.shots || 0), 0);
+      const avgAccuracy = accuracyShots > 0 
+        ? (totalHits / accuracyShots) * 100 
+        : 0;
+
+      setMonthlyStats({
+        sessions: monthSessions.length,
+        shots: totalShots,
+        avgAccuracy: avgAccuracy,
+        cost: totalCost
+      });
+
+      // Alerty o niskiej amunicji
+      if (userSettings.low_ammo_notifications_enabled) {
+        const lowAmmo = ammo.filter(item => {
+          const quantity = item.units_in_package || 0;
+          return quantity > 0 && quantity < 50; // Próg niskiej amunicji
+        });
+        setLowAmmoAlerts(lowAmmo);
+      }
+
+      // Alerty o konserwacji
+      if (userSettings.maintenance_notifications_enabled) {
+        const alerts = [];
+        guns.forEach(gun => {
+          const gunMaintenance = maintenance.filter(m => m.gun_id === gun.id);
+          const gunSessions = sessions.filter(s => s.gun_id === gun.id);
+          
+          if (gunMaintenance.length > 0) {
+            const lastMaintenance = gunMaintenance.sort((a, b) => 
+              new Date(b.date) - new Date(a.date)
+            )[0];
+            const lastMaintenanceDate = new Date(lastMaintenance.date);
+            const daysSince = Math.floor((now - lastMaintenanceDate) / (1000 * 60 * 60 * 24));
+            
+            // Strzały od ostatniej konserwacji
+            const sessionsAfterMaintenance = gunSessions.filter(s => 
+              new Date(s.date) >= lastMaintenanceDate
+            );
+            const shotsSince = sessionsAfterMaintenance.reduce((sum, s) => sum + (s.shots || 0), 0);
+            
+            const needsMaintenance = 
+              daysSince >= userSettings.maintenance_days_limit ||
+              shotsSince >= userSettings.maintenance_rounds_limit;
+            
+            if (needsMaintenance) {
+              alerts.push({
+                gun,
+                lastMaintenance: lastMaintenanceDate,
+                daysSince,
+                shotsSince
+              });
+            }
+          } else if (gunSessions.length > 0) {
+            // Broń bez konserwacji, ale z sesjami
+            const totalShots = gunSessions.reduce((sum, s) => sum + (s.shots || 0), 0);
+            if (totalShots >= userSettings.maintenance_rounds_limit) {
+              alerts.push({
+                gun,
+                lastMaintenance: null,
+                daysSince: null,
+                shotsSince: totalShots
+              });
+            }
+          }
+        });
+        setMaintenanceAlerts(alerts);
+      }
+
+      setError(null);
+    } catch (err) {
+      setError('Błąd podczas pobierania danych');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return <div className="text-center">Ładowanie...</div>;
+  }
+
+  return (
+    <div>
+      <div style={{ marginBottom: '2rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+          <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <img 
+              src="/assets/session_icon_dark.png" 
+              alt="Ammo Cost Log" 
+              style={{ width: '32px', height: '32px' }}
+            />
+            Ammo Cost Log – Pulpit
+          </h2>
+        </div>
+
+        {error && (
+          <div className="alert alert-danger" style={{ marginBottom: '1rem' }}>
+            {error}
+          </div>
+        )}
+
+        {/* Grid z kartami */}
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(2, 1fr)', 
+          gap: '1.5rem',
+          marginBottom: '1.5rem'
+        }}>
+          {/* Najczęściej używana broń */}
+          <div className="card" style={{ padding: '1.5rem' }}>
+            <h3 style={{ margin: 0, marginBottom: '1rem', fontSize: '1.1rem', fontWeight: 'bold' }}>
+              Najczęściej używana broń
+            </h3>
+            {mostUsedGun ? (
+              <div>
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  marginBottom: '1rem'
+                }}>
+                  <img 
+                    src="/assets/session_icon_dark.png" 
+                    alt="Broń" 
+                    style={{ width: '64px', height: '64px', opacity: 0.7 }}
+                  />
+                </div>
+                <div style={{ 
+                  textAlign: 'center', 
+                  marginBottom: '1rem',
+                  fontSize: '1.2rem',
+                  color: '#007bff',
+                  fontWeight: 'bold'
+                }}>
+                  {mostUsedGun.name}
+                </div>
+                <button
+                  className="btn btn-primary"
+                  onClick={() => navigate(`/shooting-sessions?gun_id=${mostUsedGun.id}`)}
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem'
+                  }}
+                >
+                  Zobacz sesje
+                  <span>→</span>
+                </button>
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', color: '#888', padding: '1rem' }}>
+                Brak danych
+              </div>
+            )}
+          </div>
+
+          {/* Wyniki w tym miesiącu */}
+          <div className="card" style={{ padding: '1.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="10" stroke="white" strokeWidth="2" fill="none"/>
+                <circle cx="12" cy="12" r="3" fill="white"/>
+              </svg>
+              <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 'bold' }}>
+                Wyniki
+              </h3>
+              <span style={{ color: '#888', fontSize: '0.9rem' }}>w tym miesiącu</span>
+            </div>
+            {monthlyStats ? (
+              <div style={{ display: 'grid', gap: '0.75rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#888' }}>SESJE</span>
+                  <span style={{ fontWeight: 'bold' }}>{monthlyStats.sessions}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#888' }}>STRZAŁY</span>
+                  <span style={{ fontWeight: 'bold' }}>{monthlyStats.shots}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#888' }}>ŚR. CELNOŚĆ</span>
+                  <span style={{ 
+                    fontWeight: 'bold',
+                    color: monthlyStats.avgAccuracy >= 80 ? '#4caf50' : monthlyStats.avgAccuracy >= 60 ? '#ffc107' : '#dc3545'
+                  }}>
+                    {monthlyStats.avgAccuracy.toFixed(0)}%
+                  </span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem' }}>
+                  <span style={{ color: '#888' }}>KOSZT</span>
+                  <span style={{ fontWeight: 'bold', color: '#007bff' }}>
+                    {monthlyStats.cost.toFixed(2).replace('.', ',')} zł
+                  </span>
+                </div>
+                {/* Prosty wykres kosztów */}
+                <div style={{ 
+                  marginTop: '1rem', 
+                  height: '40px', 
+                  display: 'flex', 
+                  alignItems: 'flex-end', 
+                  gap: '4px'
+                }}>
+                  {[1, 2, 3, 4].map((i) => (
+                    <div
+                      key={i}
+                      style={{
+                        flex: 1,
+                        backgroundColor: '#007bff',
+                        height: `${20 + i * 15}%`,
+                        borderRadius: '2px 2px 0 0'
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', color: '#888', padding: '1rem' }}>
+                Brak danych w tym miesiącu
+              </div>
+            )}
+          </div>
+
+          {/* Mało amunicji */}
+          <div className="card" style={{ padding: '1.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="#dc3545"/>
+                <path d="M2 17L12 22L22 17" stroke="#dc3545" strokeWidth="2" fill="none"/>
+                <path d="M2 12L12 17L22 12" stroke="#dc3545" strokeWidth="2" fill="none"/>
+              </svg>
+              <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 'bold' }}>
+                Mało amunicji
+              </h3>
+            </div>
+            {lowAmmoAlerts.length > 0 ? (
+              <div>
+                {lowAmmoAlerts.slice(0, 3).map((item, index) => (
+                  <div key={item.id} style={{ marginBottom: index < lowAmmoAlerts.length - 1 ? '1rem' : '0' }}>
+                    <div style={{ 
+                      color: '#dc3545', 
+                      fontWeight: 'bold',
+                      marginBottom: '0.5rem'
+                    }}>
+                      {item.name} {item.caliber ? `(${item.caliber})` : ''}
+                    </div>
+                    <div style={{ marginBottom: '0.5rem' }}>
+                      Pozostało: {item.units_in_package} szt
+                    </div>
+                    <div style={{
+                      width: '100%',
+                      height: '8px',
+                      backgroundColor: '#2c2c2c',
+                      borderRadius: '4px',
+                      overflow: 'hidden'
+                    }}>
+                      <div style={{
+                        width: `${Math.min((item.units_in_package / 50) * 100, 100)}%`,
+                        height: '100%',
+                        backgroundColor: '#dc3545',
+                        transition: 'width 0.3s'
+                      }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', color: '#888', padding: '1rem' }}>
+                Wszystko w porządku
+              </div>
+            )}
+          </div>
+
+          {/* Konserwacja */}
+          <div className="card" style={{ padding: '1.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" fill="white"/>
+              </svg>
+              <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 'bold' }}>
+                Konserwacja
+              </h3>
+            </div>
+            {maintenanceAlerts.length > 0 ? (
+              <div>
+                {maintenanceAlerts.slice(0, 2).map((alert, index) => (
+                  <div key={alert.gun.id} style={{ marginBottom: index < maintenanceAlerts.length - 1 ? '1rem' : '0' }}>
+                    <div style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>
+                      {alert.gun.name}
+                    </div>
+                    {alert.lastMaintenance ? (
+                      <>
+                        <div style={{ color: '#888', fontSize: '0.9rem', marginBottom: '0.25rem' }}>
+                          Ostatnia konserwacja: {alert.lastMaintenance.toLocaleDateString('pl-PL')}
+                        </div>
+                        <div style={{ color: '#888', fontSize: '0.9rem', marginBottom: '0.5rem' }}>
+                          Strzały od konserwacji: {alert.shotsSince}
+                        </div>
+                      </>
+                    ) : (
+                      <div style={{ color: '#888', fontSize: '0.9rem', marginBottom: '0.5rem' }}>
+                        Brak konserwacji. Strzały: {alert.shotsSince}
+                      </div>
+                    )}
+                    <div style={{
+                      width: '100%',
+                      height: '8px',
+                      backgroundColor: '#2c2c2c',
+                      borderRadius: '4px',
+                      overflow: 'hidden'
+                    }}>
+                      <div style={{
+                        width: `${Math.min((alert.shotsSince / userSettings.maintenance_rounds_limit) * 100, 100)}%`,
+                        height: '100%',
+                        backgroundColor: alert.shotsSince >= userSettings.maintenance_rounds_limit ? '#dc3545' : '#ffc107',
+                        transition: 'width 0.3s'
+                      }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', color: '#888', padding: '1rem' }}>
+                Wszystko w porządku
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Poziom z odznaką (placeholder) */}
+        <div className="card" style={{ padding: '1.5rem', marginTop: '1.5rem' }}>
+          <h3 style={{ margin: 0, marginBottom: '1rem', fontSize: '1.1rem', fontWeight: 'bold' }}>
+            Poziom
+          </h3>
+          <div style={{ textAlign: 'center', color: '#888', padding: '2rem' }}>
+            Funkcja w przygotowaniu
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default DashboardPage;
+

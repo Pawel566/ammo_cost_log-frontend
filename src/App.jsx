@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import HomePage from './pages/HomePage';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import DashboardPage from './pages/DashboardPage';
 import GunsPage from './pages/GunsPage';
 import AmmoPage from './pages/AmmoPage';
 import ShootingSessionsPage from './pages/ShootingSessionsPage';
@@ -91,6 +92,9 @@ function AppContent() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
               <ul className="navbar-nav">
                 <li>
+                  <Link to="/dashboard">Pulpit</Link>
+                </li>
+                <li>
                   <Link to="/guns">Broń</Link>
                 </li>
                 <li>
@@ -114,6 +118,7 @@ function AppContent() {
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/guns" element={<GunsPage />} />
           <Route path="/ammo" element={<AmmoPage />} />
           <Route path="/shooting-sessions" element={<ShootingSessionsPage />} />
