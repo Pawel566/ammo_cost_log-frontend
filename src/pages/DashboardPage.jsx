@@ -17,6 +17,7 @@ const DashboardPage = () => {
   const [maintenanceAlerts, setMaintenanceAlerts] = useState([]);
   const [rankInfo, setRankInfo] = useState(null);
   const [skillLevel, setSkillLevel] = useState('beginner');
+  const [showRankTooltip, setShowRankTooltip] = useState(false);
   const [userSettings, setUserSettings] = useState({
     low_ammo_notifications_enabled: true,
     maintenance_notifications_enabled: true,
@@ -357,24 +358,13 @@ const DashboardPage = () => {
             </h3>
             {rankInfo ? (
               <div>
-                <div 
-                  style={{ 
-                    textAlign: 'center', 
-                    marginBottom: '1rem',
-                    fontSize: '1.3rem',
-                    fontWeight: 'bold',
-                    color: '#007bff',
-                    cursor: 'help',
-                    position: 'relative'
-                  }}
-                  title={
-                    skillLevel === 'beginner' 
-                      ? 'Ranga naliczana na podstawie sesji z celnością ≥75%'
-                      : skillLevel === 'intermediate'
-                      ? 'Ranga naliczana na podstawie sesji z celnością ≥85%'
-                      : 'Ranga naliczana na podstawie sesji z celnością ≥95%'
-                  }
-                >
+                <div style={{ 
+                  textAlign: 'center', 
+                  marginBottom: '1rem',
+                  fontSize: '1.3rem',
+                  fontWeight: 'bold',
+                  color: '#007bff'
+                }}>
                   {rankInfo.rank || "Nowicjusz"}
                 </div>
                 <div style={{ 
@@ -397,7 +387,7 @@ const DashboardPage = () => {
                   </div>
                 ) : rankInfo.next_rank && rankInfo.next_rank_min !== null && rankInfo.next_rank_min !== undefined ? (
                   <>
-                    <div style={{ marginBottom: '0.5rem' }}>
+                    <div style={{ marginBottom: '0.5rem', position: 'relative' }}>
                       <div style={{ 
                         display: 'flex', 
                         justifyContent: 'space-between',
@@ -408,13 +398,19 @@ const DashboardPage = () => {
                         <span>Do następnej rangi:</span>
                         <span>{Math.max(0, rankInfo.next_rank_min - rankInfo.passed_sessions)} sesji</span>
                       </div>
-                      <div style={{
-                        width: '100%',
-                        height: '12px',
-                        backgroundColor: 'var(--bg-secondary)',
-                        borderRadius: '6px',
-                        overflow: 'hidden'
-                      }}>
+                      <div 
+                        style={{
+                          width: '100%',
+                          height: '12px',
+                          backgroundColor: 'var(--bg-secondary)',
+                          borderRadius: '6px',
+                          overflow: 'hidden',
+                          position: 'relative',
+                          cursor: 'help'
+                        }}
+                        onMouseEnter={() => setShowRankTooltip(true)}
+                        onMouseLeave={() => setShowRankTooltip(false)}
+                      >
                         <div style={{
                           width: `${rankInfo.progress_percent || 0}%`,
                           height: '100%',
@@ -423,6 +419,42 @@ const DashboardPage = () => {
                           borderRadius: '6px'
                         }} />
                       </div>
+                      {showRankTooltip && (
+                        <div 
+                          style={{
+                            position: 'absolute',
+                            bottom: '100%',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            marginBottom: '8px',
+                            padding: '8px 12px',
+                            backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                            color: 'white',
+                            borderRadius: '6px',
+                            fontSize: '0.8rem',
+                            whiteSpace: 'nowrap',
+                            zIndex: 1000,
+                            pointerEvents: 'none'
+                          }}
+                        >
+                          {skillLevel === 'beginner' 
+                            ? 'Ranga naliczana na podstawie sesji z celnością ≥75%'
+                            : skillLevel === 'intermediate'
+                            ? 'Ranga naliczana na podstawie sesji z celnością ≥85%'
+                            : 'Ranga naliczana na podstawie sesji z celnością ≥95%'}
+                          <div style={{
+                            position: 'absolute',
+                            top: '100%',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            width: 0,
+                            height: 0,
+                            borderLeft: '6px solid transparent',
+                            borderRight: '6px solid transparent',
+                            borderTop: '6px solid rgba(0, 0, 0, 0.9)'
+                          }} />
+                        </div>
+                      )}
                     </div>
                     <div style={{ 
                       textAlign: 'center',

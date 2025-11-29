@@ -166,21 +166,11 @@ const AccountPage = () => {
                   <div style={{ fontSize: '0.9rem', color: 'var(--text-tertiary)', marginBottom: '0.25rem' }}>
                     Ranga
                   </div>
-                  <div 
-                    style={{ 
-                      fontSize: '1rem', 
-                      fontWeight: '500', 
-                      color: '#007bff',
-                      cursor: 'help'
-                    }}
-                    title={
-                      skillLevel === 'beginner' 
-                        ? 'Ranga naliczana na podstawie sesji z celnością ≥75%'
-                        : skillLevel === 'intermediate'
-                        ? 'Ranga naliczana na podstawie sesji z celnością ≥85%'
-                        : 'Ranga naliczana na podstawie sesji z celnością ≥95%'
-                    }
-                  >
+                  <div style={{ 
+                    fontSize: '1rem', 
+                    fontWeight: '500', 
+                    color: '#007bff'
+                  }}>
                     {rankInfo ? (rankInfo.rank || 'Nowicjusz') : 'Ładowanie...'}
                   </div>
                   {rankInfo && (
