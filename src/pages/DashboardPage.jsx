@@ -11,6 +11,7 @@ const DashboardPage = () => {
   
   // Dane do wyświetlenia
   const [mostUsedGun, setMostUsedGun] = useState(null);
+  const [mostUsedGunImage, setMostUsedGunImage] = useState(null);
   const [monthlyStats, setMonthlyStats] = useState(null);
   const [lowAmmoAlerts, setLowAmmoAlerts] = useState([]);
   const [maintenanceAlerts, setMaintenanceAlerts] = useState([]);
@@ -74,6 +75,17 @@ const DashboardPage = () => {
         const gun = guns.find(g => g.id === mostUsedGunId);
         if (gun) {
           setMostUsedGun(gun);
+          // Pobierz zdjęcie broni
+          try {
+            const imageRes = await gunsAPI.getImage(gun.id);
+            if (imageRes.data?.url) {
+              setMostUsedGunImage(imageRes.data.url);
+            } else {
+              setMostUsedGunImage(null);
+            }
+          } catch (err) {
+            setMostUsedGunImage(null);
+          }
         }
       }
 
@@ -106,7 +118,7 @@ const DashboardPage = () => {
       if (userSettings.low_ammo_notifications_enabled) {
         const lowAmmo = ammo.filter(item => {
           const quantity = item.units_in_package || 0;
-          return quantity > 0 && quantity < 50; // Próg niskiej amunicji
+          return quantity > 0 && quantity < 20; // Próg niskiej amunicji (jak w AmmoPage)
         });
         setLowAmmoAlerts(lowAmmo);
       }
@@ -173,7 +185,7 @@ const DashboardPage = () => {
   }
 
   return (
-    <div>
+    <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
       <div style={{ marginBottom: '2rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -192,10 +204,10 @@ const DashboardPage = () => {
           </div>
         )}
 
-        {/* Grid z kartami */}
+        {/* Górny rząd: Najczęściej używana broń, Wyniki w miesiącu, Poziom */}
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: 'repeat(2, 1fr)', 
+          gridTemplateColumns: 'repeat(3, 1fr)', 
           gap: '1.5rem',
           marginBottom: '1.5rem'
         }}>
@@ -210,13 +222,35 @@ const DashboardPage = () => {
                   display: 'flex', 
                   alignItems: 'center', 
                   justifyContent: 'center',
-                  marginBottom: '1rem'
+                  marginBottom: '1rem',
+                  width: '100%',
+                  height: '120px',
+                  backgroundColor: '#2c2c2c',
+                  borderRadius: '8px',
+                  overflow: 'hidden'
                 }}>
-                  <img 
-                    src="/assets/session_icon_dark.png" 
-                    alt="Broń" 
-                    style={{ width: '64px', height: '64px', opacity: 0.7 }}
-                  />
+                  {mostUsedGunImage ? (
+                    <img 
+                      src={mostUsedGunImage}
+                      alt={mostUsedGun.name}
+                      style={{ 
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover'
+                      }}
+                    />
+                  ) : (
+                    <img 
+                      src="/assets/Add_weapon_icon.png" 
+                      alt="Brak zdjęcia"
+                      style={{ 
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'contain',
+                        opacity: 0.5
+                      }}
+                    />
+                  )}
                 </div>
                 <div style={{ 
                   textAlign: 'center', 
@@ -286,26 +320,6 @@ const DashboardPage = () => {
                     {monthlyStats.cost.toFixed(2).replace('.', ',')} zł
                   </span>
                 </div>
-                {/* Prosty wykres kosztów */}
-                <div style={{ 
-                  marginTop: '1rem', 
-                  height: '40px', 
-                  display: 'flex', 
-                  alignItems: 'flex-end', 
-                  gap: '4px'
-                }}>
-                  {[1, 2, 3, 4].map((i) => (
-                    <div
-                      key={i}
-                      style={{
-                        flex: 1,
-                        backgroundColor: '#007bff',
-                        height: `${20 + i * 15}%`,
-                        borderRadius: '2px 2px 0 0'
-                      }}
-                    />
-                  ))}
-                </div>
               </div>
             ) : (
               <div style={{ textAlign: 'center', color: '#888', padding: '1rem' }}>
@@ -314,13 +328,30 @@ const DashboardPage = () => {
             )}
           </div>
 
+          {/* Poziom z odznaką (placeholder) */}
+          <div className="card" style={{ padding: '1.5rem' }}>
+            <h3 style={{ margin: 0, marginBottom: '1rem', fontSize: '1.1rem', fontWeight: 'bold' }}>
+              Poziom
+            </h3>
+            <div style={{ textAlign: 'center', color: '#888', padding: '2rem' }}>
+              Funkcja w przygotowaniu
+            </div>
+          </div>
+        </div>
+
+        {/* Dolny rząd: Amunicja i Konserwacja */}
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(2, 1fr)', 
+          gap: '1.5rem'
+        }}>
           {/* Mało amunicji */}
           <div className="card" style={{ padding: '1.5rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="#dc3545"/>
-                <path d="M2 17L12 22L22 17" stroke="#dc3545" strokeWidth="2" fill="none"/>
-                <path d="M2 12L12 17L22 12" stroke="#dc3545" strokeWidth="2" fill="none"/>
+                <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="#ff9800"/>
+                <path d="M2 17L12 22L22 17" stroke="#ff9800" strokeWidth="2" fill="none"/>
+                <path d="M2 12L12 17L22 12" stroke="#ff9800" strokeWidth="2" fill="none"/>
               </svg>
               <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 'bold' }}>
                 Mało amunicji
@@ -331,7 +362,7 @@ const DashboardPage = () => {
                 {lowAmmoAlerts.slice(0, 3).map((item, index) => (
                   <div key={item.id} style={{ marginBottom: index < lowAmmoAlerts.length - 1 ? '1rem' : '0' }}>
                     <div style={{ 
-                      color: '#dc3545', 
+                      color: '#ff9800', 
                       fontWeight: 'bold',
                       marginBottom: '0.5rem'
                     }}>
@@ -348,9 +379,9 @@ const DashboardPage = () => {
                       overflow: 'hidden'
                     }}>
                       <div style={{
-                        width: `${Math.min((item.units_in_package / 50) * 100, 100)}%`,
+                        width: `${Math.min((item.units_in_package / 20) * 100, 100)}%`,
                         height: '100%',
-                        backgroundColor: '#dc3545',
+                        backgroundColor: '#ff9800',
                         transition: 'width 0.3s'
                       }} />
                     </div>
@@ -417,16 +448,6 @@ const DashboardPage = () => {
                 Wszystko w porządku
               </div>
             )}
-          </div>
-        </div>
-
-        {/* Poziom z odznaką (placeholder) */}
-        <div className="card" style={{ padding: '1.5rem', marginTop: '1.5rem' }}>
-          <h3 style={{ margin: 0, marginBottom: '1rem', fontSize: '1.1rem', fontWeight: 'bold' }}>
-            Poziom
-          </h3>
-          <div style={{ textAlign: 'center', color: '#888', padding: '2rem' }}>
-            Funkcja w przygotowaniu
           </div>
         </div>
       </div>
