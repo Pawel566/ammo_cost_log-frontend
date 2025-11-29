@@ -67,20 +67,10 @@ export const ThemeProvider = ({ children }) => {
     }
   };
 
-  const changeTheme = async (newTheme) => {
+  const changeTheme = (newTheme) => {
     setTheme(newTheme);
     applyTheme(newTheme);
-    
-    // Zapisz motyw w ustawieniach
-    try {
-      const currentSettings = await settingsAPI.get();
-      await settingsAPI.update({
-        ...currentSettings.data,
-        theme: newTheme
-      });
-    } catch (err) {
-      console.error('Błąd podczas zapisywania motywu:', err);
-    }
+    // Zapisywanie motywu odbywa się przez SettingsPage.handleSubmit lub SettingsPage.handleChange
   };
 
   return (

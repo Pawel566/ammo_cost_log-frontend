@@ -181,19 +181,19 @@ const MaintenancePage = () => {
             <h3 style={{ marginBottom: '1rem' }}>Statystyki</h3>
             {statistics.longest_without_maintenance && (
               <div style={{ marginBottom: '1rem' }}>
-                <div style={{ fontSize: '0.9rem', color: '#aaa', marginBottom: '0.5rem' }}>
+                <div style={{ fontSize: '0.9rem', color: 'var(--text-tertiary)', marginBottom: '0.5rem' }}>
                   Broń najdłużej bez konserwacji:
                 </div>
                 <div style={{ fontSize: '1.1rem', fontWeight: '500' }}>
                   {statistics.longest_without_maintenance.gun_name}
                 </div>
-                <div style={{ fontSize: '0.9rem', color: '#888', marginTop: '0.25rem' }}>
+                <div style={{ fontSize: '0.9rem', color: 'var(--text-tertiary)', marginTop: '0.25rem' }}>
                   {statistics.longest_without_maintenance.days_since} dni
                 </div>
               </div>
             )}
-            <div style={{ borderTop: '1px solid #404040', paddingTop: '1rem' }}>
-              <div style={{ fontSize: '0.9rem', color: '#aaa', marginBottom: '0.75rem' }}>
+            <div style={{ borderTop: `1px solid var(--border-color)`, paddingTop: '1rem' }}>
+              <div style={{ fontSize: '0.9rem', color: 'var(--text-tertiary)', marginBottom: '0.75rem' }}>
                 Dni od ostatniej konserwacji:
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -205,7 +205,7 @@ const MaintenancePage = () => {
                       justifyContent: 'space-between',
                       alignItems: 'center',
                       padding: '0.5rem',
-                      backgroundColor: '#1a1a1a',
+                      backgroundColor: 'var(--bg-primary)',
                       borderRadius: '4px'
                     }}
                   >
@@ -244,7 +244,7 @@ const MaintenancePage = () => {
           </div>
 
           {maintenance.length === 0 ? (
-            <p className="text-center" style={{ color: '#888', padding: '2rem' }}>
+            <p className="text-center" style={{ color: 'var(--text-tertiary)', padding: '2rem' }}>
               Brak konserwacji
             </p>
           ) : (
@@ -268,13 +268,13 @@ const MaintenancePage = () => {
                         <td>{new Date(maint.date).toLocaleDateString('pl-PL')}</td>
                         <td>
                           {maint.activities && maint.activities.length > 0 ? (
-                            <ul style={{ margin: 0, paddingLeft: '1.25rem', listStyle: 'disc', color: '#aaa' }}>
+                            <ul style={{ margin: 0, paddingLeft: '1.25rem', listStyle: 'disc', color: 'var(--text-tertiary)' }}>
                               {maint.activities.map((activity, idx) => (
                                 <li key={idx} style={{ marginBottom: '0.15rem' }}>{activity}</li>
                               ))}
                             </ul>
                           ) : (
-                            <span style={{ color: '#888' }}>-</span>
+                            <span style={{ color: 'var(--text-tertiary)' }}>-</span>
                           )}
                         </td>
                         <td>{maint.rounds_since_last}</td>
@@ -288,7 +288,7 @@ const MaintenancePage = () => {
                               style={{
                                 background: 'none',
                                 border: 'none',
-                                color: '#aaa',
+                                color: 'var(--text-tertiary)',
                                 cursor: 'pointer',
                                 fontSize: '1.2rem',
                                 padding: '0.5rem',
@@ -597,7 +597,7 @@ const MaintenancePage = () => {
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#aaa' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: 'var(--text-tertiary)' }}>
                   Broń
                 </label>
                 <div style={{ padding: '0.75rem', backgroundColor: 'var(--bg-secondary)', borderRadius: '4px', color: 'var(--text-primary)' }}>
@@ -606,7 +606,7 @@ const MaintenancePage = () => {
               </div>
 
               <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#aaa' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: 'var(--text-tertiary)' }}>
                   Data wykonania
                 </label>
                 <div style={{ padding: '0.75rem', backgroundColor: 'var(--bg-secondary)', borderRadius: '4px', color: 'var(--text-primary)' }}>
@@ -616,7 +616,7 @@ const MaintenancePage = () => {
 
               {selectedMaintenance.activities && selectedMaintenance.activities.length > 0 && (
                 <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#aaa' }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: 'var(--text-tertiary)' }}>
                     Lista czynności
                   </label>
                   <div style={{ padding: '0.75rem', backgroundColor: '#2c2c2c', borderRadius: '4px' }}>
@@ -631,7 +631,7 @@ const MaintenancePage = () => {
 
               {selectedMaintenance.notes && (
                 <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#aaa' }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: 'var(--text-tertiary)' }}>
                     Opis
                   </label>
                   <div style={{ padding: '0.75rem', backgroundColor: '#2c2c2c', borderRadius: '4px', color: '#fff', whiteSpace: 'pre-wrap' }}>
@@ -641,7 +641,7 @@ const MaintenancePage = () => {
               )}
 
               <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#aaa' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: 'var(--text-tertiary)' }}>
                   Strzałów od poprzedniej konserwacji
                 </label>
                 <div style={{ padding: '0.75rem', backgroundColor: 'var(--bg-secondary)', borderRadius: '4px', color: 'var(--text-primary)' }}>
@@ -650,7 +650,7 @@ const MaintenancePage = () => {
               </div>
 
               {!selectedMaintenance.notes && (!selectedMaintenance.activities || selectedMaintenance.activities.length === 0) && (
-                <div style={{ color: '#888', textAlign: 'center', padding: '1rem' }}>
+                <div style={{ color: 'var(--text-tertiary)', textAlign: 'center', padding: '1rem' }}>
                   Brak dodatkowych informacji
                 </div>
               )}

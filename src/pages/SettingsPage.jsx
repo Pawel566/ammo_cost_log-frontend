@@ -60,6 +60,7 @@ const SettingsPage = () => {
     setError('');
     setSuccess('');
     try {
+      // Zapisz wszystkie ustawienia (motyw już został zapisany przez changeTheme w handleChange)
       await settingsAPI.update(settings);
       setSuccess('Ustawienia zostały zapisane');
       setTimeout(() => setSuccess(''), 3000);
@@ -68,10 +69,18 @@ const SettingsPage = () => {
     }
   };
 
-  const handleChange = (field, value) => {
-    setSettings({ ...settings, [field]: value });
+  const handleChange = async (field, value) => {
+    const newSettings = { ...settings, [field]: value };
+    setSettings(newSettings);
     if (field === 'theme') {
+      // Zmień motyw natychmiast w kontekście
       changeTheme(value);
+      // Zapisz motyw od razu w bazie
+      try {
+        await settingsAPI.update({ theme: value });
+      } catch (err) {
+        console.error('Błąd podczas zapisywania motywu:', err);
+      }
     }
   };
 
