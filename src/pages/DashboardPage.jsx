@@ -36,7 +36,10 @@ const DashboardPage = () => {
         ammoAPI.getAll(),
         maintenanceAPI.getAll(),
         settingsAPI.get(),
-        accountAPI.getRank().catch(() => ({ data: null }))
+        accountAPI.getRank().catch((err) => {
+          console.error('Błąd pobierania rangi:', err);
+          return { data: null };
+        })
       ]);
 
       const guns = Array.isArray(gunsRes.data) ? gunsRes.data : gunsRes.data?.items ?? [];
@@ -57,8 +60,10 @@ const DashboardPage = () => {
       }
 
       // Ranga użytkownika
-      if (rankRes.data) {
+      if (rankRes && rankRes.data) {
         setRankInfo(rankRes.data);
+      } else {
+        setRankInfo({ rank: "Nowicjusz", passed_sessions: 0, progress_percent: 0 });
       }
 
       // Najczęściej używana broń
@@ -358,7 +363,7 @@ const DashboardPage = () => {
                   fontWeight: 'bold',
                   color: '#007bff'
                 }}>
-                  {rankInfo.rank}
+                  {rankInfo.rank || "Nowicjusz"}
                 </div>
                 <div style={{ 
                   textAlign: 'center', 
@@ -366,7 +371,7 @@ const DashboardPage = () => {
                   fontSize: '0.9rem',
                   color: 'var(--text-tertiary)'
                 }}>
-                  {rankInfo.passed_sessions} zaliczonych sesji
+                  {rankInfo.passed_sessions || 0} zaliczonych sesji
                 </div>
                 {rankInfo.next_rank && (
                   <>
@@ -389,7 +394,7 @@ const DashboardPage = () => {
                         overflow: 'hidden'
                       }}>
                         <div style={{
-                          width: `${rankInfo.progress_percent}%`,
+                          width: `${rankInfo.progress_percent || 0}%`,
                           height: '100%',
                           backgroundColor: '#007bff',
                           transition: 'width 0.3s',

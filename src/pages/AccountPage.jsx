@@ -44,6 +44,7 @@ const AccountPage = () => {
       setRankInfo(response.data);
     } catch (err) {
       console.error('Błąd pobierania rangi:', err);
+      setRankInfo({ rank: "Nowicjusz", passed_sessions: 0 });
     }
   };
 
@@ -141,35 +142,39 @@ const AccountPage = () => {
         {user && (
           <div className="card" style={{ marginBottom: '1.5rem' }}>
             <h3 style={{ marginBottom: '1rem' }}>Informacje o koncie</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              <div>
-                <div style={{ fontSize: '0.9rem', color: 'var(--text-tertiary)', marginBottom: '0.25rem' }}>
-                  Email
-                </div>
-                <div style={{ fontSize: '1rem', fontWeight: '500' }}>
-                  {user.email}
-                </div>
-              </div>
-              <div>
-                <div style={{ fontSize: '0.9rem', color: 'var(--text-tertiary)', marginBottom: '0.25rem' }}>
-                  Nazwa użytkownika
-                </div>
-                <div style={{ fontSize: '1rem', fontWeight: '500' }}>
-                  {user.username || '-'}
-                </div>
-              </div>
-              <div>
-                <div style={{ fontSize: '0.9rem', color: 'var(--text-tertiary)', marginBottom: '0.25rem' }}>
-                  Ranga
-                </div>
-                <div style={{ fontSize: '1rem', fontWeight: '500', color: '#007bff' }}>
-                  {rankInfo ? rankInfo.rank : 'Ładowanie...'}
-                </div>
-                {rankInfo && (
-                  <div style={{ fontSize: '0.85rem', color: 'var(--text-tertiary)', marginTop: '0.25rem' }}>
-                    {rankInfo.passed_sessions} zaliczonych sesji
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <div>
+                  <div style={{ fontSize: '0.9rem', color: 'var(--text-tertiary)', marginBottom: '0.25rem' }}>
+                    Email
                   </div>
-                )}
+                  <div style={{ fontSize: '1rem', fontWeight: '500' }}>
+                    {user.email}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.9rem', color: 'var(--text-tertiary)', marginBottom: '0.25rem' }}>
+                    Nazwa użytkownika
+                  </div>
+                  <div style={{ fontSize: '1rem', fontWeight: '500' }}>
+                    {user.username || '-'}
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <div>
+                  <div style={{ fontSize: '0.9rem', color: 'var(--text-tertiary)', marginBottom: '0.25rem' }}>
+                    Ranga
+                  </div>
+                  <div style={{ fontSize: '1rem', fontWeight: '500', color: '#007bff' }}>
+                    {rankInfo ? (rankInfo.rank || 'Nowicjusz') : 'Ładowanie...'}
+                  </div>
+                  {rankInfo && (
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-tertiary)', marginTop: '0.25rem' }}>
+                      {rankInfo.passed_sessions || 0} zaliczonych sesji
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
