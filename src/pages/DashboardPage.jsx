@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { gunsAPI, ammoAPI, shootingSessionsAPI, maintenanceAPI, settingsAPI } from '../services/api';
+import { gunsAPI, ammoAPI, shootingSessionsAPI, maintenanceAPI, settingsAPI, accountAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 const DashboardPage = () => {
@@ -15,6 +15,7 @@ const DashboardPage = () => {
   const [monthlyStats, setMonthlyStats] = useState(null);
   const [lowAmmoAlerts, setLowAmmoAlerts] = useState([]);
   const [maintenanceAlerts, setMaintenanceAlerts] = useState([]);
+  const [rankInfo, setRankInfo] = useState(null);
   const [userSettings, setUserSettings] = useState({
     low_ammo_notifications_enabled: true,
     maintenance_notifications_enabled: true,
@@ -29,12 +30,13 @@ const DashboardPage = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const [gunsRes, sessionsRes, ammoRes, maintenanceRes, settingsRes] = await Promise.all([
+      const [gunsRes, sessionsRes, ammoRes, maintenanceRes, settingsRes, rankRes] = await Promise.all([
         gunsAPI.getAll(),
         shootingSessionsAPI.getAll(),
         ammoAPI.getAll(),
         maintenanceAPI.getAll(),
-        settingsAPI.get()
+        settingsAPI.get(),
+        accountAPI.getRank().catch(() => ({ data: null }))
       ]);
 
       const guns = Array.isArray(gunsRes.data) ? gunsRes.data : gunsRes.data?.items ?? [];
@@ -52,6 +54,11 @@ const DashboardPage = () => {
           maintenance_rounds_limit: settingsRes.data.maintenance_rounds_limit || 500,
           maintenance_days_limit: settingsRes.data.maintenance_days_limit || 90
         });
+      }
+
+      // Ranga użytkownika
+      if (rankRes.data) {
+        setRankInfo(rankRes.data);
       }
 
       // Najczęściej używana broń
@@ -337,14 +344,86 @@ const DashboardPage = () => {
             )}
           </div>
 
-          {/* Poziom z odznaką (placeholder) */}
+          {/* Poziom z odznaką */}
           <div className="card" style={{ padding: '1.5rem' }}>
             <h3 style={{ margin: 0, marginBottom: '1rem', fontSize: '1.1rem', fontWeight: 'bold' }}>
               Poziom
             </h3>
-            <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', padding: '2rem' }}>
-              Funkcja w przygotowaniu
-            </div>
+            {rankInfo ? (
+              <div>
+                <div style={{ 
+                  textAlign: 'center', 
+                  marginBottom: '1rem',
+                  fontSize: '1.3rem',
+                  fontWeight: 'bold',
+                  color: '#007bff'
+                }}>
+                  {rankInfo.rank}
+                </div>
+                <div style={{ 
+                  textAlign: 'center', 
+                  marginBottom: '1rem',
+                  fontSize: '0.9rem',
+                  color: 'var(--text-tertiary)'
+                }}>
+                  {rankInfo.passed_sessions} zaliczonych sesji
+                </div>
+                {rankInfo.next_rank && (
+                  <>
+                    <div style={{ marginBottom: '0.5rem' }}>
+                      <div style={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between',
+                        fontSize: '0.85rem',
+                        color: 'var(--text-tertiary)',
+                        marginBottom: '0.25rem'
+                      }}>
+                        <span>Do następnej rangi:</span>
+                        <span>{rankInfo.next_rank_min - rankInfo.passed_sessions} sesji</span>
+                      </div>
+                      <div style={{
+                        width: '100%',
+                        height: '12px',
+                        backgroundColor: 'var(--bg-secondary)',
+                        borderRadius: '6px',
+                        overflow: 'hidden'
+                      }}>
+                        <div style={{
+                          width: `${rankInfo.progress_percent}%`,
+                          height: '100%',
+                          backgroundColor: '#007bff',
+                          transition: 'width 0.3s',
+                          borderRadius: '6px'
+                        }} />
+                      </div>
+                    </div>
+                    <div style={{ 
+                      textAlign: 'center',
+                      fontSize: '0.85rem',
+                      color: 'var(--text-tertiary)',
+                      marginTop: '0.5rem'
+                    }}>
+                      Następna: {rankInfo.next_rank}
+                    </div>
+                  </>
+                )}
+                {!rankInfo.next_rank && (
+                  <div style={{ 
+                    textAlign: 'center',
+                    fontSize: '0.85rem',
+                    color: '#4caf50',
+                    marginTop: '0.5rem',
+                    fontWeight: 'bold'
+                  }}>
+                    Osiągnięto maksymalną rangę!
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', padding: '2rem' }}>
+                Ładowanie...
+              </div>
+            )}
           </div>
         </div>
 

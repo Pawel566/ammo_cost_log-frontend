@@ -7,6 +7,7 @@ const AccountPage = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [skillLevel, setSkillLevel] = useState('beginner');
+  const [rankInfo, setRankInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -23,6 +24,7 @@ const AccountPage = () => {
 
   useEffect(() => {
     fetchSkillLevel();
+    fetchRank();
   }, []);
 
   const fetchSkillLevel = async () => {
@@ -33,6 +35,15 @@ const AccountPage = () => {
       console.error('Błąd pobierania poziomu zaawansowania:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchRank = async () => {
+    try {
+      const response = await accountAPI.getRank();
+      setRankInfo(response.data);
+    } catch (err) {
+      console.error('Błąd pobierania rangi:', err);
     }
   };
 
@@ -146,6 +157,19 @@ const AccountPage = () => {
                 <div style={{ fontSize: '1rem', fontWeight: '500' }}>
                   {user.username || '-'}
                 </div>
+              </div>
+              <div>
+                <div style={{ fontSize: '0.9rem', color: 'var(--text-tertiary)', marginBottom: '0.25rem' }}>
+                  Ranga
+                </div>
+                <div style={{ fontSize: '1rem', fontWeight: '500', color: '#007bff' }}>
+                  {rankInfo ? rankInfo.rank : 'Ładowanie...'}
+                </div>
+                {rankInfo && (
+                  <div style={{ fontSize: '0.85rem', color: 'var(--text-tertiary)', marginTop: '0.25rem' }}>
+                    {rankInfo.passed_sessions} zaliczonych sesji
+                  </div>
+                )}
               </div>
             </div>
           </div>
