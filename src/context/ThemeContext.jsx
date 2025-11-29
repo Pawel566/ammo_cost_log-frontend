@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { settingsAPI } from '../services/api';
+import { useAuth } from './AuthContext';
 
 const ThemeContext = createContext();
 
@@ -14,25 +15,33 @@ export const useTheme = () => {
 export const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState('dark');
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+
+  const fetchTheme = async () => {
+    try {
+      const response = await settingsAPI.get();
+      const savedTheme = response.data?.theme || 'dark';
+      setTheme(savedTheme);
+      applyTheme(savedTheme);
+    } catch (err) {
+      console.error('Błąd podczas pobierania motywu:', err);
+      applyTheme('dark');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    // Pobierz motyw z ustawień
-    const fetchTheme = async () => {
-      try {
-        const response = await settingsAPI.get();
-        const savedTheme = response.data?.theme || 'dark';
-        setTheme(savedTheme);
-        applyTheme(savedTheme);
-      } catch (err) {
-        console.error('Błąd podczas pobierania motywu:', err);
-        applyTheme('dark');
-      } finally {
-        setLoading(false);
-      }
-    };
-    
+    // Pobierz motyw z ustawień przy załadowaniu
     fetchTheme();
   }, []);
+
+  useEffect(() => {
+    // Odśwież motyw po zalogowaniu/wylogowaniu użytkownika
+    if (!loading) {
+      fetchTheme();
+    }
+  }, [user?.user_id]);
 
   const applyTheme = (newTheme) => {
     const root = document.documentElement;

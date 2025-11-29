@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { gunsAPI, ammoAPI, shootingSessionsAPI, maintenanceAPI, settingsAPI } from '../services/api';
+import { gunsAPI, ammoAPI, shootingSessionsAPI, maintenanceAPI, settingsAPI, accountAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 const DashboardPage = () => {
@@ -15,6 +15,9 @@ const DashboardPage = () => {
   const [monthlyStats, setMonthlyStats] = useState(null);
   const [lowAmmoAlerts, setLowAmmoAlerts] = useState([]);
   const [maintenanceAlerts, setMaintenanceAlerts] = useState([]);
+  const [rankInfo, setRankInfo] = useState(null);
+  const [skillLevel, setSkillLevel] = useState('beginner');
+  const [showRankTooltip, setShowRankTooltip] = useState(false);
   const [userSettings, setUserSettings] = useState({
     low_ammo_notifications_enabled: true,
     maintenance_notifications_enabled: true,
@@ -29,12 +32,17 @@ const DashboardPage = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const [gunsRes, sessionsRes, ammoRes, maintenanceRes, settingsRes] = await Promise.all([
+      const [gunsRes, sessionsRes, ammoRes, maintenanceRes, settingsRes, rankRes, skillLevelRes] = await Promise.all([
         gunsAPI.getAll(),
         shootingSessionsAPI.getAll(),
         ammoAPI.getAll(),
         maintenanceAPI.getAll(),
-        settingsAPI.get()
+        settingsAPI.get(),
+        accountAPI.getRank().catch((err) => {
+          console.error('Błąd pobierania rangi:', err);
+          return { data: null };
+        }),
+        accountAPI.getSkillLevel().catch(() => ({ data: { skill_level: 'beginner' } }))
       ]);
 
       const guns = Array.isArray(gunsRes.data) ? gunsRes.data : gunsRes.data?.items ?? [];
@@ -52,6 +60,18 @@ const DashboardPage = () => {
           maintenance_rounds_limit: settingsRes.data.maintenance_rounds_limit || 500,
           maintenance_days_limit: settingsRes.data.maintenance_days_limit || 90
         });
+      }
+
+      // Ranga użytkownika
+      if (rankRes && rankRes.data) {
+        setRankInfo(rankRes.data);
+      } else {
+        setRankInfo({ rank: "Nowicjusz", passed_sessions: 0, progress_percent: 0 });
+      }
+
+      // Poziom zaawansowania
+      if (skillLevelRes && skillLevelRes.data) {
+        setSkillLevel(skillLevelRes.data.skill_level || 'beginner');
       }
 
       // Najczęściej używana broń
@@ -114,14 +134,8 @@ const DashboardPage = () => {
         cost: totalCost
       });
 
-      // Alerty o niskiej amunicji
-      if (userSettings.low_ammo_notifications_enabled) {
-        const lowAmmo = ammo.filter(item => {
-          const quantity = item.units_in_package || 0;
-          return quantity > 0 && quantity < 20; // Próg niskiej amunicji (jak w AmmoPage)
-        });
-        setLowAmmoAlerts(lowAmmo);
-      }
+      // Stan amunicji - wszystkie pozycje
+      setLowAmmoAlerts(ammo.filter(item => (item.units_in_package || 0) > 0));
 
       // Alerty o konserwacji
       if (userSettings.maintenance_notifications_enabled) {
@@ -337,14 +351,127 @@ const DashboardPage = () => {
             )}
           </div>
 
-          {/* Poziom z odznaką (placeholder) */}
+          {/* Poziom z odznaką */}
           <div className="card" style={{ padding: '1.5rem' }}>
             <h3 style={{ margin: 0, marginBottom: '1rem', fontSize: '1.1rem', fontWeight: 'bold' }}>
               Poziom
             </h3>
-            <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', padding: '2rem' }}>
-              Funkcja w przygotowaniu
-            </div>
+            {rankInfo ? (
+              <div>
+                <div style={{ 
+                  textAlign: 'center', 
+                  marginBottom: '1rem',
+                  fontSize: '1.3rem',
+                  fontWeight: 'bold',
+                  color: '#007bff'
+                }}>
+                  {rankInfo.rank || "Nowicjusz"}
+                </div>
+                <div style={{ 
+                  textAlign: 'center', 
+                  marginBottom: '1rem',
+                  fontSize: '0.9rem',
+                  color: 'var(--text-tertiary)'
+                }}>
+                  {rankInfo.passed_sessions || 0} zaliczonych sesji
+                </div>
+                {rankInfo.is_max_rank ? (
+                  <div style={{ 
+                    textAlign: 'center',
+                    fontSize: '0.85rem',
+                    color: '#4caf50',
+                    marginTop: '0.5rem',
+                    fontWeight: 'bold'
+                  }}>
+                    Osiągnięto maksymalną rangę!
+                  </div>
+                ) : rankInfo.next_rank && rankInfo.next_rank_min !== null && rankInfo.next_rank_min !== undefined ? (
+                  <>
+                    <div style={{ marginBottom: '0.5rem', position: 'relative' }}>
+                      <div style={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between',
+                        fontSize: '0.85rem',
+                        color: 'var(--text-tertiary)',
+                        marginBottom: '0.25rem'
+                      }}>
+                        <span>Do następnej rangi:</span>
+                        <span>{Math.max(0, rankInfo.next_rank_min - rankInfo.passed_sessions)} sesji</span>
+                      </div>
+                      <div 
+                        style={{
+                          width: '100%',
+                          height: '12px',
+                          backgroundColor: 'var(--bg-secondary)',
+                          borderRadius: '6px',
+                          overflow: 'hidden',
+                          position: 'relative',
+                          cursor: 'help'
+                        }}
+                        onMouseEnter={() => setShowRankTooltip(true)}
+                        onMouseLeave={() => setShowRankTooltip(false)}
+                      >
+                        <div style={{
+                          width: `${rankInfo.progress_percent || 0}%`,
+                          height: '100%',
+                          backgroundColor: '#007bff',
+                          transition: 'width 0.3s',
+                          borderRadius: '6px'
+                        }} />
+                      </div>
+                      {showRankTooltip && (
+                        <div 
+                          style={{
+                            position: 'absolute',
+                            bottom: '100%',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            marginBottom: '8px',
+                            padding: '8px 12px',
+                            backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                            color: 'white',
+                            borderRadius: '6px',
+                            fontSize: '0.8rem',
+                            whiteSpace: 'nowrap',
+                            zIndex: 1000,
+                            pointerEvents: 'none'
+                          }}
+                        >
+                          {skillLevel === 'beginner' 
+                            ? 'Ranga naliczana na podstawie sesji z celnością ≥75%'
+                            : skillLevel === 'intermediate'
+                            ? 'Ranga naliczana na podstawie sesji z celnością ≥85%'
+                            : 'Ranga naliczana na podstawie sesji z celnością ≥95%'}
+                          <div style={{
+                            position: 'absolute',
+                            top: '100%',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            width: 0,
+                            height: 0,
+                            borderLeft: '6px solid transparent',
+                            borderRight: '6px solid transparent',
+                            borderTop: '6px solid rgba(0, 0, 0, 0.9)'
+                          }} />
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ 
+                      textAlign: 'center',
+                      fontSize: '0.85rem',
+                      color: 'var(--text-tertiary)',
+                      marginTop: '0.5rem'
+                    }}>
+                      Następna: {rankInfo.next_rank}
+                    </div>
+                  </>
+                ) : null}
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', padding: '2rem' }}>
+                Ładowanie...
+              </div>
+            )}
           </div>
         </div>
 
@@ -354,7 +481,7 @@ const DashboardPage = () => {
           gridTemplateColumns: 'repeat(2, 1fr)', 
           gap: '1.5rem'
         }}>
-          {/* Mało amunicji */}
+          {/* Stan amunicji */}
           <div className="card" style={{ padding: '1.5rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -363,7 +490,7 @@ const DashboardPage = () => {
                 <path d="M2 12L12 17L22 12" stroke="#ff9800" strokeWidth="2" fill="none"/>
               </svg>
               <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 'bold' }}>
-                Mało amunicji
+                Stan amunicji
               </h3>
             </div>
             {lowAmmoAlerts.length > 0 ? (
@@ -371,35 +498,24 @@ const DashboardPage = () => {
                 {lowAmmoAlerts.slice(0, 3).map((item, index) => (
                   <div key={item.id} style={{ marginBottom: index < lowAmmoAlerts.length - 1 ? '1rem' : '0' }}>
                     <div style={{ 
-                      color: '#ff9800', 
                       fontWeight: 'bold',
+                      marginBottom: '0.25rem'
+                    }}>
+                      {item.name}
+                    </div>
+                    <div style={{ 
+                      fontSize: '0.9rem',
+                      color: 'var(--text-tertiary)',
                       marginBottom: '0.5rem'
                     }}>
-                      {item.name} {item.caliber ? `(${item.caliber})` : ''}
-                    </div>
-                    <div style={{ marginBottom: '0.5rem' }}>
-                      Pozostało: {item.units_in_package} szt
-                    </div>
-                    <div style={{
-                      width: '100%',
-                      height: '8px',
-                      backgroundColor: 'var(--bg-secondary)',
-                      borderRadius: '4px',
-                      overflow: 'hidden'
-                    }}>
-                      <div style={{
-                        width: `${Math.min((item.units_in_package / 20) * 100, 100)}%`,
-                        height: '100%',
-                        backgroundColor: '#ff9800',
-                        transition: 'width 0.3s'
-                      }} />
+                      {item.caliber ? `${item.caliber} - ` : ''}{item.units_in_package} szt z magazynu
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
               <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', padding: '1rem' }}>
-                Wszystko w porządku
+                Brak amunicji w magazynie
               </div>
             )}
           </div>

@@ -136,6 +136,7 @@ export const accountAPI = {
     url: '/account',
     data: { password }
   }),
+  getRank: () => api.get('/account/rank'),
 };
 
 export default api;
