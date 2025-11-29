@@ -15,7 +15,7 @@ const AddShootingSessionPage = () => {
   const [success, setSuccess] = useState(null);
   const [distanceUnit, setDistanceUnit] = useState('m');
   const [sessionMode, setSessionMode] = useState('standard'); // 'standard' lub 'advanced'
-  const [showTargetImage, setShowTargetImage] = useState(false);
+  const [showTargetImageUpload, setShowTargetImageUpload] = useState(false);
   const [targetImageFile, setTargetImageFile] = useState(null);
   const [targetImageUrl, setTargetImageUrl] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -116,6 +116,7 @@ const AddShootingSessionPage = () => {
       // Załaduj zdjęcie tarczy jeśli istnieje
       if (session.target_image_path && user && !user.is_guest) {
         loadTargetImage();
+        setShowTargetImageUpload(true);
       }
     } catch (err) {
       setError('Błąd podczas ładowania sesji');
@@ -190,7 +191,7 @@ const AddShootingSessionPage = () => {
       const response = await shootingSessionsAPI.getTargetImage(id);
       if (response.data && response.data.url) {
         setTargetImageUrl(response.data.url);
-        setShowTargetImage(true);
+        setShowTargetImageUpload(true);
       }
     } catch (err) {
       console.error('Błąd podczas pobierania zdjęcia tarczy:', err);
@@ -243,7 +244,7 @@ const AddShootingSessionPage = () => {
       await shootingSessionsAPI.deleteTargetImage(id);
       setTargetImageUrl(null);
       setTargetImageFile(null);
-      setShowTargetImage(false);
+      setShowTargetImageUpload(false);
       setSuccess('Zdjęcie tarczy zostało usunięte');
     } catch (err) {
       setError(err.response?.data?.detail || 'Błąd podczas usuwania zdjęcia');
@@ -630,26 +631,26 @@ const AddShootingSessionPage = () => {
                 {/* Zdjęcie tarczy - tylko w trybie zaawansowanym i dla zalogowanych użytkowników */}
                 {sessionMode === 'advanced' && user && !user.is_guest && (
                   <div style={{ marginTop: '1.5rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
-                      <input
-                        type="checkbox"
-                        id="showTargetImage"
-                        checked={showTargetImage}
-                        onChange={(e) => {
-                          setShowTargetImage(e.target.checked);
-                          if (!e.target.checked) {
-                            setTargetImageFile(null);
-                            setTargetImageUrl(null);
-                          }
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                      <img
+                        src="/assets/target_icon.png"
+                        alt="Dodaj zdjęcie tarczy"
+                        onClick={() => setShowTargetImageUpload(!showTargetImageUpload)}
+                        style={{
+                          width: '24px',
+                          height: '24px',
+                          cursor: 'pointer',
+                          opacity: showTargetImageUpload || targetImageUrl ? 1 : 0.6,
+                          transition: 'opacity 0.2s'
                         }}
-                        style={{ marginRight: '0.5rem', cursor: 'pointer' }}
+                        title="Dodaj zdjęcie tarczy"
                       />
-                      <label htmlFor="showTargetImage" style={{ cursor: 'pointer', fontSize: '0.9rem' }}>
+                      <label style={{ cursor: 'pointer', fontSize: '0.9rem' }} onClick={() => setShowTargetImageUpload(!showTargetImageUpload)}>
                         Dodaj zdjęcie tarczy
                       </label>
                     </div>
                     
-                    {showTargetImage && (
+                    {showTargetImageUpload && (
                       <div style={{ padding: '1rem', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid #333' }}>
                         {targetImageUrl ? (
                           <div>
