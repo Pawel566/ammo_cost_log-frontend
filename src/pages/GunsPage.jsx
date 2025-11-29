@@ -332,7 +332,7 @@ const GunsPage = () => {
   const getMaintenanceStatus = (gunId) => {
     const lastMaint = getLastMaintenance(gunId);
     if (!lastMaint) {
-      return { status: 'none', color: '#888', message: 'Nie dotyczy' };
+      return { status: 'none', color: '#888', message: '-' };
     }
 
     const rounds = calculateRoundsSinceLastMaintenance(gunId);
@@ -380,7 +380,7 @@ const GunsPage = () => {
       green: 'OK',
       yellow: 'Wkrótce wymagana',
       red: 'Wymagana',
-      none: 'Nie dotyczy'
+      none: '-'
     };
 
     let reason = '';
@@ -892,7 +892,7 @@ const GunsPage = () => {
                           {userSettings.maintenance_notifications_enabled ? (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                               <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <MaintenanceStatusIcon status={maintenanceStatus.status} />
+                                {maintenanceStatus.status !== 'none' && <MaintenanceStatusIcon status={maintenanceStatus.status} />}
                                 <span style={{ color: maintenanceStatus.color }}>{maintenanceStatus.message}</span>
                               </div>
                               {(maintenanceStatus.status === 'yellow' || maintenanceStatus.status === 'red') && maintenanceStatus.reason && (

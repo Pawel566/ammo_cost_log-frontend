@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { shootingSessionsAPI, gunsAPI, ammoAPI } from '../services/api';
+import { shootingSessionsAPI, gunsAPI, ammoAPI, accountAPI } from '../services/api';
 
 const ShootingSessionsPage = () => {
   const navigate = useNavigate();
@@ -14,14 +14,38 @@ const ShootingSessionsPage = () => {
   const [filterType, setFilterType] = useState('');
   const [filterValue, setFilterValue] = useState('');
   const [openMenuId, setOpenMenuId] = useState(null);
+  const [selectedSession, setSelectedSession] = useState(null);
+  const [sessionToDelete, setSessionToDelete] = useState(null);
+  const [userSkillLevel, setUserSkillLevel] = useState(null);
 
-  // Sortowanie
+ 
   const [sortColumn, setSortColumn] = useState(null);
-  const [sortDirection, setSortDirection] = useState('asc'); // 'asc' lub 'desc'
+  const [sortDirection, setSortDirection] = useState('asc'); 
 
   useEffect(() => {
     fetchData();
+    fetchSkillLevel();
   }, []);
+
+  const fetchSkillLevel = async () => {
+    try {
+      const response = await accountAPI.getSkillLevel();
+      setUserSkillLevel(response.data.skill_level || 'beginner');
+    } catch (err) {
+      console.error('Błąd pobierania poziomu zaawansowania:', err);
+      setUserSkillLevel('beginner');
+    }
+  };
+
+  const getSkillLevelLabel = (level) => {
+    if (!level) return '-';
+    const levelLower = level.toLowerCase();
+    if (levelLower === 'beginner' || levelLower === 'początkujący') return 'Początkujący';
+    if (levelLower === 'intermediate' || levelLower === 'średniozaawansowany') return 'Średniozaawansowany';
+    if (levelLower === 'advanced' || levelLower === 'zaawansowany') return 'Zaawansowany';
+    if (levelLower === 'expert' || levelLower === 'ekspert') return 'Ekspert';
+    return level;
+  };
 
   useEffect(() => {
     applyFilters();
@@ -56,7 +80,7 @@ const ShootingSessionsPage = () => {
   const applyFilters = () => {
     let filtered = [...sessions];
 
-    // Filtrowanie
+    
     if (filterType && filterValue) {
       filtered = filtered.filter(session => {
       const value = filterValue.toLowerCase();
@@ -81,7 +105,7 @@ const ShootingSessionsPage = () => {
     });
     }
 
-    // Sortowanie
+    
     if (sortColumn) {
       filtered.sort((a, b) => {
         let aValue, bValue;
@@ -123,12 +147,17 @@ const ShootingSessionsPage = () => {
             aValue = a.accuracy_percent !== null && a.accuracy_percent !== undefined ? a.accuracy_percent : 0;
             bValue = b.accuracy_percent !== null && b.accuracy_percent !== undefined ? b.accuracy_percent : 0;
             return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+          case 'type':
+            
+            aValue = (a.session_type === 'advanced') ? 1 : 0;
+            bValue = (b.session_type === 'advanced') ? 1 : 0;
+            return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
           default:
             aValue = String(a[sortColumn] || '').toLowerCase();
             bValue = String(b[sortColumn] || '').toLowerCase();
         }
         
-        // Sortowanie tekstowe
+        
         if (typeof aValue === 'string' && typeof bValue === 'string') {
           if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
           if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
@@ -162,27 +191,34 @@ const ShootingSessionsPage = () => {
     return ammoItem ? ammoItem.name : 'Nieznana amunicja';
   };
 
-  const handleDelete = async (sessionId) => {
-    const sessionToDelete = sessions.find(s => s.id === sessionId);
-    const gun = guns.find(g => g.id === sessionToDelete?.gun_id);
+  const handleDeleteClick = (sessionId) => {
+    setSessionToDelete(sessionId);
+    setOpenMenuId(null);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!sessionToDelete) return;
+
+    const session = sessions.find(s => s.id === sessionToDelete);
+    const gun = guns.find(g => g.id === session?.gun_id);
     const gunName = gun ? gun.name : '';
     const gunType = gun ? (gun.type || '') : '';
-    const gunDisplayName = `${gunType ? gunType + ' ' : ''}${gunName}`;
-    
-    if (!window.confirm(`Czy na pewno chcesz usunąć sesję dla ${gunDisplayName}?`)) {
-      return;
-    }
 
     try {
-      await shootingSessionsAPI.delete(sessionId);
-      setSessions(sessions.filter(s => s.id !== sessionId));
-      setOpenMenuId(null);
+      await shootingSessionsAPI.delete(sessionToDelete);
+      setSessions(sessions.filter(s => s.id !== sessionToDelete));
+      setSessionToDelete(null);
       setSuccess(`Sesja dla ${gunType ? gunType + ' ' : ''}${gunName} usunięta!`);
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       setError(err.response?.data?.detail || 'Błąd podczas usuwania sesji');
       console.error(err);
+      setSessionToDelete(null);
     }
+  };
+
+  const handleDeleteCancel = () => {
+    setSessionToDelete(null);
   };
 
   const handleEdit = (sessionId) => {
@@ -190,9 +226,22 @@ const ShootingSessionsPage = () => {
     setOpenMenuId(null);
   };
 
-  const handleMenuToggle = (sessionId) => {
+  const handleMenuToggle = (sessionId, e) => {
+    if (e) {
+      e.stopPropagation();
+    }
     setOpenMenuId(openMenuId === sessionId ? null : sessionId);
   };
+
+  const handleRowClick = (session) => {
+    setSelectedSession(session);
+    setOpenMenuId(null);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedSession(null);
+  };
+
 
   // Zamknij menu po kliknięciu poza nim
   useEffect(() => {
@@ -277,6 +326,19 @@ const ShootingSessionsPage = () => {
               <table className="table">
                 <thead>
                   <tr>
+                    <th 
+                      style={{ 
+                        cursor: 'pointer',
+                        userSelect: 'none',
+                        padding: '0.75rem',
+                        textAlign: 'center'
+                      }}
+                      onClick={() => handleSort('type')}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    >
+                      Typ
+                    </th>
                     <th 
                       style={{ 
                         cursor: 'pointer',
@@ -373,13 +435,38 @@ const ShootingSessionsPage = () => {
                     >
                       Celność %
                     </th>
-                    <th style={{ padding: '0.75rem' }}>Notatki</th>
+                    <th style={{ padding: '0.75rem' }}>Komentarz</th>
                     <th style={{ width: '50px', padding: '0.75rem' }}></th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredSessions.map((session) => (
-                    <tr key={session.id}>
+                    <tr 
+                      key={session.id}
+                      onClick={() => handleRowClick(session)}
+                      style={{
+                        cursor: 'pointer'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!e.target.closest('.session-menu-container')) {
+                          e.currentTarget.style.backgroundColor = '#3c3c3c';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }}
+                    >
+                      <td style={{ textAlign: 'center', padding: '0.75rem' }}>
+                        <img 
+                          src={session.session_type === 'advanced' ? "/assets/session_icon_AI_dark.png" : "/assets/session_icon_dark.png"}
+                          alt={session.session_type === 'advanced' ? "Sesja zaawansowana" : "Sesja standardowa"}
+                          style={{ 
+                            width: '24px', 
+                            height: '24px',
+                            objectFit: 'contain'
+                          }}
+                        />
+                      </td>
                       <td>{new Date(session.date).toLocaleDateString('pl-PL')}</td>
                       <td>{getGunName(session.gun_id)}</td>
                       <td>{getAmmoName(session.ammo_id)}</td>
@@ -397,13 +484,23 @@ const ShootingSessionsPage = () => {
                           </span>
                         ) : '-'}
                       </td>
-                      <td>{session.notes || '-'}</td>
+                      <td 
+                        style={{ 
+                          maxWidth: '300px',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {session.ai_comment || '-'}
+                      </td>
                       <td>
                         <div className="session-menu-container" style={{ position: 'relative' }}>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleMenuToggle(session.id);
+                              handleMenuToggle(session.id, e);
                             }}
                             style={{
                               background: 'none',
@@ -454,7 +551,7 @@ const ShootingSessionsPage = () => {
                                 Edytuj
                               </button>
                               <button
-                                onClick={() => handleDelete(session.id)}
+                                onClick={() => handleDeleteClick(session.id)}
                                 style={{
                                   width: '100%',
                                   padding: '0.75rem 1rem',
@@ -483,6 +580,246 @@ const ShootingSessionsPage = () => {
           )}
         </div>
       </div>
+
+      {/* Modal ze szczegółami sesji */}
+      {selectedSession && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 2000,
+            padding: '1rem'
+          }}
+          onClick={handleCloseModal}
+        >
+          <div
+            className="card"
+            style={{
+              maxWidth: '600px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              position: 'relative'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={handleCloseModal}
+              style={{
+                position: 'absolute',
+                top: '1rem',
+                right: '1rem',
+                background: 'none',
+                border: 'none',
+                color: '#fff',
+                fontSize: '1.5rem',
+                cursor: 'pointer',
+                padding: '0.25rem 0.5rem',
+                lineHeight: 1
+              }}
+              onMouseEnter={(e) => e.target.style.color = '#dc3545'}
+              onMouseLeave={(e) => e.target.style.color = '#fff'}
+            >
+              ×
+            </button>
+
+            <h2 style={{ marginTop: 0, marginBottom: '1.5rem' }}>
+              Szczegóły sesji strzeleckiej
+            </h2>
+
+            <div style={{ display: 'grid', gap: '1rem' }}>
+              <div>
+                <strong>Typ sesji:</strong>{' '}
+                <img 
+                  src={selectedSession.session_type === 'advanced' ? "/assets/session_icon_AI_dark.png" : "/assets/session_icon_dark.png"}
+                  alt={selectedSession.session_type === 'advanced' ? "Sesja zaawansowana" : "Sesja standardowa"}
+                  style={{ 
+                    width: '20px', 
+                    height: '20px',
+                    objectFit: 'contain',
+                    verticalAlign: 'middle',
+                    marginLeft: '0.5rem'
+                  }}
+                />
+                <span style={{ marginLeft: '0.5rem' }}>
+                  {selectedSession.session_type === 'advanced' ? 'Zaawansowana' : 'Standardowa'}
+                </span>
+              </div>
+
+              <div>
+                <strong>Data:</strong> {new Date(selectedSession.date).toLocaleDateString('pl-PL')}
+              </div>
+
+              <div>
+                <strong>Broń:</strong> {getGunName(selectedSession.gun_id)}
+              </div>
+
+              <div>
+                <strong>Amunicja:</strong> {getAmmoName(selectedSession.ammo_id)}
+              </div>
+
+              <div>
+                <strong>Liczba strzałów:</strong> {selectedSession.shots || '-'}
+              </div>
+
+              <div>
+                <strong>Koszt:</strong> {selectedSession.cost ? `${parseFloat(selectedSession.cost).toFixed(2).replace('.', ',')} zł` : '-'}
+              </div>
+
+              {selectedSession.distance_m && (
+                <div>
+                  <strong>Dystans:</strong> {selectedSession.distance_m} m
+                </div>
+              )}
+
+              {selectedSession.hits !== null && selectedSession.hits !== undefined && (
+                <div>
+                  <strong>Liczba trafień:</strong> {selectedSession.hits}
+                </div>
+              )}
+
+              {selectedSession.accuracy_percent !== null && selectedSession.accuracy_percent !== undefined && (
+                <div>
+                  <strong>Celność:</strong>{' '}
+                  <span style={{ 
+                    color: parseFloat(selectedSession.accuracy_percent) >= 80 ? '#4caf50' : parseFloat(selectedSession.accuracy_percent) >= 60 ? '#ffc107' : '#dc3545',
+                    fontWeight: 'bold'
+                  }}>
+                    {parseFloat(selectedSession.accuracy_percent).toFixed(1)}%
+                  </span>
+                </div>
+              )}
+
+              {userSkillLevel && (
+                <div>
+                  <strong>Poziom doświadczenia:</strong> {getSkillLevelLabel(userSkillLevel)}
+                </div>
+              )}
+
+              {selectedSession.notes && (
+                <div>
+                  <strong>Notatki:</strong>
+                  <div style={{ 
+                    marginTop: '0.5rem', 
+                    padding: '0.75rem', 
+                    backgroundColor: '#2c2c2c', 
+                    borderRadius: '4px',
+                    whiteSpace: 'pre-wrap',
+                    wordWrap: 'break-word'
+                  }}>
+                    {selectedSession.notes}
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <div style={{ marginBottom: '0.5rem' }}>
+                  <strong>Komentarz AI:</strong>
+                </div>
+                <div style={{ 
+                  marginTop: '0.5rem', 
+                  padding: '0.75rem', 
+                  backgroundColor: '#2c2c2c', 
+                  borderRadius: '4px',
+                  whiteSpace: 'pre-wrap',
+                  wordWrap: 'break-word',
+                  minHeight: '100px'
+                }}>
+                  {selectedSession.ai_comment || '-'}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+              <button
+                className="btn btn-primary"
+                onClick={handleCloseModal}
+              >
+                Zamknij
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal potwierdzenia usunięcia sesji */}
+      {sessionToDelete && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 2000,
+            padding: '1rem'
+          }}
+          onClick={handleDeleteCancel}
+        >
+          <div
+            className="card"
+            style={{
+              maxWidth: '400px',
+              width: '100%',
+              position: 'relative'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 style={{ marginTop: 0, marginBottom: '1rem' }}>
+              Potwierdzenie usunięcia
+            </h2>
+            
+            <p style={{ marginBottom: '1.5rem', lineHeight: '1.6' }}>
+              {(() => {
+                const session = sessions.find(s => s.id === sessionToDelete);
+                const gun = guns.find(g => g.id === session?.gun_id);
+                const gunName = gun ? gun.name : '';
+                const gunType = gun ? (gun.type || '') : '';
+                const gunDisplayName = `${gunType ? gunType + ' ' : ''}${gunName}`;
+                return `Czy na pewno chcesz usunąć sesję dla ${gunDisplayName}? Ta operacja jest nieodwracalna.`;
+              })()}
+            </p>
+
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+              <button
+                className="btn btn-secondary"
+                onClick={handleDeleteCancel}
+              >
+                Anuluj
+              </button>
+              <button
+                className="btn btn-danger"
+                onClick={handleDeleteConfirm}
+                style={{
+                  backgroundColor: '#dc3545',
+                  borderColor: '#dc3545'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = '#c82333';
+                  e.target.style.borderColor = '#c82333';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = '#dc3545';
+                  e.target.style.borderColor = '#dc3545';
+                }}
+              >
+                Usuń
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

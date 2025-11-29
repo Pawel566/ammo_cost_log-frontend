@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0] – 2025-01-XX
+### Dodano
+- Wyświetlanie poziomu doświadczenia użytkownika w szczegółach sesji strzeleckiej (pod celnością)
+
+### Zmieniono
+- Usunięto przycisk "Wygeneruj komentarz AI" ze szczegółów sesji strzeleckiej
+
 ## [0.3.8] – 2025-11-24
 ### Dodano
 - Przerobiono stronę ustawień (SettingsPage) na 4 sekcje zgodnie z nowym designem:

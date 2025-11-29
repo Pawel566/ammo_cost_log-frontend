@@ -85,15 +85,16 @@ export const sessionsAPI = {
   getById: (id) => api.get(`/shooting-sessions/${id}`),
 };
 
-// Shooting Sessions API
-export const shootingSessionsAPI = {
-  getAll: (params) => api.get('/shooting-sessions', { params }),
-  getById: (id) => api.get(`/shooting-sessions/${id}`),
-  create: (sessionData) => api.post('/shooting-sessions', sessionData),
-  update: (id, sessionData) => api.patch(`/shooting-sessions/${id}`, sessionData),
-  delete: (id) => api.delete(`/shooting-sessions/${id}`),
-  getSummary: () => api.get('/shooting-sessions/summary'),
-};
+        // Shooting Sessions API
+        export const shootingSessionsAPI = {
+          getAll: (params) => api.get('/shooting-sessions', { params }),
+          getById: (id) => api.get(`/shooting-sessions/${id}`),
+          create: (sessionData) => api.post('/shooting-sessions', sessionData),
+          update: (id, sessionData) => api.patch(`/shooting-sessions/${id}`, sessionData),
+          delete: (id) => api.delete(`/shooting-sessions/${id}`),
+          getSummary: () => api.get('/shooting-sessions/summary'),
+          generateAIComment: (id) => api.post(`/shooting-sessions/${id}/generate-ai-comment`),
+        };
 
 
 // Attachments API
