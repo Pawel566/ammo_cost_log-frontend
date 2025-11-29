@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { shootingSessionsAPI, gunsAPI, ammoAPI, accountAPI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const ShootingSessionsPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [sessions, setSessions] = useState([]);
   const [filteredSessions, setFilteredSessions] = useState([]);
   const [guns, setGuns] = useState([]);
@@ -17,6 +19,7 @@ const ShootingSessionsPage = () => {
   const [selectedSession, setSelectedSession] = useState(null);
   const [sessionToDelete, setSessionToDelete] = useState(null);
   const [userSkillLevel, setUserSkillLevel] = useState(null);
+  const [targetImageUrls, setTargetImageUrls] = useState({});
 
  
   const [sortColumn, setSortColumn] = useState(null);
@@ -233,9 +236,24 @@ const ShootingSessionsPage = () => {
     setOpenMenuId(openMenuId === sessionId ? null : sessionId);
   };
 
-  const handleRowClick = (session) => {
+  const handleRowClick = async (session) => {
     setSelectedSession(session);
     setOpenMenuId(null);
+    
+    // Załaduj zdjęcie tarczy jeśli istnieje i użytkownik jest właścicielem
+    if (session.target_image_path && user && !user.is_guest && session.user_id === user.user_id) {
+      try {
+        const response = await shootingSessionsAPI.getTargetImage(session.id);
+        if (response.data && response.data.url) {
+          setTargetImageUrls(prev => ({
+            ...prev,
+            [session.id]: response.data.url
+          }));
+        }
+      } catch (err) {
+        console.error('Błąd podczas pobierania zdjęcia tarczy:', err);
+      }
+    }
   };
 
   const handleCloseModal = () => {
@@ -735,6 +753,38 @@ const ShootingSessionsPage = () => {
                   {selectedSession.ai_comment || '-'}
                 </div>
               </div>
+
+              {/* Zdjęcie tarczy - tylko dla właściciela sesji */}
+              {selectedSession.target_image_path && user && !user.is_guest && selectedSession.user_id === user.user_id && (
+                <div>
+                  <div style={{ marginBottom: '0.5rem' }}>
+                    <strong>Zdjęcie tarczy:</strong>
+                  </div>
+                  {targetImageUrls[selectedSession.id] ? (
+                    <img 
+                      src={targetImageUrls[selectedSession.id]} 
+                      alt="Zdjęcie tarczy" 
+                      style={{ 
+                        maxWidth: '100%', 
+                        maxHeight: '400px', 
+                        borderRadius: '4px',
+                        border: '1px solid #444',
+                        display: 'block'
+                      }} 
+                    />
+                  ) : (
+                    <div style={{ 
+                      padding: '1rem', 
+                      backgroundColor: '#2c2c2c', 
+                      borderRadius: '4px',
+                      color: '#888',
+                      textAlign: 'center'
+                    }}>
+                      Ładowanie zdjęcia...
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>

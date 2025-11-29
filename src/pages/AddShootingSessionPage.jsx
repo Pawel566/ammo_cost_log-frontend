@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { shootingSessionsAPI, gunsAPI, ammoAPI, settingsAPI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const AddShootingSessionPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { user } = useAuth();
   const isEditMode = !!id;
   const [guns, setGuns] = useState([]);
   const [ammo, setAmmo] = useState([]);
@@ -13,6 +15,10 @@ const AddShootingSessionPage = () => {
   const [success, setSuccess] = useState(null);
   const [distanceUnit, setDistanceUnit] = useState('m');
   const [sessionMode, setSessionMode] = useState('standard'); // 'standard' lub 'advanced'
+  const [showTargetImage, setShowTargetImage] = useState(false);
+  const [targetImageFile, setTargetImageFile] = useState(null);
+  const [targetImageUrl, setTargetImageUrl] = useState(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [formData, setFormData] = useState({
     gun_id: '',
     ammo_id: '',
@@ -106,6 +112,11 @@ const AddShootingSessionPage = () => {
       } else {
         setSessionMode('standard');
       }
+      
+      // Załaduj zdjęcie tarczy jeśli istnieje
+      if (session.target_image_path && user && !user.is_guest) {
+        loadTargetImage();
+      }
     } catch (err) {
       setError('Błąd podczas ładowania sesji');
       console.error(err);
@@ -170,6 +181,73 @@ const AddShootingSessionPage = () => {
     }
     
     return total.toFixed(2).replace('.', ',');
+  };
+
+  const loadTargetImage = async () => {
+    if (!id || !user || user.is_guest) return;
+    
+    try {
+      const response = await shootingSessionsAPI.getTargetImage(id);
+      if (response.data && response.data.url) {
+        setTargetImageUrl(response.data.url);
+        setShowTargetImage(true);
+      }
+    } catch (err) {
+      console.error('Błąd podczas pobierania zdjęcia tarczy:', err);
+    }
+  };
+
+  const handleTargetImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    if (!file.type.startsWith('image/')) {
+      setError('Plik musi być obrazem');
+      return;
+    }
+    
+    if (file.size > 10 * 1024 * 1024) {
+      setError('Plik jest zbyt duży (max 10MB)');
+      return;
+    }
+    
+    setTargetImageFile(file);
+    setUploadingImage(true);
+    setError(null);
+    
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      if (isEditMode && id) {
+        await shootingSessionsAPI.uploadTargetImage(id, formData);
+        await loadTargetImage();
+        setSuccess('Zdjęcie tarczy zostało przesłane');
+      } else {
+        setTargetImageUrl(URL.createObjectURL(file));
+        setSuccess('Zdjęcie zostanie przesłane po zapisaniu sesji');
+      }
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Błąd podczas przesyłania zdjęcia');
+      setTargetImageFile(null);
+      setTargetImageUrl(null);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleDeleteTargetImage = async () => {
+    if (!id || !user || user.is_guest) return;
+    
+    try {
+      await shootingSessionsAPI.deleteTargetImage(id);
+      setTargetImageUrl(null);
+      setTargetImageFile(null);
+      setShowTargetImage(false);
+      setSuccess('Zdjęcie tarczy zostało usunięte');
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Błąd podczas usuwania zdjęcia');
+    }
   };
 
   const normalize = (v) => {
@@ -312,6 +390,17 @@ const AddShootingSessionPage = () => {
       } else {
         const response = await shootingSessionsAPI.create(sessionData);
         const sessionId = response.data.id;
+        
+        // Prześlij zdjęcie tarczy jeśli zostało wybrane
+        if (targetImageFile && user && !user.is_guest) {
+          try {
+            const imageFormData = new FormData();
+            imageFormData.append('file', targetImageFile);
+            await shootingSessionsAPI.uploadTargetImage(sessionId, imageFormData);
+          } catch (err) {
+            console.error('Błąd podczas przesyłania zdjęcia tarczy:', err);
+          }
+        }
         
         // Jeśli to sesja zaawansowana z danymi celności, wygeneruj komentarz AI
         if (sessionMode === 'advanced' && formData.distance_m && formData.hits && formData.shots) {
@@ -538,12 +627,107 @@ const AddShootingSessionPage = () => {
                   </div>
                 )}
                 
-                {/* Funkcje zaawansowane - tylko w trybie zaawansowanym */}
-                {sessionMode === 'advanced' && (
-                  <div style={{ marginTop: '1.5rem', padding: '1rem', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px dashed #555' }}>
-                    <p style={{ color: '#888', fontSize: '0.9rem', margin: 0, textAlign: 'center' }}>
-                      Funkcje zaawansowane (zdjęcie, komentarz AI) - wkrótce
-                    </p>
+                {/* Zdjęcie tarczy - tylko w trybie zaawansowanym i dla zalogowanych użytkowników */}
+                {sessionMode === 'advanced' && user && !user.is_guest && (
+                  <div style={{ marginTop: '1.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
+                      <input
+                        type="checkbox"
+                        id="showTargetImage"
+                        checked={showTargetImage}
+                        onChange={(e) => {
+                          setShowTargetImage(e.target.checked);
+                          if (!e.target.checked) {
+                            setTargetImageFile(null);
+                            setTargetImageUrl(null);
+                          }
+                        }}
+                        style={{ marginRight: '0.5rem', cursor: 'pointer' }}
+                      />
+                      <label htmlFor="showTargetImage" style={{ cursor: 'pointer', fontSize: '0.9rem' }}>
+                        Dodaj zdjęcie tarczy
+                      </label>
+                    </div>
+                    
+                    {showTargetImage && (
+                      <div style={{ padding: '1rem', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid #333' }}>
+                        {targetImageUrl ? (
+                          <div>
+                            <img 
+                              src={targetImageUrl} 
+                              alt="Zdjęcie tarczy" 
+                              style={{ 
+                                maxWidth: '100%', 
+                                maxHeight: '300px', 
+                                borderRadius: '4px',
+                                marginBottom: '1rem',
+                                display: 'block'
+                              }} 
+                            />
+                            {isEditMode && (
+                              <button
+                                type="button"
+                                onClick={handleDeleteTargetImage}
+                                style={{
+                                  padding: '0.5rem 1rem',
+                                  backgroundColor: '#dc3545',
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: '4px',
+                                  cursor: 'pointer',
+                                  fontSize: '0.9rem'
+                                }}
+                              >
+                                Usuń zdjęcie
+                              </button>
+                            )}
+                            {!isEditMode && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setTargetImageFile(null);
+                                  setTargetImageUrl(null);
+                                }}
+                                style={{
+                                  padding: '0.5rem 1rem',
+                                  backgroundColor: '#dc3545',
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: '4px',
+                                  cursor: 'pointer',
+                                  fontSize: '0.9rem'
+                                }}
+                              >
+                                Usuń zdjęcie
+                              </button>
+                            )}
+                          </div>
+                        ) : (
+                          <div>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={handleTargetImageUpload}
+                              disabled={uploadingImage}
+                              style={{
+                                width: '100%',
+                                padding: '0.5rem',
+                                backgroundColor: '#2c2c2c',
+                                color: '#fff',
+                                border: '1px solid #555',
+                                borderRadius: '4px',
+                                cursor: 'pointer'
+                              }}
+                            />
+                            {uploadingImage && (
+                              <p style={{ color: '#888', fontSize: '0.9rem', marginTop: '0.5rem' }}>
+                                Przesyłanie...
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

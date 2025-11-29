@@ -94,6 +94,11 @@ export const sessionsAPI = {
           delete: (id) => api.delete(`/shooting-sessions/${id}`),
           getSummary: () => api.get('/shooting-sessions/summary'),
           generateAIComment: (id) => api.post(`/shooting-sessions/${id}/generate-ai-comment`),
+          uploadTargetImage: (id, formData) => api.post(`/shooting-sessions/${id}/target-image`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          }),
+          getTargetImage: (id) => api.get(`/shooting-sessions/${id}/target-image`),
+          deleteTargetImage: (id) => api.delete(`/shooting-sessions/${id}/target-image`),
         };
 
 
