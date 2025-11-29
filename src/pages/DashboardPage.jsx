@@ -225,9 +225,10 @@ const DashboardPage = () => {
                   marginBottom: '1rem',
                   width: '100%',
                   height: '180px',
-                  backgroundColor: '#2c2c2c',
+                  backgroundColor: 'var(--bg-secondary)',
                   borderRadius: '8px',
-                  overflow: 'hidden'
+                  overflow: 'hidden',
+                  padding: 0
                 }}>
                   {mostUsedGunImage ? (
                     <img 
@@ -238,7 +239,9 @@ const DashboardPage = () => {
                         maxHeight: '100%',
                         width: 'auto',
                         height: 'auto',
-                        objectFit: 'contain'
+                        objectFit: 'contain',
+                        padding: 0,
+                        margin: 0
                       }}
                     />
                   ) : (
@@ -251,7 +254,9 @@ const DashboardPage = () => {
                         width: 'auto',
                         height: 'auto',
                         objectFit: 'contain',
-                        opacity: 0.5
+                        opacity: 0.5,
+                        padding: 0,
+                        margin: 0
                       }}
                     />
                   )}
@@ -281,7 +286,7 @@ const DashboardPage = () => {
                 </button>
               </div>
             ) : (
-              <div style={{ textAlign: 'center', color: '#888', padding: '1rem' }}>
+              <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', padding: '1rem' }}>
                 Brak danych
               </div>
             )}
@@ -289,28 +294,28 @@ const DashboardPage = () => {
 
           {/* Wyniki w tym miesiącu */}
           <div className="card" style={{ padding: '1.5rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', color: 'var(--text-primary)' }}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="12" cy="12" r="10" stroke="white" strokeWidth="2" fill="none"/>
-                <circle cx="12" cy="12" r="3" fill="white"/>
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none"/>
+                <circle cx="12" cy="12" r="3" fill="currentColor"/>
               </svg>
               <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 'bold' }}>
                 Wyniki
               </h3>
-              <span style={{ color: '#888', fontSize: '0.9rem' }}>w tym miesiącu</span>
+              <span style={{ color: 'var(--text-tertiary)', fontSize: '0.9rem' }}>w tym miesiącu</span>
             </div>
             {monthlyStats ? (
               <div style={{ display: 'grid', gap: '0.75rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#888' }}>SESJE</span>
+                  <span style={{ color: 'var(--text-tertiary)' }}>SESJE</span>
                   <span style={{ fontWeight: 'bold' }}>{monthlyStats.sessions}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#888' }}>STRZAŁY</span>
+                  <span style={{ color: 'var(--text-tertiary)' }}>STRZAŁY</span>
                   <span style={{ fontWeight: 'bold' }}>{monthlyStats.shots}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#888' }}>ŚR. CELNOŚĆ</span>
+                  <span style={{ color: 'var(--text-tertiary)' }}>ŚR. CELNOŚĆ</span>
                   <span style={{ 
                     fontWeight: 'bold',
                     color: monthlyStats.avgAccuracy >= 80 ? '#4caf50' : monthlyStats.avgAccuracy >= 60 ? '#ffc107' : '#dc3545'
@@ -319,14 +324,14 @@ const DashboardPage = () => {
                   </span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem' }}>
-                  <span style={{ color: '#888' }}>KOSZT</span>
+                  <span style={{ color: 'var(--text-tertiary)' }}>KOSZT</span>
                   <span style={{ fontWeight: 'bold', color: '#007bff' }}>
                     {monthlyStats.cost.toFixed(2).replace('.', ',')} zł
                   </span>
                 </div>
               </div>
             ) : (
-              <div style={{ textAlign: 'center', color: '#888', padding: '1rem' }}>
+              <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', padding: '1rem' }}>
                 Brak danych w tym miesiącu
               </div>
             )}
@@ -337,7 +342,7 @@ const DashboardPage = () => {
             <h3 style={{ margin: 0, marginBottom: '1rem', fontSize: '1.1rem', fontWeight: 'bold' }}>
               Poziom
             </h3>
-            <div style={{ textAlign: 'center', color: '#888', padding: '2rem' }}>
+            <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', padding: '2rem' }}>
               Funkcja w przygotowaniu
             </div>
           </div>
@@ -378,7 +383,7 @@ const DashboardPage = () => {
                     <div style={{
                       width: '100%',
                       height: '8px',
-                      backgroundColor: '#2c2c2c',
+                      backgroundColor: 'var(--bg-secondary)',
                       borderRadius: '4px',
                       overflow: 'hidden'
                     }}>
@@ -393,7 +398,7 @@ const DashboardPage = () => {
                 ))}
               </div>
             ) : (
-              <div style={{ textAlign: 'center', color: '#888', padding: '1rem' }}>
+              <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', padding: '1rem' }}>
                 Wszystko w porządku
               </div>
             )}
@@ -401,9 +406,9 @@ const DashboardPage = () => {
 
           {/* Konserwacja */}
           <div className="card" style={{ padding: '1.5rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', color: 'var(--text-primary)' }}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" fill="white"/>
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" fill="currentColor"/>
               </svg>
               <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 'bold' }}>
                 Konserwacja
@@ -418,22 +423,22 @@ const DashboardPage = () => {
                     </div>
                     {alert.lastMaintenance ? (
                       <>
-                        <div style={{ color: '#888', fontSize: '0.9rem', marginBottom: '0.25rem' }}>
+                        <div style={{ color: 'var(--text-tertiary)', fontSize: '0.9rem', marginBottom: '0.25rem' }}>
                           Ostatnia konserwacja: {alert.lastMaintenance.toLocaleDateString('pl-PL')}
                         </div>
-                        <div style={{ color: '#888', fontSize: '0.9rem', marginBottom: '0.5rem' }}>
+                        <div style={{ color: 'var(--text-tertiary)', fontSize: '0.9rem', marginBottom: '0.5rem' }}>
                           Strzały od konserwacji: {alert.shotsSince}
                         </div>
                       </>
                     ) : (
-                      <div style={{ color: '#888', fontSize: '0.9rem', marginBottom: '0.5rem' }}>
+                      <div style={{ color: 'var(--text-tertiary)', fontSize: '0.9rem', marginBottom: '0.5rem' }}>
                         Brak konserwacji. Strzały: {alert.shotsSince}
                       </div>
                     )}
                     <div style={{
                       width: '100%',
                       height: '8px',
-                      backgroundColor: '#2c2c2c',
+                      backgroundColor: 'var(--bg-secondary)',
                       borderRadius: '4px',
                       overflow: 'hidden'
                     }}>
@@ -448,7 +453,7 @@ const DashboardPage = () => {
                 ))}
               </div>
             ) : (
-              <div style={{ textAlign: 'center', color: '#888', padding: '1rem' }}>
+              <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', padding: '1rem' }}>
                 Wszystko w porządku
               </div>
             )}

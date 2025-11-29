@@ -595,8 +595,8 @@ const AddShootingSessionPage = () => {
             <div style={{
               width: '16px',
               height: '16px',
-              border: '2px solid #fff',
-              borderTop: '2px solid transparent',
+              border: `2px solid var(--text-primary)`,
+              borderTop: `2px solid transparent`,
               borderRadius: '50%',
               animation: 'spin 1s linear infinite'
             }}></div>
@@ -628,7 +628,7 @@ const AddShootingSessionPage = () => {
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '2rem' }}>
               <div style={{ 
                 display: 'flex', 
-                backgroundColor: '#2c2c2c', 
+                backgroundColor: 'var(--bg-secondary)', 
                 borderRadius: '8px', 
                 padding: '4px',
                 gap: '4px'
@@ -642,7 +642,7 @@ const AddShootingSessionPage = () => {
                     border: 'none',
                     cursor: 'pointer',
                     backgroundColor: sessionMode === 'standard' ? '#007bff' : 'transparent',
-                    color: sessionMode === 'standard' ? '#fff' : '#aaa',
+                    color: sessionMode === 'standard' ? '#fff' : 'var(--text-tertiary)',
                     fontWeight: sessionMode === 'standard' ? 'bold' : 'normal',
                     transition: 'all 0.2s'
                   }}
@@ -658,7 +658,7 @@ const AddShootingSessionPage = () => {
                     border: 'none',
                     cursor: 'pointer',
                     backgroundColor: sessionMode === 'advanced' ? '#007bff' : 'transparent',
-                    color: sessionMode === 'advanced' ? '#fff' : '#aaa',
+                    color: sessionMode === 'advanced' ? '#fff' : 'var(--text-tertiary)',
                     fontWeight: sessionMode === 'advanced' ? 'bold' : 'normal',
                     transition: 'all 0.2s'
                   }}
@@ -679,7 +679,7 @@ const AddShootingSessionPage = () => {
                     value={formData.gun_id}
                     onChange={(e) => setFormData({ ...formData, gun_id: e.target.value })}
                     required
-                    style={{ appearance: 'none', backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'%3E%3Cpath fill=\'%23fff\' d=\'M6 9L1 4h10z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', paddingRight: '2.5rem' }}
+                    style={{ appearance: 'none', backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'%3E%3Cpath fill=\'%23aaa\' d=\'M6 9L1 4h10z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', paddingRight: '2.5rem' }}
                   >
                     <option value="">Wybierz broń</option>
                     {guns.map((gun) => (
@@ -696,7 +696,7 @@ const AddShootingSessionPage = () => {
                     value={formData.ammo_id}
                     onChange={(e) => setFormData({ ...formData, ammo_id: e.target.value })}
                     required
-                    style={{ appearance: 'none', backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'%3E%3Cpath fill=\'%23fff\' d=\'M6 9L1 4h10z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', paddingRight: '2.5rem' }}
+                    style={{ appearance: 'none', backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'%3E%3Cpath fill=\'%23aaa\' d=\'M6 9L1 4h10z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', paddingRight: '2.5rem' }}
                   >
                     <option value="">Wybierz amunicję</option>
                     {ammo.map((item) => (
@@ -776,7 +776,7 @@ const AddShootingSessionPage = () => {
                       value={`${calculateAccuracy()}%`}
                       readOnly
                       style={{ 
-                        backgroundColor: '#2c2c2c',
+                        backgroundColor: 'var(--bg-secondary)',
                         color: parseFloat(calculateAccuracy()) >= 80 ? '#4caf50' : parseFloat(calculateAccuracy()) >= 60 ? '#ffc107' : parseFloat(calculateAccuracy()) > 0 ? '#dc3545' : '#4caf50',
                         fontWeight: 'bold'
                       }}
@@ -836,7 +836,7 @@ const AddShootingSessionPage = () => {
                             style={{
                               padding: '0.5rem 1rem',
                               backgroundColor: '#dc3545',
-                              color: 'white',
+                              color: 'var(--text-primary)',
                               border: 'none',
                               borderRadius: '4px',
                               cursor: 'pointer',
@@ -859,7 +859,7 @@ const AddShootingSessionPage = () => {
                             style={{
                               padding: '0.5rem 1rem',
                               backgroundColor: '#dc3545',
-                              color: 'white',
+                              color: 'var(--text-primary)',
                               border: 'none',
                               borderRadius: '4px',
                               cursor: 'pointer',
@@ -885,17 +885,17 @@ const AddShootingSessionPage = () => {
             <div style={{ 
               marginTop: '2rem', 
               padding: '1rem', 
-              backgroundColor: '#1a1a1a', 
+              backgroundColor: 'var(--bg-primary)', 
               borderRadius: '8px',
-              border: '1px solid #333'
+              border: `1px solid var(--border-color)`
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <label style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#fff' }}>Koszt całkowity:</label>
+                <label style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>Koszt całkowity:</label>
                 <div style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#4caf50' }}>
                   {calculateTotalCost()} zł
                 </div>
               </div>
-              <div style={{ marginTop: '0.5rem', fontSize: '0.9rem', color: '#888' }}>
+              <div style={{ marginTop: '0.5rem', fontSize: '0.9rem', color: 'var(--text-tertiary)' }}>
                 {formData.cost && formData.cost.trim() ? (
                   <>
                     Koszt stały: {parseFloat(formData.cost.replace(',', '.').trim()) || 0} zł
@@ -935,7 +935,7 @@ const AddShootingSessionPage = () => {
                   padding: '0.75rem 2rem', 
                   fontSize: '1.1rem', 
                   backgroundColor: '#6c757d', 
-                  color: 'white',
+                  color: 'var(--text-primary)',
                   border: 'none',
                   borderRadius: '4px',
                   cursor: 'pointer'
@@ -952,7 +952,7 @@ const AddShootingSessionPage = () => {
                   padding: '0.75rem 2rem', 
                   fontSize: '1.1rem',
                   backgroundColor: analyzingAI ? '#6c757d' : '#007bff',
-                  color: 'white',
+                  color: 'var(--text-primary)',
                   border: 'none',
                   borderRadius: '4px',
                   cursor: analyzingAI ? 'not-allowed' : 'pointer',

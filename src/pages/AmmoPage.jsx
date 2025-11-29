@@ -423,9 +423,9 @@ const AmmoPage = () => {
                   style={{
                     width: '100%',
                     padding: '0.75rem',
-                    backgroundColor: '#2c2c2c',
-                    color: 'white',
-                    border: '1px solid #555',
+                    backgroundColor: 'var(--input-bg)',
+                    color: 'var(--text-primary)',
+                    border: `1px solid var(--border-color)`,
                     borderRadius: '4px',
                     fontSize: '1rem'
                   }}
@@ -447,9 +447,9 @@ const AmmoPage = () => {
                         style={{
                           flex: 1,
                           padding: '0.75rem',
-                          backgroundColor: '#2c2c2c',
-                          color: 'white',
-                          border: '1px solid #555',
+                          backgroundColor: 'var(--input-bg)',
+                          color: 'var(--text-primary)',
+                          border: `1px solid var(--border-color)`,
                           borderRadius: '4px',
                           fontSize: '1rem'
                         }}
@@ -473,9 +473,9 @@ const AmmoPage = () => {
                         style={{
                           flex: 1,
                           padding: '0.75rem',
-                          backgroundColor: '#2c2c2c',
-                          color: 'white',
-                          border: '1px solid #555',
+                          backgroundColor: 'var(--input-bg)',
+                          color: 'var(--text-primary)',
+                          border: `1px solid var(--border-color)`,
                           borderRadius: '4px',
                           fontSize: '1rem'
                         }}
@@ -488,8 +488,8 @@ const AmmoPage = () => {
                         }}
                         style={{
                           padding: '0.5rem 1rem',
-                          backgroundColor: '#555',
-                          color: 'white',
+                          backgroundColor: 'var(--bg-tertiary)',
+                          color: 'var(--text-primary)',
                           border: 'none',
                           borderRadius: '4px',
                           cursor: 'pointer',
@@ -514,9 +514,9 @@ const AmmoPage = () => {
                   style={{
                     width: '100%',
                     padding: '0.75rem',
-                    backgroundColor: '#2c2c2c',
-                    color: 'white',
-                    border: '1px solid #555',
+                    backgroundColor: 'var(--input-bg)',
+                    color: 'var(--text-primary)',
+                    border: `1px solid var(--border-color)`,
                     borderRadius: '4px',
                     fontSize: '1rem'
                   }}
@@ -545,9 +545,9 @@ const AmmoPage = () => {
                   style={{
                     width: '100%',
                     padding: '0.75rem',
-                    backgroundColor: '#2c2c2c',
-                    color: 'white',
-                    border: '1px solid #555',
+                    backgroundColor: 'var(--input-bg)',
+                    color: 'var(--text-primary)',
+                    border: `1px solid var(--border-color)`,
                     borderRadius: '4px',
                     fontSize: '1rem'
                   }}
@@ -567,9 +567,9 @@ const AmmoPage = () => {
                   style={{
                     width: '100%',
                     padding: '0.75rem',
-                    backgroundColor: '#2c2c2c',
-                    color: 'white',
-                    border: '1px solid #555',
+                    backgroundColor: 'var(--input-bg)',
+                    color: 'var(--text-primary)',
+                    border: `1px solid var(--border-color)`,
                     borderRadius: '4px',
                     fontSize: '1rem'
                   }}
@@ -581,7 +581,7 @@ const AmmoPage = () => {
                 className="btn btn-success"
                 style={{
                   backgroundColor: '#4caf50',
-                  color: 'white',
+                  color: 'var(--text-primary)',
                   border: 'none',
                   padding: '0.75rem 2rem',
                   borderRadius: '4px',
@@ -614,9 +614,9 @@ const AmmoPage = () => {
                   onChange={(e) => setCaliberFilter(e.target.value)}
                   style={{
                     padding: '0.5rem',
-                    backgroundColor: '#2c2c2c',
-                    color: 'white',
-                    border: '1px solid #555',
+                    backgroundColor: 'var(--input-bg)',
+                    color: 'var(--text-primary)',
+                    border: `1px solid var(--border-color)`,
                     borderRadius: '4px',
                     fontSize: '0.9rem'
                   }}
@@ -634,9 +634,9 @@ const AmmoPage = () => {
                   onChange={(e) => setTypeFilter(e.target.value)}
                   style={{
                     padding: '0.5rem',
-                    backgroundColor: '#2c2c2c',
-                    color: 'white',
-                    border: '1px solid #555',
+                    backgroundColor: 'var(--input-bg)',
+                    color: 'var(--text-primary)',
+                    border: `1px solid var(--border-color)`,
                     borderRadius: '4px',
                     fontSize: '0.9rem'
                   }}
@@ -808,8 +808,8 @@ const AmmoPage = () => {
                                     position: 'absolute',
                                     right: 0,
                                     top: '100%',
-                                    backgroundColor: '#2c2c2c',
-                                    border: '1px solid #555',
+                                    backgroundColor: 'var(--bg-secondary)',
+                                    border: `1px solid var(--border-color)`,
                                     borderRadius: '4px',
                                     minWidth: '150px',
                                     zIndex: 1000,
@@ -822,8 +822,8 @@ const AmmoPage = () => {
                                     style={{
                                       padding: '0.75rem 1rem',
                                       cursor: 'pointer',
-                                      color: '#fff',
-                                      borderBottom: '1px solid #555'
+                                      color: 'var(--text-primary)',
+                                      borderBottom: `1px solid var(--border-color)`
                                     }}
                                     onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
                                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
@@ -870,7 +870,7 @@ const AmmoPage = () => {
                     style={{
                       background: 'none',
                       border: 'none',
-                      color: currentPage === 1 ? '#555' : '#fff',
+                      color: currentPage === 1 ? 'var(--text-tertiary)' : 'var(--text-primary)',
                       cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
                       fontSize: '1rem',
                       padding: '0.5rem 1rem'
@@ -887,7 +887,7 @@ const AmmoPage = () => {
                     style={{
                       background: 'none',
                       border: 'none',
-                      color: currentPage === totalPages ? '#555' : '#fff',
+                      color: currentPage === totalPages ? 'var(--text-tertiary)' : 'var(--text-primary)',
                       cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
                       fontSize: '1rem',
                       padding: '0.5rem 1rem'

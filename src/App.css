@@ -19,11 +19,11 @@
 }
 
 .navbar-nav a {
-  color: #ecf0f1;
+  color: var(--text-secondary);
   text-decoration: none;
   padding: 0.5rem 1rem;
   border-radius: 4px;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s ease, color 0.3s ease;
 }
 
 .navbar-nav a:hover,
@@ -41,17 +41,17 @@
 }
 
 .user-menu {
-  color: #ecf0f1;
+  color: var(--text-secondary);
   font-weight: 600;
   padding: 0.5rem 1rem;
   border-radius: 4px;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s ease, color 0.3s ease;
   user-select: none;
   cursor: pointer;
 }
 
 .user-menu:hover {
-  background-color: #404040;
+  background-color: var(--table-hover-bg);
 }
 
 .user-menu-dropdown {
@@ -69,10 +69,10 @@
 }
 
 .user-menu-item {
-  color: #ecf0f1;
+  color: var(--text-secondary);
   padding: 0.75rem 1rem;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s ease, color 0.3s ease;
   user-select: none;
 }
 

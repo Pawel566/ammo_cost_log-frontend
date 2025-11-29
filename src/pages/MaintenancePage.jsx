@@ -177,7 +177,7 @@ const MaintenancePage = () => {
         )}
 
         {statistics && (
-          <div className="card" style={{ marginBottom: '1.5rem', backgroundColor: '#2c2c2c' }}>
+          <div className="card" style={{ marginBottom: '1.5rem', backgroundColor: 'var(--bg-secondary)' }}>
             <h3 style={{ marginBottom: '1rem' }}>Statystyki</h3>
             {statistics.longest_without_maintenance && (
               <div style={{ marginBottom: '1rem' }}>
@@ -210,7 +210,7 @@ const MaintenancePage = () => {
                     }}
                   >
                     <span>{stat.gun_name}</span>
-                    <span style={{ color: stat.days_since_last !== null ? '#fff' : '#888' }}>
+                    <span style={{ color: stat.days_since_last !== null ? 'var(--text-primary)' : 'var(--text-tertiary)' }}>
                       {stat.days_since_last !== null ? `${stat.days_since_last} dni` : 'Brak konserwacji'}
                     </span>
                   </div>
@@ -311,8 +311,8 @@ const MaintenancePage = () => {
                                   right: 0,
                                   top: '100%',
                                   marginTop: '0.25rem',
-                                  backgroundColor: '#2c2c2c',
-                                  border: '1px solid #555',
+                                  backgroundColor: 'var(--bg-secondary)',
+                                  border: `1px solid var(--border-color)`,
                                   borderRadius: '8px',
                                   minWidth: '150px',
                                   zIndex: 1000,
@@ -333,13 +333,13 @@ const MaintenancePage = () => {
                                     padding: '0.75rem 1rem',
                                     background: 'none',
                                     border: 'none',
-                                    color: '#fff',
+                                    color: 'var(--text-primary)',
                                     cursor: 'pointer',
                                     textAlign: 'left',
                                     fontSize: '0.9rem',
                                     display: 'block'
                                   }}
-                                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
                                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                                 >
                                   Szczegóły
@@ -355,14 +355,14 @@ const MaintenancePage = () => {
                                     padding: '0.75rem 1rem',
                                     background: 'none',
                                     border: 'none',
-                                    color: '#fff',
+                                    color: 'var(--text-primary)',
                                     cursor: 'pointer',
                                     textAlign: 'left',
                                     fontSize: '0.9rem',
                                     display: 'block',
-                                    borderTop: '1px solid #555'
+                                    borderTop: `1px solid var(--border-color)`
                                   }}
-                                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
                                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                                 >
                                   Edytuj
@@ -383,9 +383,9 @@ const MaintenancePage = () => {
                                     textAlign: 'left',
                                     fontSize: '0.9rem',
                                     display: 'block',
-                                    borderTop: '1px solid #555'
+                                    borderTop: `1px solid var(--border-color)`
                                   }}
-                                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
                                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                                 >
                                   Usuń
@@ -443,7 +443,7 @@ const MaintenancePage = () => {
               </div>
               <div className="form-group">
                 <label className="form-label">Lista czynności</label>
-                <div style={{ border: '1px solid #555', borderRadius: '4px', backgroundColor: '#2c2c2c' }}>
+                <div style={{ border: `1px solid var(--border-color)`, borderRadius: '4px', backgroundColor: 'var(--bg-secondary)' }}>
                   <button
                     type="button"
                     onClick={(e) => {
@@ -455,7 +455,7 @@ const MaintenancePage = () => {
                       padding: '0.75rem',
                       background: 'none',
                       border: 'none',
-                      color: '#fff',
+                      color: 'var(--text-primary)',
                       textAlign: 'left',
                       cursor: 'pointer',
                       display: 'flex',
@@ -600,7 +600,7 @@ const MaintenancePage = () => {
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#aaa' }}>
                   Broń
                 </label>
-                <div style={{ padding: '0.75rem', backgroundColor: '#2c2c2c', borderRadius: '4px', color: '#fff' }}>
+                <div style={{ padding: '0.75rem', backgroundColor: 'var(--bg-secondary)', borderRadius: '4px', color: 'var(--text-primary)' }}>
                   {selectedMaintenance.gun_name || getGunName(selectedMaintenance.gun_id)}
                 </div>
               </div>
@@ -609,7 +609,7 @@ const MaintenancePage = () => {
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#aaa' }}>
                   Data wykonania
                 </label>
-                <div style={{ padding: '0.75rem', backgroundColor: '#2c2c2c', borderRadius: '4px', color: '#fff' }}>
+                <div style={{ padding: '0.75rem', backgroundColor: 'var(--bg-secondary)', borderRadius: '4px', color: 'var(--text-primary)' }}>
                   {new Date(selectedMaintenance.date).toLocaleDateString('pl-PL')}
                 </div>
               </div>
@@ -620,7 +620,7 @@ const MaintenancePage = () => {
                     Lista czynności
                   </label>
                   <div style={{ padding: '0.75rem', backgroundColor: '#2c2c2c', borderRadius: '4px' }}>
-                    <ul style={{ margin: 0, paddingLeft: '1.25rem', listStyle: 'disc', color: '#fff' }}>
+                    <ul style={{ margin: 0, paddingLeft: '1.25rem', listStyle: 'disc', color: 'var(--text-primary)' }}>
                       {selectedMaintenance.activities.map((activity, idx) => (
                         <li key={idx} style={{ marginBottom: '0.5rem' }}>{activity}</li>
                       ))}
@@ -644,7 +644,7 @@ const MaintenancePage = () => {
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#aaa' }}>
                   Strzałów od poprzedniej konserwacji
                 </label>
-                <div style={{ padding: '0.75rem', backgroundColor: '#2c2c2c', borderRadius: '4px', color: '#fff' }}>
+                <div style={{ padding: '0.75rem', backgroundColor: 'var(--bg-secondary)', borderRadius: '4px', color: 'var(--text-primary)' }}>
                   {selectedMaintenance.rounds_since_last || 0}
                 </div>
               </div>

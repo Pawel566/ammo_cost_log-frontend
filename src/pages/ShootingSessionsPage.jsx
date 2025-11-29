@@ -487,7 +487,7 @@ const ShootingSessionsPage = () => {
                       }}
                       onMouseEnter={(e) => {
                         if (!e.target.closest('.session-menu-container')) {
-                          e.currentTarget.style.backgroundColor = '#3c3c3c';
+                          e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)';
                         }
                       }}
                       onMouseLeave={(e) => {
@@ -764,11 +764,12 @@ const ShootingSessionsPage = () => {
                 <div style={{ 
                   marginTop: '0.5rem', 
                   padding: '0.75rem', 
-                  backgroundColor: '#2c2c2c', 
+                  backgroundColor: 'var(--bg-secondary)', 
                   borderRadius: '4px',
                   whiteSpace: 'pre-wrap',
                   wordWrap: 'break-word',
-                  minHeight: '100px'
+                  minHeight: '100px',
+                  color: 'var(--text-primary)'
                 }}>
                   {selectedSession.ai_comment || '-'}
                 </div>

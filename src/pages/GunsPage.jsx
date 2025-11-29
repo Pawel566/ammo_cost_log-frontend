@@ -575,7 +575,7 @@ const GunsPage = () => {
             }}
             style={{ 
               backgroundColor: '#007bff',
-              color: 'white',
+              color: 'var(--text-primary)',
               border: 'none',
               padding: '0.5rem 1rem',
               borderRadius: '4px',
@@ -643,9 +643,9 @@ const GunsPage = () => {
                     style={{
                       width: '100%',
                       padding: '0.75rem',
-                      backgroundColor: '#2c2c2c',
-                      color: 'white',
-                      border: '1px solid #555',
+                      backgroundColor: 'var(--input-bg)',
+                      color: 'var(--text-primary)',
+                      border: `1px solid var(--border-color)`,
                       borderRadius: '4px',
                       fontSize: '1rem',
                       opacity: formData.type ? 1 : 0.6,
@@ -671,9 +671,9 @@ const GunsPage = () => {
                       style={{
                         flex: 1,
                         padding: '0.75rem',
-                        backgroundColor: '#2c2c2c',
-                        color: 'white',
-                        border: '1px solid #555',
+                        backgroundColor: 'var(--input-bg)',
+                        color: 'var(--text-primary)',
+                        border: `1px solid var(--border-color)`,
                         borderRadius: '4px',
                         fontSize: '1rem'
                       }}
@@ -686,8 +686,8 @@ const GunsPage = () => {
                       }}
                       style={{
                         padding: '0.5rem 1rem',
-                        backgroundColor: '#555',
-                        color: 'white',
+                        backgroundColor: 'var(--bg-tertiary)',
+                        color: 'var(--text-primary)',
                         border: 'none',
                         borderRadius: '4px',
                         cursor: 'pointer',
@@ -733,9 +733,9 @@ const GunsPage = () => {
                   onChange={(e) => setTypeFilter(e.target.value)}
                   style={{
                     padding: '0.5rem',
-                    backgroundColor: '#2c2c2c',
-                    color: 'white',
-                    border: '1px solid #555',
+                    backgroundColor: 'var(--input-bg)',
+                    color: 'var(--text-primary)',
+                    border: `1px solid var(--border-color)`,
                     borderRadius: '4px',
                     fontSize: '0.9rem'
                   }}
@@ -753,9 +753,9 @@ const GunsPage = () => {
                   onChange={(e) => setCaliberFilter(e.target.value)}
                   style={{
                     padding: '0.5rem',
-                    backgroundColor: '#2c2c2c',
-                    color: 'white',
-                    border: '1px solid #555',
+                    backgroundColor: 'var(--input-bg)',
+                    color: 'var(--text-primary)',
+                    border: `1px solid var(--border-color)`,
                     borderRadius: '4px',
                     fontSize: '0.9rem'
                   }}
@@ -796,7 +796,7 @@ const GunsPage = () => {
                 style={{
                   background: 'none',
                   border: 'none',
-                  color: currentPage === 1 ? '#555' : '#fff',
+                  color: currentPage === 1 ? 'var(--text-tertiary)' : 'var(--text-primary)',
                   cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
                   fontSize: '1.2rem',
                   padding: '0.25rem 0.5rem'
@@ -810,7 +810,7 @@ const GunsPage = () => {
                 style={{
                   background: 'none',
                   border: 'none',
-                  color: currentPage === totalPages ? '#555' : '#fff',
+                  color: currentPage === totalPages ? 'var(--text-tertiary)' : 'var(--text-primary)',
                   cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
                   fontSize: '1.2rem',
                   padding: '0.25rem 0.5rem'
@@ -926,8 +926,8 @@ const GunsPage = () => {
                                   position: 'absolute',
                                   right: 0,
                                   top: '100%',
-                                  backgroundColor: '#2c2c2c',
-                                  border: '1px solid #555',
+                                  backgroundColor: 'var(--bg-secondary)',
+                                  border: `1px solid var(--border-color)`,
                                   borderRadius: '4px',
                                   minWidth: '150px',
                                   zIndex: 1000,
@@ -941,10 +941,10 @@ const GunsPage = () => {
                                     style={{
                                       padding: '0.75rem 1rem',
                                       cursor: 'pointer',
-                                      color: '#fff',
-                                      borderBottom: '1px solid #555'
+                                      color: 'var(--text-primary)',
+                                      borderBottom: `1px solid var(--border-color)`
                                     }}
-                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
                                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                                   >
                                     Szczegóły
@@ -955,10 +955,10 @@ const GunsPage = () => {
                                   style={{
                                     padding: '0.75rem 1rem',
                                     cursor: 'pointer',
-                                    color: '#fff',
-                                    borderBottom: user ? '1px solid #555' : 'none'
+                                    color: 'var(--text-primary)',
+                                    borderBottom: user ? `1px solid var(--border-color)` : 'none'
                                   }}
-                                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
                                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                         >
                           Edytuj
@@ -970,7 +970,7 @@ const GunsPage = () => {
                                     cursor: 'pointer',
                                     color: '#f44336'
                                   }}
-                                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
                                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                         >
                           Usuń
