@@ -18,6 +18,7 @@ const AddShootingSessionPage = () => {
   const [targetImageFile, setTargetImageFile] = useState(null);
   const [targetImageUrl, setTargetImageUrl] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [analyzingAI, setAnalyzingAI] = useState(false);
   const fileInputRef = useRef(null);
   const [formData, setFormData] = useState({
     gun_id: '',
@@ -441,6 +442,44 @@ const AddShootingSessionPage = () => {
           normalizedData.ammo_id = sessionData.ammo_id;
         }
         await shootingSessionsAPI.update(id, normalizedData);
+        
+        // Prześlij zdjęcie tarczy jeśli zostało dodane w edycji
+        if (targetImageFile && user && !user.is_guest) {
+          try {
+            const imageFormData = new FormData();
+            imageFormData.append('file', targetImageFile);
+            await shootingSessionsAPI.uploadTargetImage(id, imageFormData);
+          } catch (err) {
+            console.error('Błąd podczas przesyłania zdjęcia tarczy:', err);
+          }
+        }
+        
+        // Wygeneruj komentarz AI jeśli są wymagane dane (także po edycji)
+        if (sessionMode === 'advanced' && formData.distance_m && formData.shots) {
+          const hasHits = formData.hits && formData.hits.trim() !== '';
+          const hasTargetImage = targetImageUrl !== null || (targetImageFile !== null);
+          const shouldGenerateAI = hasHits || hasTargetImage;
+          
+          if (shouldGenerateAI) {
+            try {
+              setAnalyzingAI(true);
+              const result = await shootingSessionsAPI.generateAIComment(id);
+              // Jeśli Vision policzyło trafienia (przypadek A), zaktualizuj widok
+              if (result.data && result.data.hits !== undefined && !hasHits) {
+                setFormData(prev => ({
+                  ...prev,
+                  hits: result.data.hits.toString()
+                }));
+              }
+            } catch (err) {
+              // Nie blokuj zapisu sesji, jeśli generowanie komentarza się nie powiodło
+              console.error('Błąd podczas generowania komentarza AI:', err);
+            } finally {
+              setAnalyzingAI(false);
+            }
+          }
+        }
+        
         setSuccess(`Sesja dla ${gunType ? gunType + ' ' : ''}${gunName} zaktualizowana!`);
         setTimeout(() => {
           navigate('/shooting-sessions');
@@ -450,23 +489,41 @@ const AddShootingSessionPage = () => {
         const sessionId = response.data.id;
         
         // Prześlij zdjęcie tarczy jeśli zostało wybrane
+        let hasTargetImage = false;
         if (targetImageFile && user && !user.is_guest) {
           try {
             const imageFormData = new FormData();
             imageFormData.append('file', targetImageFile);
             await shootingSessionsAPI.uploadTargetImage(sessionId, imageFormData);
+            hasTargetImage = true;
           } catch (err) {
             console.error('Błąd podczas przesyłania zdjęcia tarczy:', err);
           }
         }
         
-        // Jeśli to sesja zaawansowana z danymi celności, wygeneruj komentarz AI
-        if (sessionMode === 'advanced' && formData.distance_m && formData.hits && formData.shots) {
-          try {
-            await shootingSessionsAPI.generateAIComment(sessionId);
-          } catch (err) {
-            // Nie blokuj zapisu sesji, jeśli generowanie komentarza się nie powiodło
-            console.error('Błąd podczas generowania komentarza AI:', err);
+        // Wygeneruj komentarz AI jeśli są wymagane dane
+        // Wymagania: dystans + strzały + (trafienia LUB zdjęcie)
+        if (sessionMode === 'advanced' && formData.distance_m && formData.shots) {
+          const hasHits = formData.hits && formData.hits.trim() !== '';
+          const shouldGenerateAI = hasHits || hasTargetImage;
+          
+          if (shouldGenerateAI) {
+            try {
+              setAnalyzingAI(true);
+              const result = await shootingSessionsAPI.generateAIComment(sessionId);
+              // Jeśli Vision policzyło trafienia (przypadek A), zaktualizuj widok
+              if (result.data && result.data.hits !== undefined && !hasHits) {
+                setFormData(prev => ({
+                  ...prev,
+                  hits: result.data.hits.toString()
+                }));
+              }
+            } catch (err) {
+              // Nie blokuj zapisu sesji, jeśli generowanie komentarza się nie powiodło
+              console.error('Błąd podczas generowania komentarza AI:', err);
+            } finally {
+              setAnalyzingAI(false);
+            }
           }
         }
         
@@ -508,6 +565,34 @@ const AddShootingSessionPage = () => {
         {success && (
           <div className="alert alert-success" style={{ marginBottom: '1rem' }}>
             {success}
+          </div>
+        )}
+
+        {analyzingAI && (
+          <div className="alert alert-info" style={{ 
+            marginBottom: '1rem', 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '0.5rem',
+            backgroundColor: '#1a5490',
+            border: '1px solid #2d6fb8',
+            color: '#fff'
+          }}>
+            <div style={{
+              width: '16px',
+              height: '16px',
+              border: '2px solid #fff',
+              borderTop: '2px solid transparent',
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite'
+            }}></div>
+            <span>Trwa analiza AI...</span>
+            <style>{`
+              @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+              }
+            `}</style>
           </div>
         )}
 
@@ -848,17 +933,19 @@ const AddShootingSessionPage = () => {
               <button 
                 type="submit" 
                 className="btn btn-primary" 
+                disabled={analyzingAI}
                 style={{ 
                   padding: '0.75rem 2rem', 
                   fontSize: '1.1rem',
-                  backgroundColor: '#007bff',
+                  backgroundColor: analyzingAI ? '#6c757d' : '#007bff',
                   color: 'white',
                   border: 'none',
                   borderRadius: '4px',
-                  cursor: 'pointer'
+                  cursor: analyzingAI ? 'not-allowed' : 'pointer',
+                  opacity: analyzingAI ? 0.6 : 1
                 }}
               >
-                Zapisz
+                {analyzingAI ? 'Analiza AI...' : 'Zapisz'}
               </button>
             </div>
           </form>
