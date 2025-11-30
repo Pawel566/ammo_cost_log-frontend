@@ -3,11 +3,19 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-if (!supabaseUrl || !supabaseAnonKey) {
+let supabase = null;
+
+if (supabaseUrl && supabaseAnonKey && supabaseUrl !== 'https://your-project-id.supabase.co') {
+  try {
+    supabase = createClient(supabaseUrl, supabaseAnonKey)
+  } catch (e) {
+    console.warn('Failed to initialize Supabase client:', e)
+  }
+} else {
   console.warn('Supabase credentials not found. Authentication will be disabled.')
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export { supabase }
 
 // Auth helper functions
 export const auth = {

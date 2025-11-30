@@ -17,25 +17,6 @@ export const ThemeProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
-  const fetchTheme = async () => {
-    try {
-      const response = await settingsAPI.get();
-      const savedTheme = response.data?.theme || 'dark';
-      setTheme(savedTheme);
-      applyTheme(savedTheme);
-    } catch (err) {
-      console.error('Błąd podczas pobierania motywu:', err);
-      applyTheme('dark');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    // Pobierz motyw z ustawień przy załadowaniu
-    fetchTheme();
-  }, []);
-
   useEffect(() => {
     // Odśwież motyw po zalogowaniu/wylogowaniu użytkownika
     if (!loading) {
@@ -76,10 +57,37 @@ export const ThemeProvider = ({ children }) => {
     }
   };
 
+  const fetchTheme = async (setLoadingFlag = true) => {
+    try {
+      const response = await settingsAPI.get();
+      const savedTheme = response.data?.theme || 'dark';
+      setTheme(savedTheme);
+      applyTheme(savedTheme);
+    } catch (err) {
+      console.error('Błąd podczas pobierania motywu:', err);
+      applyTheme('dark');
+    } finally {
+      if (setLoadingFlag) {
+        setLoading(false);
+      }
+    }
+  };
+
+  useEffect(() => {
+    // Pobierz motyw z ustawień przy załadowaniu
+    fetchTheme(true);
+  }, []);
+
+  useEffect(() => {
+    // Odśwież motyw po zalogowaniu/wylogowaniu użytkownika
+    if (!loading) {
+      fetchTheme(false);
+    }
+  }, [user?.user_id, loading]);
+
   const changeTheme = (newTheme) => {
     setTheme(newTheme);
     applyTheme(newTheme);
-    // Zapisywanie motywu odbywa się przez SettingsPage.handleSubmit lub SettingsPage.handleChange
   };
 
   return (
@@ -88,4 +96,3 @@ export const ThemeProvider = ({ children }) => {
     </ThemeContext.Provider>
   );
 };
-

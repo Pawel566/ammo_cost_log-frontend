@@ -86,6 +86,18 @@ const Login = () => {
                   {loading ? 'Logowanie...' : 'Zaloguj się'}
                 </button>
               </form>
+              <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+                <Link 
+                  to="/forgot-password" 
+                  style={{ 
+                    color: 'var(--text-secondary)', 
+                    textDecoration: 'none',
+                    fontSize: '0.9rem'
+                  }}
+                >
+                  Nie pamiętasz hasła?
+                </Link>
+              </div>
               <div className="guest-info">
                 <p>Kontynuuj jako gość</p>
                 <Link to="/guns" className="guest-btn">

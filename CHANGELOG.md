@@ -1,6 +1,28 @@
 # Changelog
 
-## [0.4.0] – 2025-01-XX
+## [0.5.5] – 2025-11-30
+### Dodano
+- System rang użytkowników wyświetlany na stronie Pulpit (Dashboard)
+- Pasek postępu do następnej rangi z tooltipem wyjaśniającym zasady naliczania rang
+- Wyświetlanie rangi użytkownika na stronie "Moje konto" obok nazwy użytkownika i emaila
+- Tooltip na pasku postępu z informacją o wymaganej celności dla danego poziomu doświadczenia
+- Licznik zaliczonych sesji strzeleckich na stronie Pulpit i Moje konto
+- Automatyczne odświeżanie rangi po dodaniu, edycji lub usunięciu sesji strzeleckiej
+
+### Zmieniono
+- Zmieniono "Mało amunicji" na "Stan amunicji" na stronie Pulpit
+- Wyświetlanie wszystkich pozycji amunicji z nazwą, kalibrem i ilością sztuk z magazynu
+- Ustawienia motywu (jasny/ciemny) są teraz permanentnie przypisane do użytkownika, który je zmienił
+- Kolejność providerów w `App.jsx` - `AuthProvider` jest teraz na zewnątrz `ThemeProvider` dla poprawnej obsługi odświeżania motywu
+
+## [0.5.0] – 2025-11-28
+### Dodano
+- Analiza zdjęć tarczy strzeleckiej przy użyciu AI
+- Możliwość przesłania zdjęcia tarczy i automatycznego wykrywania trafień
+- Jasny motyw interfejsu użytkownika (oprócz istniejącego ciemnego motywu)
+- Przełącznik motywu w ustawieniach użytkownika
+
+## [0.4.0] – 2025-11-26
 ### Dodano
 - Wyświetlanie poziomu doświadczenia użytkownika w szczegółach sesji strzeleckiej (pod celnością)
 
