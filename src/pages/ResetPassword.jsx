@@ -68,6 +68,11 @@ const ResetPassword = () => {
         throw new Error('Brak tokena resetującego.');
       }
 
+      // Check if Supabase is configured
+      if (!supabase || !supabase.auth) {
+        throw new Error('Usługa resetowania hasła nie jest dostępna.');
+      }
+
       // Update password using Supabase
       const { error: updateError } = await supabase.auth.updateUser({
         password: formData.password

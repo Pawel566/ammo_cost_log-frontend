@@ -5,6 +5,8 @@ import { ThemeProvider, useTheme } from './context/ThemeContext';
 import HomePage from './pages/HomePage';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import DashboardPage from './pages/DashboardPage';
 import GunsPage from './pages/GunsPage';
 import AmmoPage from './pages/AmmoPage';
@@ -84,7 +86,7 @@ const NavbarUser = () => {
 function AppContent() {
   const location = useLocation();
   const { theme } = useTheme();
-  const isHomePage = location.pathname === '/' || location.pathname === '/login' || location.pathname === '/register';
+  const isHomePage = location.pathname === '/' || location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/forgot-password' || location.pathname === '/reset-password';
   
   return (
     <div className={`App ${!isHomePage ? `theme-${theme}` : ''}`}>
@@ -125,6 +127,8 @@ function AppContent() {
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/guns" element={<GunsPage />} />
           <Route path="/ammo" element={<AmmoPage />} />
