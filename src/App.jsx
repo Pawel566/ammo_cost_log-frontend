@@ -85,9 +85,41 @@ const NavbarUser = () => {
 
 function AppContent() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { theme } = useTheme();
   const isHomePage = location.pathname === '/' || location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/forgot-password' || location.pathname === '/reset-password';
-  
+
+  // Check for password reset token in URL and redirect to reset-password page
+  useEffect(() => {
+    // Check if we have recovery token in hash or query params
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const searchParams = new URLSearchParams(window.location.search);
+    
+    const hashAccessToken = hashParams.get('access_token');
+    const hashType = hashParams.get('type');
+    const queryAccessToken = searchParams.get('access_token');
+    const queryType = searchParams.get('type');
+    
+    const accessToken = hashAccessToken || queryAccessToken;
+    const type = hashType || queryType;
+
+    // If we have a recovery token and we're not already on reset-password page
+    if (accessToken && type === 'recovery' && location.pathname !== '/reset-password') {
+      // Build the new URL with the token
+      let newPath = '/reset-password';
+      
+      if (hashAccessToken) {
+        // Token is in hash - preserve hash
+        newPath += window.location.hash;
+      } else if (queryAccessToken) {
+        // Token is in query - preserve query params
+        newPath += window.location.search;
+      }
+      
+      navigate(newPath, { replace: true });
+    }
+  }, [location.pathname, navigate]);
+
   return (
     <div className={`App ${!isHomePage ? `theme-${theme}` : ''}`}>
       {!isHomePage && (

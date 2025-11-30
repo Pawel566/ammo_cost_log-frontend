@@ -8,6 +8,30 @@ const HomePage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Check for password reset token first
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const searchParams = new URLSearchParams(window.location.search);
+    
+    const hashAccessToken = hashParams.get('access_token');
+    const hashType = hashParams.get('type');
+    const queryAccessToken = searchParams.get('access_token');
+    const queryType = searchParams.get('type');
+    
+    const accessToken = hashAccessToken || queryAccessToken;
+    const type = hashType || queryType;
+
+    // If we have a recovery token, redirect to reset-password page
+    if (accessToken && type === 'recovery') {
+      let newPath = '/reset-password';
+      if (hashAccessToken) {
+        newPath += window.location.hash;
+      } else if (queryAccessToken) {
+        newPath += window.location.search;
+      }
+      navigate(newPath, { replace: true });
+      return;
+    }
+
     // Jeśli użytkownik jest zalogowany, przekieruj na dashboard
     if (!loading && user) {
       navigate('/dashboard');
