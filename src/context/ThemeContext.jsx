@@ -17,6 +17,13 @@ export const ThemeProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
+  useEffect(() => {
+    // Odśwież motyw po zalogowaniu/wylogowaniu użytkownika
+    if (!loading) {
+      fetchTheme();
+    }
+  }, [user?.user_id]);
+
   const applyTheme = (newTheme) => {
     const root = document.documentElement;
     if (newTheme === 'light') {
@@ -81,7 +88,6 @@ export const ThemeProvider = ({ children }) => {
   const changeTheme = (newTheme) => {
     setTheme(newTheme);
     applyTheme(newTheme);
-    // Zapisywanie motywu odbywa się przez SettingsPage.handleSubmit lub SettingsPage.handleChange
   };
 
   return (
@@ -90,4 +96,3 @@ export const ThemeProvider = ({ children }) => {
     </ThemeContext.Provider>
   );
 };
-
