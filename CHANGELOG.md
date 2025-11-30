@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.5.5] – 2025-01-XX
+## [0.5.5] – 2025-11-30
 ### Dodano
 - System rang użytkowników wyświetlany na stronie Pulpit (Dashboard)
 - Pasek postępu do następnej rangi z tooltipem wyjaśniającym zasady naliczania rang
@@ -15,14 +15,14 @@
 - Ustawienia motywu (jasny/ciemny) są teraz permanentnie przypisane do użytkownika, który je zmienił
 - Kolejność providerów w `App.jsx` - `AuthProvider` jest teraz na zewnątrz `ThemeProvider` dla poprawnej obsługi odświeżania motywu
 
-## [0.5.0] – 2025-01-XX
+## [0.5.0] – 2025-11-28
 ### Dodano
 - Analiza zdjęć tarczy strzeleckiej przy użyciu AI
 - Możliwość przesłania zdjęcia tarczy i automatycznego wykrywania trafień
 - Jasny motyw interfejsu użytkownika (oprócz istniejącego ciemnego motywu)
 - Przełącznik motywu w ustawieniach użytkownika
 
-## [0.4.0] – 2025-01-XX
+## [0.4.0] – 2025-11-26
 ### Dodano
 - Wyświetlanie poziomu doświadczenia użytkownika w szczegółach sesji strzeleckiej (pod celnością)
 
