@@ -139,4 +139,9 @@ export const accountAPI = {
   getRank: () => api.get('/account/rank'),
 };
 
+// Auth API
+export const authAPI = {
+  forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
+};
+
 export default api;
