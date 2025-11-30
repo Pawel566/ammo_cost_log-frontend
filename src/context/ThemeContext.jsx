@@ -15,25 +15,6 @@ export const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState('dark');
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Pobierz motyw z ustawień
-    const fetchTheme = async () => {
-      try {
-        const response = await settingsAPI.get();
-        const savedTheme = response.data?.theme || 'dark';
-        setTheme(savedTheme);
-        applyTheme(savedTheme);
-      } catch (err) {
-        console.error('Błąd podczas pobierania motywu:', err);
-        applyTheme('dark');
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchTheme();
-  }, []);
-
   const applyTheme = (newTheme) => {
     const root = document.documentElement;
     if (newTheme === 'light') {
@@ -66,6 +47,25 @@ export const ThemeProvider = ({ children }) => {
       root.style.setProperty('--shadow', '0 2px 4px rgba(0, 0, 0, 0.3)');
     }
   };
+
+  useEffect(() => {
+    // Pobierz motyw z ustawień
+    const fetchTheme = async () => {
+      try {
+        const response = await settingsAPI.get();
+        const savedTheme = response.data?.theme || 'dark';
+        setTheme(savedTheme);
+        applyTheme(savedTheme);
+      } catch (err) {
+        console.error('Błąd podczas pobierania motywu:', err);
+        applyTheme('dark');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchTheme();
+  }, []);
 
   const changeTheme = (newTheme) => {
     setTheme(newTheme);
