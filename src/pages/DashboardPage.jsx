@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { gunsAPI, ammoAPI, shootingSessionsAPI, maintenanceAPI, settingsAPI, accountAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 const DashboardPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -66,7 +68,7 @@ const DashboardPage = () => {
       if (rankRes && rankRes.data) {
         setRankInfo(rankRes.data);
       } else {
-        setRankInfo({ rank: "Nowicjusz", passed_sessions: 0, progress_percent: 0 });
+        setRankInfo({ rank: t('account.beginner'), passed_sessions: 0, progress_percent: 0 });
       }
 
       // Poziom zaawansowania
@@ -187,7 +189,7 @@ const DashboardPage = () => {
 
       setError(null);
     } catch (err) {
-      setError('Błąd podczas pobierania danych');
+      setError(t('common.error'));
       console.error(err);
     } finally {
       setLoading(false);
@@ -195,7 +197,7 @@ const DashboardPage = () => {
   };
 
   if (loading) {
-    return <div className="text-center">Ładowanie...</div>;
+    return <div className="text-center">{t('common.loading')}</div>;
   }
 
   return (
@@ -208,7 +210,7 @@ const DashboardPage = () => {
               alt="Ammo Cost Log" 
               style={{ width: '32px', height: '32px' }}
             />
-            Ammo Cost Log – Pulpit
+            {t('dashboard.title')}
           </h2>
         </div>
 
@@ -228,7 +230,7 @@ const DashboardPage = () => {
           {/* Najczęściej używana broń */}
           <div className="card" style={{ padding: '1.5rem' }}>
             <h3 style={{ margin: 0, marginBottom: '1rem', fontSize: '1.1rem', fontWeight: 'bold' }}>
-              Najczęściej używana broń
+              {t('dashboard.mostUsedWeapon')}
             </h3>
             {mostUsedGun ? (
               <div>
@@ -295,13 +297,13 @@ const DashboardPage = () => {
                     gap: '0.5rem'
                   }}
                 >
-                  Zobacz sesje
+                  {t('dashboard.viewSessions')}
                   <span>→</span>
                 </button>
               </div>
             ) : (
               <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', padding: '1rem' }}>
-                Brak danych
+                {t('dashboard.noData')}
               </div>
             )}
           </div>
@@ -314,22 +316,22 @@ const DashboardPage = () => {
                 <circle cx="12" cy="12" r="3" fill="currentColor"/>
               </svg>
               <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 'bold' }}>
-                Wyniki
+                {t('dashboard.results')}
               </h3>
-              <span style={{ color: 'var(--text-tertiary)', fontSize: '0.9rem' }}>w tym miesiącu</span>
+              <span style={{ color: 'var(--text-tertiary)', fontSize: '0.9rem' }}>{t('dashboard.thisMonth')}</span>
             </div>
             {monthlyStats ? (
               <div style={{ display: 'grid', gap: '0.75rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: 'var(--text-tertiary)' }}>SESJE</span>
+                  <span style={{ color: 'var(--text-tertiary)' }}>{t('dashboard.sessions')}</span>
                   <span style={{ fontWeight: 'bold' }}>{monthlyStats.sessions}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: 'var(--text-tertiary)' }}>STRZAŁY</span>
+                  <span style={{ color: 'var(--text-tertiary)' }}>{t('dashboard.shots')}</span>
                   <span style={{ fontWeight: 'bold' }}>{monthlyStats.shots}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: 'var(--text-tertiary)' }}>ŚR. CELNOŚĆ</span>
+                  <span style={{ color: 'var(--text-tertiary)' }}>{t('dashboard.avgAccuracy')}</span>
                   <span style={{ 
                     fontWeight: 'bold',
                     color: monthlyStats.avgAccuracy >= 80 ? '#4caf50' : monthlyStats.avgAccuracy >= 60 ? '#ffc107' : '#dc3545'
@@ -338,7 +340,7 @@ const DashboardPage = () => {
                   </span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem' }}>
-                  <span style={{ color: 'var(--text-tertiary)' }}>KOSZT</span>
+                  <span style={{ color: 'var(--text-tertiary)' }}>{t('dashboard.cost')}</span>
                   <span style={{ fontWeight: 'bold', color: '#007bff' }}>
                     {monthlyStats.cost.toFixed(2).replace('.', ',')} zł
                   </span>
@@ -346,7 +348,7 @@ const DashboardPage = () => {
               </div>
             ) : (
               <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', padding: '1rem' }}>
-                Brak danych w tym miesiącu
+                {t('dashboard.noDataThisMonth')}
               </div>
             )}
           </div>
@@ -354,7 +356,7 @@ const DashboardPage = () => {
           {/* Poziom z odznaką */}
           <div className="card" style={{ padding: '1.5rem' }}>
             <h3 style={{ margin: 0, marginBottom: '1rem', fontSize: '1.1rem', fontWeight: 'bold' }}>
-              Poziom
+              {t('dashboard.level')}
             </h3>
             {rankInfo ? (
               <div>
@@ -373,7 +375,7 @@ const DashboardPage = () => {
                   fontSize: '0.9rem',
                   color: 'var(--text-tertiary)'
                 }}>
-                  {rankInfo.passed_sessions || 0} zaliczonych sesji
+                  {rankInfo.passed_sessions || 0} {t('dashboard.passedSessions')}
                 </div>
                 {rankInfo.is_max_rank ? (
                   <div style={{ 
@@ -383,7 +385,7 @@ const DashboardPage = () => {
                     marginTop: '0.5rem',
                     fontWeight: 'bold'
                   }}>
-                    Osiągnięto maksymalną rangę!
+                    {t('dashboard.maxRankReached')}
                   </div>
                 ) : rankInfo.next_rank && rankInfo.next_rank_min !== null && rankInfo.next_rank_min !== undefined ? (
                   <>
@@ -395,8 +397,8 @@ const DashboardPage = () => {
                         color: 'var(--text-tertiary)',
                         marginBottom: '0.25rem'
                       }}>
-                        <span>Do następnej rangi:</span>
-                        <span>{Math.max(0, rankInfo.next_rank_min - rankInfo.passed_sessions)} sesji</span>
+                        <span>{t('dashboard.toNextRank')}</span>
+                        <span>{Math.max(0, rankInfo.next_rank_min - rankInfo.passed_sessions)} {t('dashboard.sessionsToNext')}</span>
                       </div>
                       <div 
                         style={{
@@ -438,10 +440,10 @@ const DashboardPage = () => {
                           }}
                         >
                           {skillLevel === 'beginner' 
-                            ? 'Ranga naliczana na podstawie sesji z celnością ≥75%'
+                            ? t('dashboard.rankTooltipBeginner')
                             : skillLevel === 'intermediate'
-                            ? 'Ranga naliczana na podstawie sesji z celnością ≥85%'
-                            : 'Ranga naliczana na podstawie sesji z celnością ≥95%'}
+                            ? t('dashboard.rankTooltipIntermediate')
+                            : t('dashboard.rankTooltipAdvanced')}
                           <div style={{
                             position: 'absolute',
                             top: '100%',
@@ -462,14 +464,14 @@ const DashboardPage = () => {
                       color: 'var(--text-tertiary)',
                       marginTop: '0.5rem'
                     }}>
-                      Następna: {rankInfo.next_rank}
+                      {t('dashboard.nextRank')} {rankInfo.next_rank}
                     </div>
                   </>
                 ) : null}
               </div>
             ) : (
               <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', padding: '2rem' }}>
-                Ładowanie...
+                {t('common.loading')}
               </div>
             )}
           </div>
@@ -490,7 +492,7 @@ const DashboardPage = () => {
                 <path d="M2 12L12 17L22 12" stroke="#ff9800" strokeWidth="2" fill="none"/>
               </svg>
               <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 'bold' }}>
-                Stan amunicji
+                {t('dashboard.ammoStatus')}
               </h3>
             </div>
             {lowAmmoAlerts.length > 0 ? (
@@ -508,14 +510,14 @@ const DashboardPage = () => {
                       color: 'var(--text-tertiary)',
                       marginBottom: '0.5rem'
                     }}>
-                      {item.caliber ? `${item.caliber} - ` : ''}{item.units_in_package} szt z magazynu
+                      {item.caliber ? `${item.caliber} - ` : ''}{item.units_in_package} {t('dashboard.fromStock')}
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
               <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', padding: '1rem' }}>
-                Brak amunicji w magazynie
+                {t('dashboard.noAmmoInStock')}
               </div>
             )}
           </div>
@@ -527,7 +529,7 @@ const DashboardPage = () => {
                 <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" fill="currentColor"/>
               </svg>
               <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 'bold' }}>
-                Konserwacja
+                {t('dashboard.maintenance')}
               </h3>
             </div>
             {maintenanceAlerts.length > 0 ? (
@@ -540,15 +542,15 @@ const DashboardPage = () => {
                     {alert.lastMaintenance ? (
                       <>
                         <div style={{ color: 'var(--text-tertiary)', fontSize: '0.9rem', marginBottom: '0.25rem' }}>
-                          Ostatnia konserwacja: {alert.lastMaintenance.toLocaleDateString('pl-PL')}
+                          {t('dashboard.lastMaintenance')} {alert.lastMaintenance.toLocaleDateString('pl-PL')}
                         </div>
                         <div style={{ color: 'var(--text-tertiary)', fontSize: '0.9rem', marginBottom: '0.5rem' }}>
-                          Strzały od konserwacji: {alert.shotsSince}
+                          {t('dashboard.shotsSinceMaintenance')} {alert.shotsSince}
                         </div>
                       </>
                     ) : (
                       <div style={{ color: 'var(--text-tertiary)', fontSize: '0.9rem', marginBottom: '0.5rem' }}>
-                        Brak konserwacji. Strzały: {alert.shotsSince}
+                        {t('dashboard.noMaintenance')} {alert.shotsSince}
                       </div>
                     )}
                     <div style={{
@@ -570,7 +572,7 @@ const DashboardPage = () => {
               </div>
             ) : (
               <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', padding: '1rem' }}>
-                Wszystko w porządku
+                {t('dashboard.allGood')}
               </div>
             )}
           </div>

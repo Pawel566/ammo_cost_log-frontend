@@ -150,9 +150,6 @@ function AppContent() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
                 <ul className="navbar-nav">
                   <li>
-                    <Link to="/dashboard">{t('nav.dashboard')}</Link>
-                  </li>
-                  <li>
                     <Link to="/guns">{t('nav.guns')}</Link>
                   </li>
                   <li>
