@@ -1,0 +1,21 @@
+{
+  "nav": {
+    "dashboard": "Pulpit",
+    "guns": "Broń",
+    "ammo": "Amunicja",
+    "shootingSessions": "Sesje strzeleckie",
+    "summary": "Podsumowanie"
+  },
+  "userMenu": {
+    "myAccount": "Moje konto",
+    "myWeapons": "Moja broń i wyposażenie",
+    "maintenance": "Konserwacja",
+    "settings": "Ustawienia",
+    "logout": "Wyloguj"
+  },
+  "language": {
+    "pl": "Polski",
+    "en": "English"
+  }
+}
+
