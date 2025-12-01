@@ -302,13 +302,13 @@ const MyWeaponsPage = () => {
   };
 
   const handleDeleteAttachment = async (attachmentId) => {
-    if (window.confirm(t('myWeapons.confirmDeleteAttachment'))) {
+    if (window.confirm(`${t('common.confirmDeleteItem')} ${t('myWeapons.attachment')}?`)) {
       try {
         await attachmentsAPI.delete(attachmentId);
         fetchGunDetails(expandedGun);
         fetchGuns();
       } catch (err) {
-        setError(err.response?.data?.detail || t('myWeapons.errorDeletingAttachment'));
+        setError(err.response?.data?.detail || t('common.errorDeleting', { item: 'equipment' }));
       }
     }
   };
@@ -353,7 +353,7 @@ const MyWeaponsPage = () => {
       await fetchAllMaintenance();
       fetchGuns();
     } catch (err) {
-      setError(err.response?.data?.detail || t('myWeapons.errorSavingMaintenance'));
+      setError(err.response?.data?.detail || t('common.errorSaving', { item: 'maintenance' }));
       console.error(err);
     }
   };
@@ -373,14 +373,14 @@ const MyWeaponsPage = () => {
   };
 
   const handleDeleteMaintenance = async (maintenanceId) => {
-    if (window.confirm(t('myWeapons.confirmDeleteMaintenance'))) {
+    if (window.confirm(`${t('common.confirmDeleteItem')} ${t('common.maintenance')}?`)) {
       try {
         await maintenanceAPI.delete(maintenanceId);
         await fetchGunDetails(expandedGun);
         await fetchAllMaintenance();
         fetchGuns();
       } catch (err) {
-        setError(err.response?.data?.detail || t('myWeapons.errorDeletingMaintenance'));
+        setError(err.response?.data?.detail || t('common.errorDeleting', { item: 'maintenance' }));
       }
     }
   };
@@ -612,7 +612,7 @@ const MyWeaponsPage = () => {
   };
 
   const handleImageDelete = async (gunId) => {
-    if (!window.confirm(t('myWeapons.confirmDeleteImage'))) {
+    if (!window.confirm(`${t('common.confirmDeleteItem')} image?`)) {
       return;
     }
 
@@ -624,7 +624,7 @@ const MyWeaponsPage = () => {
       await fetchGuns();
       setOpenImageMenu(null);
     } catch (err) {
-      setError(err.response?.data?.detail || t('myWeapons.errorDeletingImage'));
+      setError(err.response?.data?.detail || t('common.errorDeleting', { item: 'image' }));
       console.error(err);
     }
   };

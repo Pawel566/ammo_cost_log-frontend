@@ -124,7 +124,7 @@ const AddShootingSessionPage = () => {
         setTargetImageFile(null);
       }
     } catch (err) {
-      setError(t('sessions.errorLoading'));
+      setError(t('common.errorLoading'));
       console.error(err);
     } finally {
       setLoading(false);
@@ -148,7 +148,7 @@ const AddShootingSessionPage = () => {
       setAmmo(ammoItems);
       setError(null);
     } catch (err) {
-      setError(t('sessions.errorLoading'));
+      setError(t('common.errorLoading'));
       console.error(err);
     } finally {
       setLoading(false);

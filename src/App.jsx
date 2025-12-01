@@ -62,8 +62,8 @@ const NavbarUser = () => {
           value={currentLanguage}
           onChange={(e) => handleLanguageChange(e.target.value)}
         >
-          <option value="pl">{t('language.pl')}</option>
-          <option value="en">{t('language.en')}</option>
+          <option value="pl">PL</option>
+          <option value="en">EN</option>
         </select>
       </div>
       {user ? (

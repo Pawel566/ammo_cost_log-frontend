@@ -153,13 +153,13 @@ const MaintenancePage = () => {
   };
 
   const handleDeleteMaintenance = async (maintenanceId) => {
-    if (window.confirm(t('maintenance.confirmDelete'))) {
+    if (window.confirm(`${t('common.confirmDeleteItem')} ${t('common.maintenance')}?`)) {
       try {
         await maintenanceAPI.delete(maintenanceId);
         await fetchMaintenance();
         await fetchData();
       } catch (err) {
-        setError(err.response?.data?.detail || t('maintenance.errorDeleting'));
+        setError(err.response?.data?.detail || t('common.errorDeleting', { item: 'maintenance' }));
       }
     }
   };

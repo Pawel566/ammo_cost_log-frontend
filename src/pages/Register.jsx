@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import './HomePage.css';
 
 const Register = () => {
   const { signUp, loading } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -30,12 +32,12 @@ const Register = () => {
     const { error, status } = await signUp(formData.email, formData.password, formData.username);
     if (error) {
       if (status === 409) {
-        setError('Użytkownik o tym e-mailu już istnieje.');
+        setError(t('register.userExists'));
       } else {
-        setError('Błąd rejestracji: ' + error);
+        setError(t('register.registerError', { error }));
       }
     } else {
-      setSuccess('Konto zostało utworzone pomyślnie! Możesz się teraz zalogować.');
+      setSuccess(t('register.registerSuccess'));
       setFormData({ email: '', password: '', username: '' });
     }
   };
@@ -44,18 +46,18 @@ const Register = () => {
     <div className="homepage">
       <div className="homepage-container">
         <header className="homepage-header">
-          <h1 className="app-title">Ammo Cost Log</h1>
-          <p className="app-subtitle">Śledź użycie i koszty amunicji z Ammo Cost Log.</p>
+          <h1 className="app-title">{t('register.title')}</h1>
+          <p className="app-subtitle">{t('register.subtitle')}</p>
         </header>
         <div className="homepage-content" style={{ gridTemplateColumns: '1fr', maxWidth: '500px', margin: '0 auto' }}>
           <section className="login-section">
             <div className="login-card">
               <div className="auth-buttons-large">
                 <Link to="/login" className="auth-btn-large login-btn-large">
-                  Zaloguj się
+                  {t('register.login')}
                 </Link>
                 <Link to="/register" className="auth-btn-large register-btn-large active">
-                  Zarejestruj się
+                  {t('register.register')}
                 </Link>
               </div>
               {error && <div className="error-message">{error}</div>}
@@ -64,7 +66,7 @@ const Register = () => {
                   {success}
                   <div style={{ marginTop: '15px' }}>
                     <Link to="/login" className="register-btn" style={{ display: 'inline-block' }}>
-                      Przejdź do logowania
+                      {t('register.goToLogin')}
                     </Link>
                   </div>
                 </div>
@@ -72,51 +74,51 @@ const Register = () => {
               {!success && (
               <form onSubmit={handleSubmit} className="register-form">
                 <div className="form-group">
-                  <label htmlFor="username">Nazwa użytkownika</label>
+                  <label htmlFor="username">{t('register.username')}</label>
                   <input
                     type="text"
                     id="username"
                     name="username"
                     value={formData.username}
                     onChange={handleInputChange}
-                    placeholder="Wprowadź nazwę użytkownika"
+                    placeholder={t('register.usernamePlaceholder')}
                     required
                   />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="email">Email</label>
+                  <label htmlFor="email">{t('register.email')}</label>
                   <input
                     type="email"
                     id="email"
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    placeholder="Wprowadź email"
+                    placeholder={t('register.emailPlaceholder')}
                     required
                   />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="password">Hasło</label>
+                  <label htmlFor="password">{t('register.password')}</label>
                   <input
                     type="password"
                     id="password"
                     name="password"
                     value={formData.password}
                     onChange={handleInputChange}
-                    placeholder="Wprowadź hasło"
+                    placeholder={t('register.passwordPlaceholder')}
                     required
                   />
                 </div>
                 <button type="submit" className="register-btn" disabled={loading}>
-                  {loading ? 'Rejestracja...' : 'Zarejestruj się'}
+                  {loading ? t('register.registering') : t('register.registerButton')}
                 </button>
               </form>
               )}
               {!success && (
               <div className="guest-info">
-                <p>Kontynuuj jako gość</p>
+                <p>{t('register.continueAsGuest')}</p>
                 <Link to="/guns" className="guest-btn">
-                  Przejdź do aplikacji
+                  {t('register.goToApp')}
                 </Link>
               </div>
               )}
@@ -124,7 +126,7 @@ const Register = () => {
           </section>
         </div>
         <footer className="homepage-footer">
-          <p>&copy; 2024 Ammo Cost Log. Wszystkie prawa zastrzeżone.</p>
+          <p>{t('register.footer')}</p>
         </footer>
       </div>
     </div>

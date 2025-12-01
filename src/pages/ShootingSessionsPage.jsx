@@ -80,7 +80,7 @@ const ShootingSessionsPage = () => {
       setAmmo(ammoItems);
       setError(null);
     } catch (err) {
-      setError(t('sessions.errorLoading'));
+      setError(t('common.errorLoading'));
       console.error(err);
     } finally {
       setLoading(false);
@@ -218,10 +218,10 @@ const ShootingSessionsPage = () => {
       await shootingSessionsAPI.delete(sessionToDelete);
       setSessions(sessions.filter(s => s.id !== sessionToDelete));
       setSessionToDelete(null);
-      setSuccess(`${t('sessions.sessionDeleted')}`);
+      setSuccess(t('common.itemDeleted', { item: t('common.session') }));
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      setError(err.response?.data?.detail || t('sessions.errorDeleting'));
+      setError(err.response?.data?.detail || t('common.errorDeleting', { item: 'session' }));
       console.error(err);
       setSessionToDelete(null);
     }
@@ -951,7 +951,7 @@ const ShootingSessionsPage = () => {
                 const gunName = gun ? gun.name : '';
                 const gunType = gun ? (gun.type || '') : '';
                 const gunDisplayName = `${gunType ? gunType + ' ' : ''}${gunName}`;
-                return `${t('sessions.confirmDeleteText')} ${gunDisplayName}? ${t('sessions.irreversible')}`;
+                return `${t('sessions.confirmDeleteText')} ${gunDisplayName}? ${t('common.irreversible')}`;
               })()}
             </p>
 

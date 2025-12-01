@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import './HomePage.css';
 
 const ResetPassword = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     password: '',
     confirmPassword: ''
@@ -27,7 +29,7 @@ const ResetPassword = () => {
           url: import.meta.env.VITE_SUPABASE_URL ? 'Set' : 'Missing',
           key: import.meta.env.VITE_SUPABASE_ANON_KEY ? 'Set' : 'Missing'
         });
-        setError('Usługa resetowania hasła nie jest dostępna. Proszę skontaktować się z administratorem.');
+        setError(t('resetPassword.serviceUnavailable'));
         setCheckingToken(false);
         return;
       }
@@ -56,7 +58,7 @@ const ResetPassword = () => {
           
           if (sessionError) {
             console.error('Session error:', sessionError);
-            setError('Nieprawidłowy lub wygasły link resetujący. Proszę poprosić o nowy link.');
+            setError(t('resetPassword.invalidToken'));
             setCheckingToken(false);
             return;
           }
@@ -67,7 +69,7 @@ const ResetPassword = () => {
             // Clear the hash/query from URL for cleaner UX
             window.history.replaceState({}, document.title, window.location.pathname);
           } else {
-            setError('Nieprawidłowy lub wygasły link resetujący. Proszę poprosić o nowy link.');
+            setError(t('resetPassword.invalidToken'));
             setCheckingToken(false);
           }
         } else {
@@ -78,13 +80,13 @@ const ResetPassword = () => {
             setTokenValid(true);
             setCheckingToken(false);
           } else {
-            setError('Nieprawidłowy lub brakujący link resetujący. Proszę poprosić o nowy link.');
+            setError(t('resetPassword.invalidToken'));
             setCheckingToken(false);
           }
         }
       } catch (err) {
         console.error('Error checking recovery token:', err);
-        setError('Wystąpił błąd podczas weryfikacji linku resetującego. Proszę spróbować ponownie.');
+        setError(t('resetPassword.resetError'));
         setCheckingToken(false);
       }
     };
@@ -107,12 +109,12 @@ const ResetPassword = () => {
     setSuccess('');
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Hasła nie są identyczne.');
+      setError(t('resetPassword.passwordsNotMatch'));
       return;
     }
 
     if (formData.password.length < 6) {
-      setError('Hasło musi mieć co najmniej 6 znaków.');
+      setError(t('resetPassword.passwordTooShort'));
       return;
     }
 
@@ -122,14 +124,14 @@ const ResetPassword = () => {
       // Check if Supabase is configured
       if (!supabase || !supabase.auth) {
         console.error('Supabase client not initialized during password reset');
-        throw new Error('Usługa resetowania hasła nie jest dostępna. Proszę skontaktować się z administratorem.');
+        throw new Error(t('resetPassword.serviceUnavailable'));
       }
 
       // Verify we have a valid session
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError || !session) {
-        throw new Error('Sesja wygasła. Proszę poprosić o nowy link resetujący.');
+        throw new Error(t('resetPassword.sessionExpired'));
       }
 
       // Update password using Supabase
@@ -144,7 +146,7 @@ const ResetPassword = () => {
       // Sign out after password change for security
       await supabase.auth.signOut();
 
-      setSuccess('Hasło zostało zmienione pomyślnie! Możesz się teraz zalogować nowym hasłem.');
+      setSuccess(t('resetPassword.passwordChanged'));
       setFormData({ password: '', confirmPassword: '' });
       
       // Redirect to login after 2 seconds
@@ -152,7 +154,7 @@ const ResetPassword = () => {
         navigate('/login');
       }, 2000);
     } catch (err) {
-      setError(err.message || 'Wystąpił błąd podczas resetowania hasła.');
+      setError(err.message || t('resetPassword.resetError'));
     } finally {
       setLoading(false);
     }
@@ -163,15 +165,15 @@ const ResetPassword = () => {
       <div className="homepage">
         <div className="homepage-container">
           <header className="homepage-header">
-            <h1 className="app-title">Ammo Cost Log</h1>
-            <p className="app-subtitle">Resetowanie hasła</p>
+            <h1 className="app-title">{t('resetPassword.title')}</h1>
+            <p className="app-subtitle">{t('resetPassword.subtitle')}</p>
           </header>
           <div className="homepage-content" style={{ gridTemplateColumns: '1fr', maxWidth: '500px', margin: '0 auto' }}>
             <section className="login-section">
               <div className="login-card">
                 {checkingToken ? (
                   <div style={{ textAlign: 'center', padding: '2rem' }}>
-                    <p>Sprawdzanie linku resetującego...</p>
+                    <p>{t('resetPassword.checkingToken')}</p>
                   </div>
                 ) : (
                   <>
@@ -182,7 +184,7 @@ const ResetPassword = () => {
                         className="register-btn" 
                         style={{ display: 'inline-block', marginRight: '1rem' }}
                       >
-                        Poproś o nowy link
+                        {t('resetPassword.requestNewLink')}
                       </Link>
                       <Link 
                         to="/login" 
@@ -192,7 +194,7 @@ const ResetPassword = () => {
                           fontSize: '0.9rem'
                         }}
                       >
-                        Wróć do logowania
+                        {t('resetPassword.backToLogin')}
                       </Link>
                     </div>
                   </>
@@ -201,7 +203,7 @@ const ResetPassword = () => {
             </section>
           </div>
           <footer className="homepage-footer">
-            <p>&copy; 2024 Ammo Cost Log. Wszystkie prawa zastrzeżone.</p>
+            <p>{t('resetPassword.footer')}</p>
           </footer>
         </div>
       </div>
@@ -212,8 +214,8 @@ const ResetPassword = () => {
     <div className="homepage">
       <div className="homepage-container">
         <header className="homepage-header">
-          <h1 className="app-title">Ammo Cost Log</h1>
-          <p className="app-subtitle">Ustaw nowe hasło</p>
+          <h1 className="app-title">{t('resetPassword.title')}</h1>
+          <p className="app-subtitle">{t('resetPassword.newPasswordSubtitle')}</p>
         </header>
         <div className="homepage-content" style={{ gridTemplateColumns: '1fr', maxWidth: '500px', margin: '0 auto' }}>
           <section className="login-section">
@@ -224,7 +226,7 @@ const ResetPassword = () => {
                   {success}
                   <div style={{ marginTop: '15px' }}>
                     <Link to="/login" className="register-btn" style={{ display: 'inline-block' }}>
-                      Przejdź do logowania
+                      {t('resetPassword.goToLogin')}
                     </Link>
                   </div>
                 </div>
@@ -232,33 +234,33 @@ const ResetPassword = () => {
               {!success && (
                 <form onSubmit={handleSubmit} className="login-form">
                   <div className="form-group">
-                    <label htmlFor="password">Nowe hasło</label>
+                    <label htmlFor="password">{t('resetPassword.newPassword')}</label>
                     <input
                       type="password"
                       id="password"
                       name="password"
                       value={formData.password}
                       onChange={handleInputChange}
-                      placeholder="Wprowadź nowe hasło"
+                      placeholder={t('resetPassword.newPasswordPlaceholder')}
                       required
                       minLength={6}
                     />
                   </div>
                   <div className="form-group">
-                    <label htmlFor="confirmPassword">Potwierdź hasło</label>
+                    <label htmlFor="confirmPassword">{t('resetPassword.confirmPassword')}</label>
                     <input
                       type="password"
                       id="confirmPassword"
                       name="confirmPassword"
                       value={formData.confirmPassword}
                       onChange={handleInputChange}
-                      placeholder="Powtórz hasło"
+                      placeholder={t('resetPassword.confirmPasswordPlaceholder')}
                       required
                       minLength={6}
                     />
                   </div>
                   <button type="submit" className="login-btn" disabled={loading}>
-                    {loading ? 'Zmienianie hasła...' : 'Zmień hasło'}
+                    {loading ? t('resetPassword.changing') : t('resetPassword.changeButton')}
                   </button>
                 </form>
               )}
@@ -272,7 +274,7 @@ const ResetPassword = () => {
                       fontSize: '0.9rem'
                     }}
                   >
-                    Wróć do logowania
+                    {t('resetPassword.backToLogin')}
                   </Link>
                 </div>
               )}
@@ -280,7 +282,7 @@ const ResetPassword = () => {
           </section>
         </div>
         <footer className="homepage-footer">
-          <p>&copy; 2024 Ammo Cost Log. Wszystkie prawa zastrzeżone.</p>
+          <p>{t('resetPassword.footer')}</p>
         </footer>
       </div>
     </div>

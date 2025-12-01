@@ -458,13 +458,14 @@ const GunsPage = () => {
       
       let gunName = formData.name;
       let gunType = formData.type || '';
+      const gunDisplayName = `${gunType ? gunType + ' ' : ''}${gunName}`;
       if (editingId) {
         await gunsAPI.update(editingId, gunData);
         setEditingId(null);
-        setSuccess(`${gunType ? gunType + ' ' : ''}${gunName} ${t('guns.weaponUpdated')}`);
+        setSuccess(t('common.itemUpdated', { item: gunDisplayName }));
       } else {
         await gunsAPI.create(gunData);
-        setSuccess(`${gunType ? gunType + ' ' : ''}${gunName} ${t('guns.weaponAdded')}`);
+        setSuccess(t('common.itemAdded', { item: gunDisplayName }));
       }
       
       setFormData({ name: '', caliber: '', caliberCustom: '', type: '', notes: '' });
@@ -474,7 +475,7 @@ const GunsPage = () => {
       fetchGuns();
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      setError(err.response?.data?.detail || t('guns.errorSaving'));
+      setError(err.response?.data?.detail || t('common.errorSaving', { item: 'weapon' }));
       console.error(err);
     }
   };
@@ -515,15 +516,15 @@ const GunsPage = () => {
     const gunType = gunToDelete ? (gunToDelete.type || '') : '';
     const gunDisplayName = `${gunType ? gunType + ' ' : ''}${gunName}`;
     
-    if (window.confirm(`${t('guns.confirmDelete')} ${gunDisplayName}?`)) {
+    if (window.confirm(`${t('common.confirmDeleteItem')} ${gunDisplayName}?`)) {
       try {
         await gunsAPI.delete(id);
-        setSuccess(`${gunType ? gunType + ' ' : ''}${gunName} ${t('guns.weaponDeleted')}`);
+        setSuccess(t('common.itemDeleted', { item: gunDisplayName }));
         fetchGuns();
         setActiveMenuId(null);
         setTimeout(() => setSuccess(null), 3000);
       } catch (err) {
-        setError(err.response?.data?.detail || t('guns.errorDeleting'));
+        setError(err.response?.data?.detail || t('common.errorDeleting', { item: 'weapon' }));
         console.error(err);
       }
     }

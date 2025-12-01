@@ -236,11 +236,11 @@ const AmmoPage = () => {
       setUseCustomCaliber(false);
       setShowForm(false);
       setError(null);
-      setSuccess(`${t('ammo.title')} ${formData.name} ${t('ammo.ammoAdded')}`);
+      setSuccess(t('common.itemAdded', { item: `${t('ammo.title')} ${formData.name}` }));
       fetchAmmo();
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      setError(err.response?.data?.detail || t('ammo.errorAdding'));
+      setError(err.response?.data?.detail || t('common.errorAdding', { item: 'ammunition' }));
       console.error(err);
     }
   };
@@ -249,15 +249,15 @@ const AmmoPage = () => {
     const ammoToDelete = ammo.find(a => a.id === id);
     const ammoName = ammoToDelete ? ammoToDelete.name : '';
     
-    if (window.confirm(`${t('ammo.confirmDelete')} ${ammoName}?`)) {
+    if (window.confirm(`${t('common.confirmDeleteItem')} ${ammoName}?`)) {
       try {
         await ammoAPI.delete(id);
-        setSuccess(`${t('ammo.title')} ${ammoName} ${t('ammo.ammoDeleted')}`);
+        setSuccess(t('common.itemDeleted', { item: `${t('ammo.title')} ${ammoName}` }));
         fetchAmmo();
         setActiveMenuId(null);
         setTimeout(() => setSuccess(null), 3000);
       } catch (err) {
-        setError(err.response?.data?.detail || t('ammo.errorDeleting'));
+        setError(err.response?.data?.detail || t('common.errorDeleting', { item: 'ammunition' }));
         console.error(err);
       }
     }

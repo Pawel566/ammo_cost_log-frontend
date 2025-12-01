@@ -1,11 +1,15 @@
 import React, { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import './HomePage.css';
 
 const HomePage = () => {
   const { user, signOut, loading } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
+  const { currentLanguage, changeLanguage } = useLanguage();
 
   useEffect(() => {
     // Check for password reset token first
@@ -42,20 +46,35 @@ const HomePage = () => {
     await signOut();
   };
 
+  const handleLanguageChange = async (lang) => {
+    await changeLanguage(lang);
+  };
+
   return (
     <div className="homepage">
       <div className="homepage-container">
+        {/* Language Selector */}
+        <div className="language-selector" style={{ position: 'absolute', top: '1rem', right: '1rem', zIndex: 1000 }}>
+          <select
+            value={currentLanguage}
+            onChange={(e) => handleLanguageChange(e.target.value)}
+            style={{ padding: '0.5rem', fontSize: '1rem', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
+          >
+            <option value="pl">PL</option>
+            <option value="en">EN</option>
+          </select>
+        </div>
         {/* Header */}
         <header className="homepage-header">
-          <h1 className="app-title">Ammo Cost Log</h1>
-          <p className="app-subtitle">Kompleksowe zarządzanie strzelectwem</p>
+          <h1 className="app-title">{t('homepage.title')}</h1>
+          <p className="app-subtitle">{t('homepage.subtitle')}</p>
         </header>
 
         {/* Main Content */}
         <div className="homepage-content">
           {/* App Description */}
           <section className="app-description">
-            <h2>O aplikacji</h2>
+            <h2>{t('homepage.aboutApp')}</h2>
             <div className="description-grid">
               <div className="feature-card">
                 <div className="feature-icon">
@@ -63,8 +82,8 @@ const HomePage = () => {
                     <path d="M9 15h6M4 12h16M6 8h12M8 4h8M12 2v2M12 22v2"/>
                   </svg>
                 </div>
-                <h3>Zarządzanie sprzętem</h3>
-                <p>Katalog broni i amunicji z cenami i dostępnością</p>
+                <h3>{t('homepage.equipmentManagement')}</h3>
+                <p>{t('homepage.equipmentManagementDesc')}</p>
               </div>
               <div className="feature-card">
                 <div className="feature-icon">
@@ -73,8 +92,8 @@ const HomePage = () => {
                     <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
                   </svg>
                 </div>
-                <h3>Śledzenie kosztów</h3>
-                <p>Rejestrowanie sesji strzeleckich z automatycznym obliczaniem wydatków</p>
+                <h3>{t('homepage.costTracking')}</h3>
+                <p>{t('homepage.costTrackingDesc')}</p>
               </div>
               <div className="feature-card">
                 <div className="feature-icon">
@@ -84,8 +103,8 @@ const HomePage = () => {
                     <circle cx="12" cy="12" r="2"></circle>
                   </svg>
                 </div>
-                <h3>Analiza celności</h3>
-                <p>Pomiar i ocena wyników strzeleckich</p>
+                <h3>{t('homepage.accuracyAnalysis')}</h3>
+                <p>{t('homepage.accuracyAnalysisDesc')}</p>
               </div>
               <div className="feature-card">
                 <div className="feature-icon">
@@ -95,8 +114,8 @@ const HomePage = () => {
                     <line x1="6" y1="20" x2="6" y2="14"></line>
                   </svg>
                 </div>
-                <h3>Statystyki</h3>
-                <p>Miesięczne podsumowania kosztów i analiza wyników</p>
+                <h3>{t('homepage.statistics')}</h3>
+                <p>{t('homepage.statisticsDesc')}</p>
               </div>
             </div>
           </section>
@@ -106,26 +125,26 @@ const HomePage = () => {
             <div className="login-card">
               {user ? (
                 <div className="user-info">
-                  <h2>Witaj, {user.username || user.email}!</h2>
-                  <p>Jesteś zalogowany jako: {user.email}</p>
+                  <h2>{t('homepage.welcome', { username: user.username || user.email })}</h2>
+                  <p>{t('homepage.loggedInAs', { email: user.email })}</p>
                   <button onClick={handleLogout} className="logout-btn">
-                    Wyloguj się
+                    {t('homepage.logout')}
                   </button>
                 </div>
               ) : (
                 <>
                   <div className="auth-buttons-large">
                     <Link to="/login" className="auth-btn-large login-btn-large">
-                      Zaloguj się
+                      {t('homepage.login')}
                     </Link>
                     <Link to="/register" className="auth-btn-large register-btn-large">
-                      Zarejestruj się
+                      {t('homepage.register')}
                     </Link>
                   </div>
                   <div className="guest-info">
-                    <p>Kontynuuj jako gość</p>
+                    <p>{t('homepage.continueAsGuest')}</p>
                     <Link to="/guns" className="guest-btn">
-                      Przejdź do aplikacji
+                      {t('homepage.goToApp')}
                     </Link>
                   </div>
                 </>
@@ -136,7 +155,7 @@ const HomePage = () => {
 
         {/* Footer */}
         <footer className="homepage-footer">
-          <p>&copy; 2024 Ammo Cost Log. Wszystkie prawa zastrzeżone.</p>
+          <p>{t('homepage.footer')}</p>
         </footer>
       </div>
     </div>
