@@ -44,7 +44,8 @@ const SettingsPage = () => {
           ? response.data.low_ammo_notifications_enabled : true,
         ai_analysis_intensity: response.data.ai_analysis_intensity || 'normalna',
         ai_auto_comments: response.data.ai_auto_comments !== undefined 
-          ? response.data.ai_auto_comments : false
+          ? response.data.ai_auto_comments : false,
+        language: response.data.language || 'pl'
       });
       setError('');
     } catch (err) {
