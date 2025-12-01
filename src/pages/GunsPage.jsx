@@ -16,22 +16,30 @@ const MaintenanceStatusIcon = ({ status }) => {
       </svg>
     );
   } else if (status === 'yellow' || status === 'warning') {
-    // Żółta ikona z wykrzyknikiem - Wkrótce wymagana
+    // Pomarańczowa ikona ostrzegawcza - Wkrótce wymagana
     return (
-      <svg width={iconSize} height={iconSize} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M10 2 L18 18 L2 18 Z" fill="#ff9800" stroke="none"/>
-        <path d="M10 6 L10 11" stroke="black" strokeWidth="2" strokeLinecap="round"/>
-        <circle cx="10" cy="14" r="1" fill="black"/>
-      </svg>
+      <img 
+        src="/assets/warning_weapon_orange.png" 
+        alt="Warning"
+        style={{ 
+          width: `${iconSize}px`, 
+          height: `${iconSize}px`,
+          objectFit: 'contain'
+        }}
+      />
     );
   } else if (status === 'red' || status === 'required') {
-    // Czerwona ikona z wykrzyknikiem - Wymagana
+    // Czerwona ikona ostrzegawcza - Wymagana
     return (
-      <svg width={iconSize} height={iconSize} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="10" cy="10" r="9" fill="#f44336" stroke="none"/>
-        <path d="M10 5 L10 11" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-        <circle cx="10" cy="14" r="1" fill="white"/>
-      </svg>
+      <img 
+        src="/assets/warning_weapon_red.png" 
+        alt="Required"
+        style={{ 
+          width: `${iconSize}px`, 
+          height: `${iconSize}px`,
+          objectFit: 'contain'
+        }}
+      />
     );
   } else {
     // Szara ikona z przekreśleniem - Nie dotyczy

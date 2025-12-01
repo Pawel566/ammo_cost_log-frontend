@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.6.0] – 2025-01-XX
+### Dodano
+- Wsparcie dla języka angielskiego w interfejsie użytkownika
+- Przełącznik języka w ustawieniach użytkownika (Polski/Angielski)
+- Tłumaczenia wszystkich elementów interfejsu na język angielski
+
 ## [0.5.5] – 2025-11-30
 ### Dodano
 - System rang użytkowników wyświetlany na stronie Pulpit (Dashboard)

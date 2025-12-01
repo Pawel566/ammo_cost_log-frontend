@@ -9,6 +9,7 @@ React frontend do aplikacji zarządzania strzelectwem z inteligentnym asystentem
 - **Analiza celności** - pomiar wyników z komentarzami AI (`gpt-4o-mini`)
 - **Statystyki** - miesięczne podsumowania i wykresy
 - **Tryb gościa i logowanie** - obsługa sesji sandboxowych i użytkowników Supabase
+- **Wielojęzyczność** - wsparcie dla języka polskiego i angielskiego
 
 ## 🛠️ Technologie
 
@@ -41,7 +42,7 @@ d
 
 ## 🎨 Design
 
-Szary motyw (#545454) z białym tekstem i zielonymi akcentami (#4caf50). Responsywny layout.
+Szary motyw (#545454) z białym tekstem i zielonymi akcentami (#4caf50). Responsywny layout. Wsparcie dla jasnego i ciemnego motywu.
 
 ## 🚀 Deployment
 
