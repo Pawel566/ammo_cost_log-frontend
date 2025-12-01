@@ -21,7 +21,13 @@ const ResetPassword = () => {
       setError('');
 
       if (!supabase || !supabase.auth) {
-        setError('Usługa resetowania hasła nie jest dostępna.');
+        console.error('Supabase client not initialized. Missing environment variables:', {
+          hasUrl: !!import.meta.env.VITE_SUPABASE_URL,
+          hasKey: !!import.meta.env.VITE_SUPABASE_ANON_KEY,
+          url: import.meta.env.VITE_SUPABASE_URL ? 'Set' : 'Missing',
+          key: import.meta.env.VITE_SUPABASE_ANON_KEY ? 'Set' : 'Missing'
+        });
+        setError('Usługa resetowania hasła nie jest dostępna. Proszę skontaktować się z administratorem.');
         setCheckingToken(false);
         return;
       }
@@ -115,7 +121,8 @@ const ResetPassword = () => {
     try {
       // Check if Supabase is configured
       if (!supabase || !supabase.auth) {
-        throw new Error('Usługa resetowania hasła nie jest dostępna.');
+        console.error('Supabase client not initialized during password reset');
+        throw new Error('Usługa resetowania hasła nie jest dostępna. Proszę skontaktować się z administratorem.');
       }
 
       // Verify we have a valid session
