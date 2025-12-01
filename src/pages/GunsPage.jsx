@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { gunsAPI, maintenanceAPI, shootingSessionsAPI, settingsAPI } from '../services/api';
 
 const MaintenanceStatusIcon = ({ status }) => {
-  const iconSize = 20;
+  const iconSize = 48;
   
   if (status === 'green' || status === 'ok') {
     // Zielona ikona z checkmarkiem - OK

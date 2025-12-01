@@ -5,7 +5,7 @@ import { gunsAPI, attachmentsAPI, shootingSessionsAPI, ammoAPI, maintenanceAPI, 
 import imageCompression from 'browser-image-compression';
 
 const MaintenanceStatusIcon = ({ status }) => {
-  const iconSize = 20;
+  const iconSize = 48;
   
   if (status === 'green' || status === 'ok') {
     // Zielona ikona z checkmarkiem - OK
