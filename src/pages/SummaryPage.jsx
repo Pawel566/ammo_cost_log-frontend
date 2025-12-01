@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { shootingSessionsAPI } from '../services/api';
 
 const MonthlyCostsChart = ({ data }) => {
@@ -130,6 +131,7 @@ const MonthlyCostsChart = ({ data }) => {
 };
 
 const SummaryPage = () => {
+  const { t } = useTranslation();
   const [summary, setSummary] = useState([]);
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -153,7 +155,7 @@ const SummaryPage = () => {
       setSessions(allSessions);
       setError(null);
     } catch (err) {
-      setError('Błąd podczas pobierania danych');
+      setError(t('common.error'));
       console.error(err);
     } finally {
       setLoading(false);
@@ -195,7 +197,7 @@ const SummaryPage = () => {
   };
 
   if (loading) {
-    return <div className="text-center">Ładowanie...</div>;
+    return <div className="text-center">{t('common.loading')}</div>;
   }
 
   const accuracyStats = getAccuracyStats();
@@ -204,12 +206,12 @@ const SummaryPage = () => {
     <div>
       <div style={{ marginBottom: '2rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-          <h2 style={{ margin: 0 }}>Podsumowanie</h2>
+          <h2 style={{ margin: 0 }}>{t('summary.title')}</h2>
           <button 
             className="btn btn-primary" 
             onClick={fetchData}
           >
-            Odśwież
+            {t('summary.refresh')}
           </button>
         </div>
 
@@ -222,49 +224,49 @@ const SummaryPage = () => {
         {summary.length === 0 && sessions.length === 0 ? (
           <div className="card">
             <p className="text-center" style={{ color: '#888', padding: '2rem' }}>
-              Brak danych do wyświetlenia
+              {t('summary.noData')}
             </p>
             <p className="text-center" style={{ color: '#888' }}>
-              Dodaj sesje strzeleckie, aby zobaczyć podsumowanie.
+              {t('summary.addSessions')}
             </p>
           </div>
         ) : (
           <>
             <div style={{ marginBottom: '1.5rem' }}>
-              <h3 style={{ marginBottom: '1rem', fontSize: '1.2rem', fontWeight: '500' }}>Podsumowanie</h3>
+              <h3 style={{ marginBottom: '1rem', fontSize: '1.2rem', fontWeight: '500' }}>{t('summary.summary')}</h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '1rem', overflowX: 'auto' }}>
               <div className="card" style={{ textAlign: 'center' }}>
-                <h3 style={{ marginBottom: '0.5rem', fontSize: '0.9rem', color: '#aaa' }}>Łączny koszt</h3>
+                <h3 style={{ marginBottom: '0.5rem', fontSize: '0.9rem', color: '#aaa' }}>{t('summary.totalCost')}</h3>
                 <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#dc3545' }}>
                   {getTotalCost().toFixed(2).replace('.', ',')} zł
                 </div>
               </div>
               <div className="card" style={{ textAlign: 'center' }}>
-                <h3 style={{ marginBottom: '0.5rem', fontSize: '0.9rem', color: '#aaa' }}>Łączna liczba strzałów</h3>
+                <h3 style={{ marginBottom: '0.5rem', fontSize: '0.9rem', color: '#aaa' }}>{t('summary.totalShots')}</h3>
                 <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#007bff' }}>
                   {getTotalShots()}
                 </div>
               </div>
               <div className="card" style={{ textAlign: 'center' }}>
-                <h3 style={{ marginBottom: '0.5rem', fontSize: '0.9rem', color: '#aaa' }}>Średni koszt za strzał</h3>
+                <h3 style={{ marginBottom: '0.5rem', fontSize: '0.9rem', color: '#aaa' }}>{t('summary.avgCostPerShot')}</h3>
                 <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#28a745' }}>
                   {getTotalShots() > 0 ? (getTotalCost() / getTotalShots()).toFixed(2).replace('.', ',') : '0,00'} zł
                 </div>
               </div>
                 <div className="card" style={{ textAlign: 'center' }}>
-                  <h3 style={{ marginBottom: '0.5rem', fontSize: '0.9rem', color: '#aaa' }}>Średnia celność</h3>
+                  <h3 style={{ marginBottom: '0.5rem', fontSize: '0.9rem', color: '#aaa' }}>{t('summary.avgAccuracy')}</h3>
                   <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#ff9800' }}>
                     {accuracyStats.averageAccuracy.toFixed(1).replace('.', ',')}%
                   </div>
                 </div>
                 <div className="card" style={{ textAlign: 'center' }}>
-                  <h3 style={{ marginBottom: '0.5rem', fontSize: '0.9rem', color: '#aaa' }}>Sesje celnościowe</h3>
+                  <h3 style={{ marginBottom: '0.5rem', fontSize: '0.9rem', color: '#aaa' }}>{t('summary.accuracySessions')}</h3>
                   <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#6f42c1' }}>
                     {accuracyStats.totalSessions}
                   </div>
                 </div>
                 <div className="card" style={{ textAlign: 'center' }}>
-                  <h3 style={{ marginBottom: '0.5rem', fontSize: '0.9rem', color: '#aaa' }}>Łączne trafienia</h3>
+                  <h3 style={{ marginBottom: '0.5rem', fontSize: '0.9rem', color: '#aaa' }}>{t('summary.totalHits')}</h3>
                   <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#007bff' }}>
                     {accuracyStats.totalHits}
                   </div>
@@ -274,22 +276,22 @@ const SummaryPage = () => {
 
             {summary.length > 0 && (
               <div className="card" style={{ marginBottom: '1.5rem' }}>
-                <h3 style={{ marginBottom: '1rem' }}>Koszty miesięczne</h3>
+                <h3 style={{ marginBottom: '1rem' }}>{t('summary.monthlyCosts')}</h3>
                 <MonthlyCostsChart data={summary} />
               </div>
             )}
 
             {summary.length > 0 && (
               <div className="card" style={{ marginBottom: '1.5rem' }}>
-                <h3 style={{ marginBottom: '1rem' }}>Podsumowanie miesięczne</h3>
+                <h3 style={{ marginBottom: '1rem' }}>{t('summary.monthlySummary')}</h3>
                 <div style={{ overflowX: 'auto' }}>
                   <table className="table">
                     <thead>
                       <tr>
-                        <th>Miesiąc</th>
-                        <th>Koszt</th>
-                        <th>Strzały</th>
-                        <th>Średni koszt za strzał</th>
+                        <th>{t('summary.month')}</th>
+                        <th>{t('summary.cost')}</th>
+                        <th>{t('summary.shots')}</th>
+                        <th>{t('summary.avgCostPerShot')}</th>
                       </tr>
                     </thead>
                     <tbody>

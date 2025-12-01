@@ -384,7 +384,20 @@
     "errorUploadingImage": "Error uploading image",
     "errorDeletingImage": "Error deleting image",
     "fileMustBeImage": "File must be an image",
-    "noWeaponSelected": "No weapon selected"
+    "noWeaponSelected": "No weapon selected",
+    "activities": {
+      "barrelCleaning": "Barrel cleaning",
+      "slideCleaning": "Slide cleaning",
+      "boltCleaning": "Bolt cleaning",
+      "firingPinCleaning": "Firing pin cleaning",
+      "railLubrication": "Rail lubrication",
+      "boltLubrication": "Bolt lubrication",
+      "springWearCheck": "Spring wear check",
+      "boltLatchCheck": "Bolt / latch check",
+      "partsReplacement": "Parts replacement",
+      "opticCheck": "Optic check",
+      "magazineCleaning": "Magazine cleaning"
+    }
   },
   "maintenance": {
     "title": "Maintenance",
@@ -423,6 +436,19 @@
     "errorLoading": "Error loading data",
     "errorLoadingMaintenance": "Error loading maintenance",
     "errorUpdating": "Error updating maintenance",
-    "errorDeleting": "Error deleting maintenance"
+    "errorDeleting": "Error deleting maintenance",
+    "activities": {
+      "barrelCleaning": "Barrel cleaning",
+      "slideCleaning": "Slide cleaning",
+      "boltCleaning": "Bolt cleaning",
+      "firingPinCleaning": "Firing pin cleaning",
+      "railLubrication": "Rail lubrication",
+      "boltLubrication": "Bolt lubrication",
+      "springWearCheck": "Spring wear check",
+      "boltLatchCheck": "Bolt / latch check",
+      "partsReplacement": "Parts replacement",
+      "opticCheck": "Optic check",
+      "magazineCleaning": "Magazine cleaning"
+    }
   }
 }

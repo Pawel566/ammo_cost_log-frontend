@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ammoAPI, settingsAPI } from '../services/api';
 
 const COMMON_CALIBERS = [
@@ -38,6 +39,7 @@ const AMMO_TYPES = [
 ];
 
 const AmmoPage = () => {
+  const { t } = useTranslation();
   const [ammo, setAmmo] = useState([]);
   const [filteredAmmo, setFilteredAmmo] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -113,7 +115,7 @@ const AmmoPage = () => {
       setAmmo(items);
       setError(null);
     } catch (err) {
-      setError('Błąd podczas pobierania listy amunicji');
+      setError(t('ammo.errorLoading'));
       console.error(err);
     } finally {
       setLoading(false);
@@ -207,7 +209,7 @@ const AmmoPage = () => {
     
     const price = parseFloat(formData.price_per_unit.replace(',', '.'));
     if (isNaN(price) || price <= 0) {
-      setError('Cena za sztukę musi być dodatnią liczbą');
+      setError(t('ammo.invalidPrice'));
       return;
     }
     
@@ -234,11 +236,11 @@ const AmmoPage = () => {
       setUseCustomCaliber(false);
       setShowForm(false);
       setError(null);
-      setSuccess(`Amunicja ${formData.name} dodana!`);
+      setSuccess(`${t('ammo.title')} ${formData.name} ${t('ammo.ammoAdded')}`);
       fetchAmmo();
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Błąd podczas dodawania amunicji');
+      setError(err.response?.data?.detail || t('ammo.errorAdding'));
       console.error(err);
     }
   };
@@ -247,29 +249,29 @@ const AmmoPage = () => {
     const ammoToDelete = ammo.find(a => a.id === id);
     const ammoName = ammoToDelete ? ammoToDelete.name : '';
     
-    if (window.confirm(`Czy na pewno chcesz usunąć amunicję ${ammoName}?`)) {
+    if (window.confirm(`${t('ammo.confirmDelete')} ${ammoName}?`)) {
       try {
         await ammoAPI.delete(id);
-        setSuccess(`Amunicja ${ammoName} usunięta!`);
+        setSuccess(`${t('ammo.title')} ${ammoName} ${t('ammo.ammoDeleted')}`);
         fetchAmmo();
         setActiveMenuId(null);
         setTimeout(() => setSuccess(null), 3000);
       } catch (err) {
-        setError(err.response?.data?.detail || 'Błąd podczas usuwania amunicji');
+        setError(err.response?.data?.detail || t('ammo.errorDeleting'));
         console.error(err);
       }
     }
   };
 
   const handleAddQuantity = async (id) => {
-    const amountStr = window.prompt('Ile sztuk dodać?');
+    const amountStr = window.prompt(t('ammo.howMany'));
     if (amountStr === null) {
       setActiveMenuId(null);
       return;
     }
     const amount = parseInt(amountStr, 10);
     if (Number.isNaN(amount) || amount <= 0) {
-      setError('Wprowadź poprawną dodatnią liczbę');
+      setError(t('ammo.enterValidNumber'));
       setActiveMenuId(null);
       return;
     }
@@ -279,7 +281,7 @@ const AmmoPage = () => {
       setActiveMenuId(null);
       fetchAmmo();
     } catch (err) {
-      setError(err.response?.data?.detail || 'Błąd podczas dodawania ilości amunicji');
+      setError(err.response?.data?.detail || t('ammo.errorAddingQuantity'));
       console.error(err);
       setActiveMenuId(null);
     }
@@ -323,7 +325,7 @@ const AmmoPage = () => {
   }, [activeMenuId]);
 
   if (loading) {
-    return <div className="text-center">Ładowanie...</div>;
+    return <div className="text-center">{t('common.loading')}</div>;
   }
 
   const lowStockItems = ammo.filter(item => isLowStock(item.units_in_package));
@@ -332,7 +334,7 @@ const AmmoPage = () => {
     <div>
       <div style={{ marginBottom: '2rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-          <h2 style={{ margin: 0 }}>Amunicja</h2>
+          <h2 style={{ margin: 0 }}>{t('ammo.title')}</h2>
           <button 
             className="btn btn-primary" 
             onClick={() => {
@@ -359,7 +361,7 @@ const AmmoPage = () => {
               fontSize: '0.9rem'
             }}
           >
-            {showForm ? 'Anuluj' : '+ Dodaj amunicję'}
+            {showForm ? t('ammo.cancel') : t('ammo.addAmmo')}
           </button>
         </div>
 
@@ -391,7 +393,7 @@ const AmmoPage = () => {
             <span style={{ fontSize: '1.2rem' }}>⚠️</span>
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>
-                Ostrzeżenie: Niska ilość amunicji
+                {t('ammo.lowStockWarning')}
               </div>
               <div style={{ fontSize: '0.9rem' }}>
                 {lowStockItems.map((item, index) => (
@@ -407,18 +409,18 @@ const AmmoPage = () => {
 
         {showForm && (
           <div className="card" style={{ marginBottom: '1.5rem' }}>
-            <h3 style={{ marginBottom: '1.5rem', fontSize: '1.5rem', fontWeight: 'bold' }}>Dodaj nową amunicję</h3>
+            <h3 style={{ marginBottom: '1.5rem', fontSize: '1.5rem', fontWeight: 'bold' }}>{t('ammo.addNewAmmo')}</h3>
             <form onSubmit={handleSubmit}>
               <div className="form-group" style={{ marginBottom: '1.5rem' }}>
                 <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
-                  Nazwa amunicji *
+                  {t('ammo.ammoName')}
                 </label>
                 <input
                   type="text"
                   className="form-input"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="np. Fiocchi 124gr FMJ"
+                  placeholder={t('ammo.ammoNamePlaceholder')}
                   required
                   style={{
                     width: '100%',
@@ -434,7 +436,7 @@ const AmmoPage = () => {
               
               <div className="form-group" style={{ marginBottom: '1.5rem' }}>
                 <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
-                  Kaliber *
+                  {t('ammo.caliber')}
                 </label>
                 <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                   {!useCustomCaliber ? (
@@ -454,11 +456,11 @@ const AmmoPage = () => {
                           fontSize: '1rem'
                         }}
                       >
-                        <option value="">Wybierz kaliber</option>
+                        <option value="">{t('ammo.selectCaliber')}</option>
                         {COMMON_CALIBERS.map(caliber => (
                           <option key={caliber} value={caliber}>{caliber}</option>
                         ))}
-                        <option value="custom">Własny kaliber...</option>
+                        <option value="custom">{t('ammo.customCaliber')}</option>
                       </select>
                     </>
                   ) : (
@@ -468,7 +470,7 @@ const AmmoPage = () => {
                         className="form-input"
                         value={formData.caliberCustom}
                         onChange={handleCustomCaliberChange}
-                        placeholder="Wpisz własny kaliber"
+                        placeholder={t('ammo.enterCustomCaliber')}
                         required
                         style={{
                           flex: 1,
@@ -496,7 +498,7 @@ const AmmoPage = () => {
                           fontSize: '0.9rem'
                         }}
                       >
-                        Anuluj
+                        {t('common.cancel')}
                       </button>
                     </>
                   )}
@@ -505,7 +507,7 @@ const AmmoPage = () => {
 
               <div className="form-group" style={{ marginBottom: '1.5rem' }}>
                 <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
-                  Typ amunicji
+                  {t('ammo.ammoType')}
                 </label>
                 <select
                   className="form-input"
@@ -521,7 +523,7 @@ const AmmoPage = () => {
                     fontSize: '1rem'
                   }}
                 >
-                  <option value="">Wybierz typ (opcjonalnie)</option>
+                  <option value="">{t('ammo.selectType')}</option>
                   {AMMO_TYPES.map(type => (
                     <option key={type.value} value={type.value}>{type.label}</option>
                   ))}
@@ -530,7 +532,7 @@ const AmmoPage = () => {
 
               <div className="form-group" style={{ marginBottom: '1.5rem' }}>
                 <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
-                  Cena za sztukę *
+                  {t('ammo.pricePerUnit')}
                 </label>
                 <input
                   type="text"
@@ -540,7 +542,7 @@ const AmmoPage = () => {
                     const value = e.target.value.replace(/[^0-9,.]/g, '');
                     setFormData({ ...formData, price_per_unit: value });
                   }}
-                  placeholder="1,50"
+                  placeholder={t('ammo.pricePlaceholder')}
                   required
                   style={{
                     width: '100%',
@@ -556,7 +558,7 @@ const AmmoPage = () => {
 
               <div className="form-group" style={{ marginBottom: '1.5rem' }}>
                 <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
-                  Ilość w opakowaniu (opcjonalnie)
+                  {t('ammo.unitsInPackage')}
                 </label>
                 <input
                   type="number"
@@ -590,7 +592,7 @@ const AmmoPage = () => {
                   fontWeight: '500'
                 }}
               >
-                Dodaj amunicję
+                {t('ammo.addAmmo')}
               </button>
             </form>
           </div>
@@ -608,7 +610,7 @@ const AmmoPage = () => {
           }}>
             <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
               <div>
-                <label style={{ marginRight: '0.5rem', color: '#aaa', fontSize: '0.9rem' }}>Kaliber:</label>
+                <label style={{ marginRight: '0.5rem', color: '#aaa', fontSize: '0.9rem' }}>{t('ammo.filterByCaliber')}</label>
                 <select
                   value={caliberFilter}
                   onChange={(e) => setCaliberFilter(e.target.value)}
@@ -621,14 +623,14 @@ const AmmoPage = () => {
                     fontSize: '0.9rem'
                   }}
                 >
-                  <option value="">Wszystkie</option>
+                  <option value="">{t('common.all')}</option>
                   {getUniqueCalibers().map(caliber => (
                     <option key={caliber} value={caliber}>{caliber}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label style={{ marginRight: '0.5rem', color: '#aaa', fontSize: '0.9rem' }}>Typ:</label>
+                <label style={{ marginRight: '0.5rem', color: '#aaa', fontSize: '0.9rem' }}>{t('ammo.filterByType')}</label>
                 <select
                   value={typeFilter}
                   onChange={(e) => setTypeFilter(e.target.value)}
@@ -641,7 +643,7 @@ const AmmoPage = () => {
                     fontSize: '0.9rem'
                   }}
                 >
-                  <option value="">Wszystkie</option>
+                  <option value="">{t('common.all')}</option>
                   {getUniqueTypes().map(type => (
                     <option key={type} value={type}>{getAmmoTypeLabel(type)}</option>
                   ))}
@@ -650,7 +652,7 @@ const AmmoPage = () => {
             </div>
             
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ color: '#aaa', fontSize: '0.9rem' }}>Pokaż:</span>
+              <span style={{ color: '#aaa', fontSize: '0.9rem' }}>{t('common.show')}:</span>
               <select
                 value={itemsPerPage}
                 onChange={(e) => {
@@ -677,7 +679,7 @@ const AmmoPage = () => {
           {/* Tabela */}
           {paginatedAmmo.length === 0 ? (
             <p className="text-center" style={{ color: '#888', padding: '2rem' }}>
-              Brak amunicji spełniającej kryteria
+              {t('ammo.noAmmoMatch')}
             </p>
           ) : (
             <>
@@ -698,7 +700,7 @@ const AmmoPage = () => {
                         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
                         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                       >
-                        Nazwa
+                        {t('common.name')}
                       </th>
                       <th 
                         style={{ 
@@ -713,7 +715,7 @@ const AmmoPage = () => {
                         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
                         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                       >
-                        Kaliber
+                        {t('ammo.caliber')}
                       </th>
                       <th 
                         style={{ 
@@ -728,7 +730,7 @@ const AmmoPage = () => {
                         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
                         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                       >
-                        Cena / szt.
+                        {t('ammo.pricePerPiece')}
                       </th>
                       <th 
                         style={{ 
@@ -743,7 +745,7 @@ const AmmoPage = () => {
                         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
                         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                       >
-                        Typ
+                        {t('common.type')}
                       </th>
                       <th 
                         style={{ 
@@ -758,7 +760,7 @@ const AmmoPage = () => {
                         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
                         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                       >
-                        Dostępna ilość
+                        {t('ammo.availableQuantity')}
                       </th>
                       <th style={{ padding: '0.75rem', textAlign: 'left', color: '#aaa', fontWeight: 'normal' }}></th>
                   </tr>
@@ -785,7 +787,7 @@ const AmmoPage = () => {
                             color: lowStock ? '#ff9800' : 'inherit',
                             fontWeight: lowStock ? 'bold' : 'normal'
                           }}>
-                            {units} szt.
+                            {units} {t('common.pieces')}
                           </td>
                           <td style={{ padding: '0.75rem', position: 'relative' }}>
                             <div className="action-menu-container" style={{ position: 'relative' }}>
@@ -828,7 +830,7 @@ const AmmoPage = () => {
                                     onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
                                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                           >
-                            Dodaj ilość
+                            {t('ammo.addQuantity')}
                                   </div>
                                   <div
                             onClick={() => handleDelete(item.id)}
@@ -840,7 +842,7 @@ const AmmoPage = () => {
                                     onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
                                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                           >
-                            Usuń
+                            {t('common.delete')}
                                   </div>
                                 </div>
                               )}
