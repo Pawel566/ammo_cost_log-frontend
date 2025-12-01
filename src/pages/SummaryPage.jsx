@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { shootingSessionsAPI } from '../services/api';
 
-const MonthlyCostsChart = ({ data }) => {
+const MonthlyCostsChart = ({ data, t }) => {
   if (!data || data.length === 0) return null;
 
   const width = 800;
@@ -18,7 +18,11 @@ const MonthlyCostsChart = ({ data }) => {
   const formatMonthLabel = (monthString) => {
     const [year, month] = monthString.split('-');
     const date = new Date(year, month - 1);
-    const monthNames = ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru'];
+    const monthNames = [
+      t('common.months.jan'), t('common.months.feb'), t('common.months.mar'), t('common.months.apr'),
+      t('common.months.may'), t('common.months.jun'), t('common.months.jul'), t('common.months.aug'),
+      t('common.months.sep'), t('common.months.oct'), t('common.months.nov'), t('common.months.dec')
+    ];
     const monthName = monthNames[date.getMonth()];
     const yearFull = date.getFullYear();
     return { month: monthName, year: yearFull.toString() };
@@ -193,7 +197,12 @@ const SummaryPage = () => {
   const formatMonth = (monthString) => {
     const [year, month] = monthString.split('-');
     const date = new Date(year, month - 1);
-    return date.toLocaleDateString('pl-PL', { year: 'numeric', month: 'long' });
+    const monthNames = [
+      t('common.months.january'), t('common.months.february'), t('common.months.march'), t('common.months.april'),
+      t('common.months.may'), t('common.months.june'), t('common.months.july'), t('common.months.august'),
+      t('common.months.september'), t('common.months.october'), t('common.months.november'), t('common.months.december')
+    ];
+    return `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
   };
 
   if (loading) {
@@ -277,7 +286,7 @@ const SummaryPage = () => {
             {summary.length > 0 && (
               <div className="card" style={{ marginBottom: '1.5rem' }}>
                 <h3 style={{ marginBottom: '1rem' }}>{t('summary.monthlyCosts')}</h3>
-                <MonthlyCostsChart data={summary} />
+                <MonthlyCostsChart data={summary} t={t} />
               </div>
             )}
 

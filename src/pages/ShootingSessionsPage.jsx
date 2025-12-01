@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { shootingSessionsAPI, gunsAPI, ammoAPI, accountAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 const ShootingSessionsPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [sessions, setSessions] = useState([]);
@@ -47,10 +49,10 @@ const ShootingSessionsPage = () => {
   const getSkillLevelLabel = (level) => {
     if (!level) return '-';
     const levelLower = level.toLowerCase();
-    if (levelLower === 'beginner' || levelLower === 'początkujący') return 'Początkujący';
-    if (levelLower === 'intermediate' || levelLower === 'średniozaawansowany') return 'Średniozaawansowany';
-    if (levelLower === 'advanced' || levelLower === 'zaawansowany') return 'Zaawansowany';
-    if (levelLower === 'expert' || levelLower === 'ekspert') return 'Ekspert';
+    if (levelLower === 'beginner' || levelLower === 'początkujący') return t('account.beginner');
+    if (levelLower === 'intermediate' || levelLower === 'średniozaawansowany') return t('account.intermediate');
+    if (levelLower === 'advanced' || levelLower === 'zaawansowany') return t('account.advanced');
+    if (levelLower === 'expert' || levelLower === 'ekspert') return t('account.expert');
     return level;
   };
 
@@ -78,7 +80,7 @@ const ShootingSessionsPage = () => {
       setAmmo(ammoItems);
       setError(null);
     } catch (err) {
-      setError('Błąd podczas pobierania danych');
+      setError(t('sessions.errorLoading'));
       console.error(err);
     } finally {
       setLoading(false);
@@ -191,12 +193,12 @@ const ShootingSessionsPage = () => {
 
   const getGunName = (gunId) => {
     const gun = guns.find(g => g.id === gunId);
-    return gun ? gun.name : 'Nieznana broń';
+    return gun ? gun.name : t('sessions.unknownWeapon');
   };
 
   const getAmmoName = (ammoId) => {
     const ammoItem = ammo.find(a => a.id === ammoId);
-    return ammoItem ? ammoItem.name : 'Nieznana amunicja';
+    return ammoItem ? ammoItem.name : t('sessions.unknownAmmo');
   };
 
   const handleDeleteClick = (sessionId) => {
@@ -216,10 +218,10 @@ const ShootingSessionsPage = () => {
       await shootingSessionsAPI.delete(sessionToDelete);
       setSessions(sessions.filter(s => s.id !== sessionToDelete));
       setSessionToDelete(null);
-      setSuccess(`Sesja dla ${gunType ? gunType + ' ' : ''}${gunName} usunięta!`);
+      setSuccess(`${t('sessions.sessionDeleted')}`);
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Błąd podczas usuwania sesji');
+      setError(err.response?.data?.detail || t('sessions.errorDeleting'));
       console.error(err);
       setSessionToDelete(null);
     }
@@ -301,20 +303,20 @@ const ShootingSessionsPage = () => {
   }, [openMenuId]);
 
   if (loading) {
-    return <div className="text-center">Ładowanie...</div>;
+    return <div className="text-center">{t('common.loading')}</div>;
   }
 
   return (
     <div>
       <div style={{ marginBottom: '2rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-          <h2 style={{ margin: 0 }}>Sesje strzeleckie</h2>
+          <h2 style={{ margin: 0 }}>{t('sessions.title')}</h2>
           <button 
             className="btn btn-primary" 
             onClick={() => navigate('/shooting-sessions/add')}
             style={{ padding: '0.75rem 1.5rem' }}
           >
-            + Dodaj sesję
+            {t('sessions.addSession')}
           </button>
         </div>
 
@@ -331,7 +333,7 @@ const ShootingSessionsPage = () => {
         )}
 
         <div className="card">
-          <h3 style={{ marginBottom: '1rem' }}>Historia sesji strzeleckich</h3>
+          <h3 style={{ marginBottom: '1rem' }}>{t('sessions.history')}</h3>
           
           <div style={{ marginBottom: '1rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
             <select
@@ -340,20 +342,20 @@ const ShootingSessionsPage = () => {
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
             >
-              <option value="">Filtruj po...</option>
-              <option value="gun">Broń</option>
-              <option value="ammo">Amunicja</option>
-              <option value="date">Data</option>
-              <option value="cost">Koszt</option>
-              <option value="distance">Dystans</option>
-              <option value="accuracy">Celność</option>
+              <option value="">{t('sessions.filterBy')}</option>
+              <option value="gun">{t('sessions.weapon')}</option>
+              <option value="ammo">{t('sessions.ammunition')}</option>
+              <option value="date">{t('sessions.date')}</option>
+              <option value="cost">{t('sessions.cost')}</option>
+              <option value="distance">{t('sessions.distance')}</option>
+              <option value="accuracy">{t('sessions.accuracy')}</option>
             </select>
             {filterType && (
               <input
                 type="text"
                 className="form-input"
                 style={{ flex: 1, minWidth: '200px' }}
-                placeholder="Wpisz wartość..."
+                placeholder={t('sessions.enterValue')}
                 value={filterValue}
                 onChange={(e) => setFilterValue(e.target.value)}
               />
@@ -370,7 +372,7 @@ const ShootingSessionsPage = () => {
             gap: '1rem'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ color: 'var(--text-tertiary)', fontSize: '0.9rem' }}>Pokaż:</span>
+              <span style={{ color: 'var(--text-tertiary)', fontSize: '0.9rem' }}>{t('sessions.show')}</span>
               <select
                 value={itemsPerPage}
                 onChange={(e) => {
@@ -394,14 +396,14 @@ const ShootingSessionsPage = () => {
             </div>
             {filteredSessions.length > 0 && (
               <div style={{ color: 'var(--text-tertiary)', fontSize: '0.9rem' }}>
-                Strona {currentPage} z {Math.ceil(filteredSessions.length / itemsPerPage)} ({filteredSessions.length} sesji)
+                {t('common.page')} {currentPage} {t('common.of')} {Math.ceil(filteredSessions.length / itemsPerPage)} ({filteredSessions.length} {t('common.sessions')})
               </div>
             )}
           </div>
 
           {filteredSessions.length === 0 ? (
             <p className="text-center" style={{ color: 'var(--text-tertiary)', padding: '2rem' }}>
-              Brak zarejestrowanych sesji strzeleckich
+              {t('sessions.noSessions')}
             </p>
           ) : (
             <div style={{ overflowX: 'auto' }}>
@@ -419,7 +421,7 @@ const ShootingSessionsPage = () => {
                       onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
-                      Typ
+                      {t('sessions.sessionType')}
                     </th>
                     <th 
                       style={{ 
@@ -431,7 +433,7 @@ const ShootingSessionsPage = () => {
                       onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
-                      Data
+                      {t('sessions.date')}
                     </th>
                     <th 
                       style={{ 
@@ -443,7 +445,7 @@ const ShootingSessionsPage = () => {
                       onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
-                      Broń
+                      {t('sessions.weapon')}
                     </th>
                     <th 
                       style={{ 
@@ -455,7 +457,7 @@ const ShootingSessionsPage = () => {
                       onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
-                      Amunicja
+                      {t('sessions.ammunition')}
                     </th>
                     <th 
                       style={{ 
@@ -467,7 +469,7 @@ const ShootingSessionsPage = () => {
                       onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
-                      Strzały
+                      {t('sessions.shots')}
                     </th>
                     <th 
                       style={{ 
@@ -479,7 +481,7 @@ const ShootingSessionsPage = () => {
                       onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
-                      Koszt
+                      {t('sessions.cost')}
                     </th>
                     <th 
                       style={{ 
@@ -491,7 +493,7 @@ const ShootingSessionsPage = () => {
                       onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
-                      Dystans
+                      {t('sessions.distance')}
                     </th>
                     <th 
                       style={{ 
@@ -503,7 +505,7 @@ const ShootingSessionsPage = () => {
                       onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
-                      Trafienia
+                      {t('sessions.hits')}
                     </th>
                     <th 
                       style={{ 
@@ -515,9 +517,9 @@ const ShootingSessionsPage = () => {
                       onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
-                      Celność %
+                      {t('sessions.accuracyPercent')}
                     </th>
-                    <th style={{ padding: '0.75rem' }}>Komentarz</th>
+                    <th style={{ padding: '0.75rem' }}>{t('sessions.comment')}</th>
                     <th style={{ width: '50px', padding: '0.75rem' }}></th>
                   </tr>
                 </thead>
@@ -543,7 +545,7 @@ const ShootingSessionsPage = () => {
                       <td style={{ textAlign: 'center', padding: '0.75rem' }}>
                         <img 
                           src={session.session_type === 'advanced' ? "/assets/session_icon_AI_dark.png" : "/assets/session_icon_dark.png"}
-                          alt={session.session_type === 'advanced' ? "Sesja zaawansowana" : "Sesja standardowa"}
+                          alt={session.session_type === 'advanced' ? t('sessions.advanced') : t('sessions.standard')}
                           style={{ 
                             width: '24px', 
                             height: '24px',
@@ -597,7 +599,7 @@ const ShootingSessionsPage = () => {
                               alignItems: 'center',
                               justifyContent: 'center'
                             }}
-                            title="Opcje"
+                            title={t('common.actions')}
                           >
                             ⋮
                           </button>
@@ -632,7 +634,7 @@ const ShootingSessionsPage = () => {
                                 onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--table-hover-bg)'}
                                 onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
                               >
-                                Edytuj
+                                {t('common.edit')}
                               </button>
                               <button
                                 onClick={() => handleDeleteClick(session.id)}
@@ -650,7 +652,7 @@ const ShootingSessionsPage = () => {
                                 onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--table-hover-bg)'}
                                 onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
                               >
-                                Usuń
+                                {t('common.delete')}
                               </button>
                             </div>
                           )}
@@ -689,7 +691,7 @@ const ShootingSessionsPage = () => {
                 ←
               </button>
               <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', padding: '0 1rem' }}>
-                Strona {currentPage} z {Math.ceil(filteredSessions.length / itemsPerPage)}
+                {t('common.page')} {currentPage} {t('common.of')} {Math.ceil(filteredSessions.length / itemsPerPage)}
               </span>
               <button
                 onClick={() => setCurrentPage(prev => Math.min(Math.ceil(filteredSessions.length / itemsPerPage), prev + 1))}
@@ -760,15 +762,15 @@ const ShootingSessionsPage = () => {
             </button>
 
             <h2 style={{ marginTop: 0, marginBottom: '1.5rem' }}>
-              Szczegóły sesji strzeleckiej
+              {t('sessions.sessionDetails')}
             </h2>
 
             <div style={{ display: 'grid', gap: '1rem' }}>
               <div>
-                <strong>Typ sesji:</strong>{' '}
+                <strong>{t('sessions.sessionType')}</strong>{' '}
                 <img 
                   src={selectedSession.session_type === 'advanced' ? "/assets/session_icon_AI_dark.png" : "/assets/session_icon_dark.png"}
-                  alt={selectedSession.session_type === 'advanced' ? "Sesja zaawansowana" : "Sesja standardowa"}
+                  alt={selectedSession.session_type === 'advanced' ? t('sessions.advanced') : t('sessions.standard')}
                   style={{ 
                     width: '20px', 
                     height: '20px',
@@ -778,45 +780,45 @@ const ShootingSessionsPage = () => {
                   }}
                 />
                 <span style={{ marginLeft: '0.5rem' }}>
-                  {selectedSession.session_type === 'advanced' ? 'Zaawansowana' : 'Standardowa'}
+                  {selectedSession.session_type === 'advanced' ? t('sessions.advanced') : t('sessions.standard')}
                 </span>
               </div>
 
               <div>
-                <strong>Data:</strong> {new Date(selectedSession.date).toLocaleDateString('pl-PL')}
+                <strong>{t('sessions.date')}</strong> {new Date(selectedSession.date).toLocaleDateString('pl-PL')}
               </div>
 
               <div>
-                <strong>Broń:</strong> {getGunName(selectedSession.gun_id)}
+                <strong>{t('sessions.weapon')}</strong> {getGunName(selectedSession.gun_id)}
               </div>
 
               <div>
-                <strong>Amunicja:</strong> {getAmmoName(selectedSession.ammo_id)}
+                <strong>{t('sessions.ammunition')}</strong> {getAmmoName(selectedSession.ammo_id)}
               </div>
 
               <div>
-                <strong>Liczba strzałów:</strong> {selectedSession.shots || '-'}
+                <strong>{t('sessions.shotsCount')}</strong> {selectedSession.shots || '-'}
               </div>
 
               <div>
-                <strong>Koszt:</strong> {selectedSession.cost ? `${parseFloat(selectedSession.cost).toFixed(2).replace('.', ',')} zł` : '-'}
+                <strong>{t('sessions.cost')}</strong> {selectedSession.cost ? `${parseFloat(selectedSession.cost).toFixed(2).replace('.', ',')} zł` : '-'}
               </div>
 
               {selectedSession.distance_m && (
                 <div>
-                  <strong>Dystans:</strong> {selectedSession.distance_m} m
+                  <strong>{t('sessions.distance')}</strong> {selectedSession.distance_m} m
                 </div>
               )}
 
               {selectedSession.hits !== null && selectedSession.hits !== undefined && (
                 <div>
-                  <strong>Liczba trafień:</strong> {selectedSession.hits}
+                  <strong>{t('sessions.hitsCount')}</strong> {selectedSession.hits}
                 </div>
               )}
 
               {selectedSession.accuracy_percent !== null && selectedSession.accuracy_percent !== undefined && (
                 <div>
-                  <strong>Celność:</strong>{' '}
+                  <strong>{t('sessions.accuracy')}</strong>{' '}
                   <span style={{ 
                     color: parseFloat(selectedSession.accuracy_percent) >= 80 ? '#4caf50' : parseFloat(selectedSession.accuracy_percent) >= 60 ? '#ffc107' : '#dc3545',
                     fontWeight: 'bold'
@@ -828,13 +830,13 @@ const ShootingSessionsPage = () => {
 
               {userSkillLevel && (
                 <div>
-                  <strong>Poziom doświadczenia:</strong> {getSkillLevelLabel(userSkillLevel)}
+                  <strong>{t('sessions.experienceLevel')}</strong> {getSkillLevelLabel(userSkillLevel)}
                 </div>
               )}
 
               {selectedSession.notes && (
                 <div>
-                  <strong>Notatki:</strong>
+                  <strong>{t('sessions.notes')}</strong>
                   <div style={{ 
                     marginTop: '0.5rem', 
                     padding: '0.75rem', 
@@ -850,7 +852,7 @@ const ShootingSessionsPage = () => {
 
               <div>
                 <div style={{ marginBottom: '0.5rem' }}>
-                  <strong>Komentarz AI:</strong>
+                  <strong>{t('sessions.aiComment')}</strong>
                 </div>
                 <div style={{ 
                   marginTop: '0.5rem', 
@@ -870,12 +872,12 @@ const ShootingSessionsPage = () => {
               {selectedSession.target_image_path && user && !user.is_guest && selectedSession.user_id === user.user_id && (
                 <div>
                   <div style={{ marginBottom: '0.5rem' }}>
-                    <strong>Zdjęcie tarczy:</strong>
+                    <strong>{t('sessions.targetImage')}</strong>
                   </div>
                   {targetImageUrls[selectedSession.id] ? (
                     <img 
                       src={targetImageUrls[selectedSession.id]} 
-                      alt="Zdjęcie tarczy" 
+                      alt={t('sessions.targetImage')} 
                       style={{ 
                         maxWidth: '100%', 
                         maxHeight: '400px', 
@@ -892,7 +894,7 @@ const ShootingSessionsPage = () => {
                       color: '#888',
                       textAlign: 'center'
                     }}>
-                      Ładowanie zdjęcia...
+                      {t('sessions.loadingImage')}
                     </div>
                   )}
                 </div>
@@ -904,7 +906,7 @@ const ShootingSessionsPage = () => {
                 className="btn btn-primary"
                 onClick={handleCloseModal}
               >
-                Zamknij
+                {t('sessions.close')}
               </button>
             </div>
           </div>
@@ -939,7 +941,7 @@ const ShootingSessionsPage = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <h2 style={{ marginTop: 0, marginBottom: '1rem' }}>
-              Potwierdzenie usunięcia
+              {t('sessions.confirmDelete')}
             </h2>
             
             <p style={{ marginBottom: '1.5rem', lineHeight: '1.6' }}>
@@ -949,7 +951,7 @@ const ShootingSessionsPage = () => {
                 const gunName = gun ? gun.name : '';
                 const gunType = gun ? (gun.type || '') : '';
                 const gunDisplayName = `${gunType ? gunType + ' ' : ''}${gunName}`;
-                return `Czy na pewno chcesz usunąć sesję dla ${gunDisplayName}? Ta operacja jest nieodwracalna.`;
+                return `${t('sessions.confirmDeleteText')} ${gunDisplayName}? ${t('sessions.irreversible')}`;
               })()}
             </p>
 
@@ -958,7 +960,7 @@ const ShootingSessionsPage = () => {
                 className="btn btn-secondary"
                 onClick={handleDeleteCancel}
               >
-                Anuluj
+                {t('sessions.cancel')}
               </button>
               <button
                 className="btn btn-danger"
@@ -976,7 +978,7 @@ const ShootingSessionsPage = () => {
                   e.target.style.borderColor = '#dc3545';
                 }}
               >
-                Usuń
+                {t('sessions.delete')}
               </button>
             </div>
           </div>

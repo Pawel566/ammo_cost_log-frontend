@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { settingsAPI } from '../services/api';
 import { useTheme } from '../context/ThemeContext';
 
 const SettingsPage = () => {
+  const { t } = useTranslation();
   const { theme, changeTheme } = useTheme();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -49,7 +51,7 @@ const SettingsPage = () => {
       });
       setError('');
     } catch (err) {
-      setError('Błąd podczas pobierania ustawień');
+      setError(t('settings.errorLoading'));
       console.error(err);
     } finally {
       setLoading(false);
@@ -63,10 +65,10 @@ const SettingsPage = () => {
     try {
       // Zapisz wszystkie ustawienia (motyw już został zapisany przez changeTheme w handleChange)
       await settingsAPI.update(settings);
-      setSuccess('Ustawienia zostały zapisane');
+      setSuccess(t('settings.settingsSaved'));
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Błąd podczas zapisywania ustawień');
+      setError(err.response?.data?.detail || t('settings.errorSaving'));
     }
   };
 
@@ -86,13 +88,13 @@ const SettingsPage = () => {
   };
 
   if (loading) {
-    return <div className="text-center">Ładowanie...</div>;
+    return <div className="text-center">{t('common.loading')}</div>;
   }
 
   return (
     <div>
       <div style={{ marginBottom: '2rem' }}>
-        <h2 style={{ marginBottom: '1.5rem' }}>Ustawienia</h2>
+        <h2 style={{ marginBottom: '1.5rem' }}>{t('settings.title')}</h2>
         {error && (
           <div className="alert alert-danger" style={{ marginBottom: '1rem' }}>
             {error}
@@ -107,11 +109,11 @@ const SettingsPage = () => {
         <form onSubmit={handleSubmit}>
           {/* Sekcja: Ogólne */}
           <div className="card" style={{ marginBottom: '1.5rem' }}>
-            <h3 style={{ marginBottom: '1.5rem', fontSize: '1.2rem', fontWeight: 'bold' }}>Ogólne</h3>
+            <h3 style={{ marginBottom: '1.5rem', fontSize: '1.2rem', fontWeight: 'bold' }}>{t('settings.general')}</h3>
             
             <div style={{ marginBottom: '1.5rem' }}>
               <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
-                Motyw
+                {t('settings.theme')}
               </label>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <button
@@ -127,7 +129,7 @@ const SettingsPage = () => {
                     transition: 'all 0.2s'
                   }}
                 >
-                  Jasny
+                  {t('settings.light')}
                 </button>
                 <button
                   type="button"
@@ -142,14 +144,14 @@ const SettingsPage = () => {
                     transition: 'all 0.2s'
                   }}
                 >
-                  Ciemny
+                  {t('settings.dark')}
                 </button>
               </div>
             </div>
 
             <div>
               <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
-                Jednostki
+                {t('settings.units')}
               </label>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <button
@@ -165,7 +167,7 @@ const SettingsPage = () => {
                     transition: 'all 0.2s'
                   }}
                 >
-                  Metry
+                  {t('settings.meters')}
                 </button>
                 <button
                   type="button"
@@ -180,7 +182,7 @@ const SettingsPage = () => {
                     transition: 'all 0.2s'
                   }}
                 >
-                  Yardy
+                  {t('settings.yards')}
                 </button>
               </div>
             </div>
@@ -188,11 +190,11 @@ const SettingsPage = () => {
 
           {/* Sekcja: Konserwacja */}
           <div className="card" style={{ marginBottom: '1.5rem' }}>
-            <h3 style={{ marginBottom: '1.5rem', fontSize: '1.2rem', fontWeight: 'bold' }}>Konserwacja</h3>
+            <h3 style={{ marginBottom: '1.5rem', fontSize: '1.2rem', fontWeight: 'bold' }}>{t('settings.maintenance')}</h3>
             
             <div style={{ marginBottom: '1.5rem' }}>
               <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
-                Limit strzałów do konserwacji
+                {t('settings.roundsLimit')}
               </label>
               <input
                 type="number"
@@ -206,7 +208,7 @@ const SettingsPage = () => {
 
             <div>
               <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
-                Limit czasu między konserwacjami
+                {t('settings.daysLimit')}
               </label>
               <input
                 type="number"
@@ -216,18 +218,18 @@ const SettingsPage = () => {
                 min="1"
                 style={{ maxWidth: '200px' }}
               />
-              <span style={{ marginLeft: '0.5rem', color: 'var(--text-tertiary)' }}>dni</span>
+              <span style={{ marginLeft: '0.5rem', color: 'var(--text-tertiary)' }}>{t('settings.days')}</span>
             </div>
           </div>
 
           {/* Sekcja: Powiadomienia */}
           <div className="card" style={{ marginBottom: '1.5rem' }}>
-            <h3 style={{ marginBottom: '1.5rem', fontSize: '1.2rem', fontWeight: 'bold' }}>Powiadomienia</h3>
+            <h3 style={{ marginBottom: '1.5rem', fontSize: '1.2rem', fontWeight: 'bold' }}>{t('settings.notifications')}</h3>
             
             <div style={{ marginBottom: '1.5rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <label className="form-label" style={{ margin: 0, fontWeight: '500' }}>
-                  Powiadomienia o konserwacji
+                  {t('settings.maintenanceNotifications')}
                 </label>
                 <label style={{ position: 'relative', display: 'inline-block', width: '50px', height: '26px', cursor: 'pointer' }}>
                   <input
@@ -265,7 +267,7 @@ const SettingsPage = () => {
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <label className="form-label" style={{ margin: 0, fontWeight: '500' }}>
-                  Powiadomienia o małej amunicji
+                  {t('settings.lowAmmoNotifications')}
                 </label>
                 <label style={{ position: 'relative', display: 'inline-block', width: '50px', height: '26px', cursor: 'pointer' }}>
                   <input
@@ -303,7 +305,7 @@ const SettingsPage = () => {
 
           {/* Sekcja: Sztuczna inteligencja */}
           <div className="card" style={{ marginBottom: '1.5rem' }}>
-            <h3 style={{ marginBottom: '1.5rem', fontSize: '1.2rem', fontWeight: 'bold' }}>Sztuczna inteligencja</h3>
+            <h3 style={{ marginBottom: '1.5rem', fontSize: '1.2rem', fontWeight: 'bold' }}>{t('settings.ai')}</h3>
             
             <div style={{ marginBottom: '1.5rem' }}>
               <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
@@ -313,9 +315,9 @@ const SettingsPage = () => {
                   onChange={(e) => handleChange('ai_analysis_intensity', e.target.checked ? 'normalna' : 'off')}
                   style={{ marginRight: '0.5rem', width: '18px', height: '18px', cursor: 'pointer' }}
                 />
-                <span style={{ fontWeight: '500' }}>Intensywność analizy</span>
+                <span style={{ fontWeight: '500' }}>{t('settings.analysisIntensity')}</span>
                 {settings.ai_analysis_intensity === 'normalna' && (
-                  <span style={{ marginLeft: '0.5rem', color: '#007bff', fontWeight: '500' }}>Normalna</span>
+                  <span style={{ marginLeft: '0.5rem', color: '#007bff', fontWeight: '500' }}>{t('settings.normal')}</span>
                 )}
               </label>
             </div>
@@ -328,13 +330,13 @@ const SettingsPage = () => {
                   onChange={(e) => handleChange('ai_auto_comments', e.target.checked)}
                   style={{ marginRight: '0.5rem', width: '18px', height: '18px', cursor: 'pointer' }}
                 />
-                <span style={{ fontWeight: '500' }}>Komentarze automatyczne</span>
+                <span style={{ fontWeight: '500' }}>{t('settings.autoComments')}</span>
               </label>
             </div>
           </div>
 
           <button type="submit" className="btn btn-primary" style={{ marginTop: '1rem' }}>
-            Zapisz ustawienia
+            {t('settings.saveSettings')}
           </button>
         </form>
       </div>

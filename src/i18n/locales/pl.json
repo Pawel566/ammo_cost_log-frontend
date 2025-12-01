@@ -71,7 +71,33 @@
     "notes": "Notatki",
     "description": "Opis",
     "optional": "Opcjonalnie",
-    "requiredField": "Pole wymagane"
+    "requiredField": "Pole wymagane",
+    "months": {
+      "jan": "sty",
+      "feb": "lut",
+      "mar": "mar",
+      "apr": "kwi",
+      "may": "maj",
+      "jun": "cze",
+      "jul": "lip",
+      "aug": "sie",
+      "sep": "wrz",
+      "oct": "paź",
+      "nov": "lis",
+      "dec": "gru",
+      "january": "styczeń",
+      "february": "luty",
+      "march": "marzec",
+      "april": "kwiecień",
+      "may": "maj",
+      "june": "czerwiec",
+      "july": "lipiec",
+      "august": "sierpień",
+      "september": "wrzesień",
+      "october": "październik",
+      "november": "listopad",
+      "december": "grudzień"
+    }
   },
   "dashboard": {
     "title": "Ammo Cost Log – Pulpit",
@@ -384,7 +410,20 @@
     "errorUploadingImage": "Błąd podczas przesyłania zdjęcia",
     "errorDeletingImage": "Błąd podczas usuwania zdjęcia",
     "fileMustBeImage": "Plik musi być obrazem",
-    "noWeaponSelected": "Brak wybranej broni"
+    "noWeaponSelected": "Brak wybranej broni",
+    "activities": {
+      "barrelCleaning": "Czyszczenie lufy",
+      "slideCleaning": "Czyszczenie suwadła",
+      "boltCleaning": "Czyszczenie zamka",
+      "firingPinCleaning": "Czyszczenie iglicy",
+      "railLubrication": "Smarowanie prowadnic",
+      "boltLubrication": "Smarowanie zamka",
+      "springWearCheck": "Kontrola zużycia sprężyn",
+      "boltLatchCheck": "Kontrola zamka / rygli",
+      "partsReplacement": "Wymiana części",
+      "opticCheck": "Sprawdzenie optyki",
+      "magazineCleaning": "Czyszczenie magazynków"
+    }
   },
   "maintenance": {
     "title": "Konserwacja",
@@ -423,6 +462,19 @@
     "errorLoading": "Błąd podczas pobierania danych",
     "errorLoadingMaintenance": "Błąd podczas pobierania konserwacji",
     "errorUpdating": "Błąd podczas aktualizacji konserwacji",
-    "errorDeleting": "Błąd podczas usuwania konserwacji"
+    "errorDeleting": "Błąd podczas usuwania konserwacji",
+    "activities": {
+      "barrelCleaning": "Czyszczenie lufy",
+      "slideCleaning": "Czyszczenie suwadła",
+      "boltCleaning": "Czyszczenie zamka",
+      "firingPinCleaning": "Czyszczenie iglicy",
+      "railLubrication": "Smarowanie prowadnic",
+      "boltLubrication": "Smarowanie zamka",
+      "springWearCheck": "Kontrola zużycia sprężyn",
+      "boltLatchCheck": "Kontrola zamka / rygli",
+      "partsReplacement": "Wymiana części",
+      "opticCheck": "Sprawdzenie optyki",
+      "magazineCleaning": "Czyszczenie magazynków"
+    }
   }
 }

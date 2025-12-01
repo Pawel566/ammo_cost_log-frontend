@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { accountAPI } from '../services/api';
 
 const AccountPage = () => {
+  const { t } = useTranslation();
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [skillLevel, setSkillLevel] = useState('beginner');
@@ -53,11 +55,11 @@ const AccountPage = () => {
     setSkillLevel(newLevel);
     try {
       await accountAPI.updateSkillLevel(newLevel);
-      setSuccess('Poziom zaawansowania został zaktualizowany');
+      setSuccess(t('account.skillLevelUpdated'));
       setError('');
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Błąd podczas aktualizacji poziomu zaawansowania');
+      setError(err.response?.data?.detail || t('account.errorUpdatingSkill'));
       setSkillLevel(skillLevel);
     }
   };
@@ -67,20 +69,20 @@ const AccountPage = () => {
     setError('');
     setSuccess('');
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      setError('Nowe hasła nie są identyczne');
+      setError(t('account.passwordsNotMatch'));
       return;
     }
     if (passwordForm.newPassword.length < 6) {
-      setError('Nowe hasło musi mieć co najmniej 6 znaków');
+      setError(t('account.passwordTooShort'));
       return;
     }
     try {
       await accountAPI.changePassword(passwordForm.oldPassword, passwordForm.newPassword);
-      setSuccess('Hasło zostało zmienione pomyślnie');
+      setSuccess(t('account.passwordChanged'));
       setPasswordForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Błąd podczas zmiany hasła');
+      setError(err.response?.data?.detail || t('account.errorChangingPassword'));
     }
   };
 
@@ -90,17 +92,17 @@ const AccountPage = () => {
     setSuccess('');
     try {
       await accountAPI.changeEmail(emailForm.newEmail);
-      setSuccess('Email został zmieniony pomyślnie');
+      setSuccess(t('account.emailChanged'));
       setEmailForm({ newEmail: '' });
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Błąd podczas zmiany emaila');
+      setError(err.response?.data?.detail || t('account.errorChangingEmail'));
     }
   };
 
   const handleDeleteAccount = async () => {
     if (!deletePassword) {
-      setError('Wprowadź hasło aby potwierdzić usunięcie konta');
+      setError(t('account.enterPasswordToDelete'));
       return;
     }
     try {
@@ -108,26 +110,26 @@ const AccountPage = () => {
       await signOut();
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.detail || 'Błąd podczas usuwania konta');
+      setError(err.response?.data?.detail || t('account.errorDeletingAccount'));
       setShowDeleteModal(false);
       setDeletePassword('');
     }
   };
 
   if (loading) {
-    return <div className="text-center">Ładowanie...</div>;
+    return <div className="text-center">{t('common.loading')}</div>;
   }
 
   const skillLevelOptions = [
-    { value: 'beginner', label: 'Początkujący' },
-    { value: 'intermediate', label: 'Średniozaawansowany' },
-    { value: 'advanced', label: 'Zaawansowany' }
+    { value: 'beginner', label: t('account.beginner') },
+    { value: 'intermediate', label: t('account.intermediate') },
+    { value: 'advanced', label: t('account.advanced') }
   ];
 
   return (
     <div>
       <div style={{ marginBottom: '2rem' }}>
-        <h2 style={{ marginBottom: '1.5rem' }}>Moje konto</h2>
+        <h2 style={{ marginBottom: '1.5rem' }}>{t('account.title')}</h2>
         {error && (
           <div className="alert alert-danger" style={{ marginBottom: '1rem' }}>
             {error}
@@ -141,12 +143,12 @@ const AccountPage = () => {
 
         {user && (
           <div className="card" style={{ marginBottom: '1.5rem' }}>
-            <h3 style={{ marginBottom: '1rem' }}>Informacje o koncie</h3>
+            <h3 style={{ marginBottom: '1rem' }}>{t('account.accountInfo')}</h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 <div>
                   <div style={{ fontSize: '0.9rem', color: 'var(--text-tertiary)', marginBottom: '0.25rem' }}>
-                    Email
+                    {t('account.email')}
                   </div>
                   <div style={{ fontSize: '1rem', fontWeight: '500' }}>
                     {user.email}
@@ -154,7 +156,7 @@ const AccountPage = () => {
                 </div>
                 <div>
                   <div style={{ fontSize: '0.9rem', color: 'var(--text-tertiary)', marginBottom: '0.25rem' }}>
-                    Nazwa użytkownika
+                    {t('account.username')}
                   </div>
                   <div style={{ fontSize: '1rem', fontWeight: '500' }}>
                     {user.username || '-'}
@@ -164,18 +166,18 @@ const AccountPage = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 <div>
                   <div style={{ fontSize: '0.9rem', color: 'var(--text-tertiary)', marginBottom: '0.25rem' }}>
-                    Ranga
+                    {t('account.rank')}
                   </div>
                   <div style={{ 
                     fontSize: '1rem', 
                     fontWeight: '500', 
                     color: '#007bff'
                   }}>
-                    {rankInfo ? (rankInfo.rank || 'Nowicjusz') : 'Ładowanie...'}
+                    {rankInfo ? (rankInfo.rank || t('account.beginner')) : t('common.loading')}
                   </div>
                   {rankInfo && (
                     <div style={{ fontSize: '0.85rem', color: 'var(--text-tertiary)', marginTop: '0.25rem' }}>
-                      {rankInfo.passed_sessions || 0} zaliczonych sesji
+                      {rankInfo.passed_sessions || 0} {t('account.passedSessions')}
                     </div>
                   )}
                 </div>
@@ -185,9 +187,9 @@ const AccountPage = () => {
         )}
 
         <div className="card" style={{ marginBottom: '1.5rem' }}>
-          <h3 style={{ marginBottom: '1rem' }}>Poziom zaawansowania</h3>
+          <h3 style={{ marginBottom: '1rem' }}>{t('account.skillLevel')}</h3>
           <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label">Wybierz swój poziom zaawansowania</label>
+            <label className="form-label">{t('account.selectSkillLevel')}</label>
             <select
               className="form-input"
               value={skillLevel}
@@ -203,13 +205,13 @@ const AccountPage = () => {
         </div>
 
         <div className="card" style={{ marginBottom: '1.5rem' }}>
-          <h3 style={{ marginBottom: '1.5rem' }}>Bezpieczeństwo</h3>
+          <h3 style={{ marginBottom: '1.5rem' }}>{t('account.security')}</h3>
           
           <div style={{ marginBottom: '2rem', paddingBottom: '2rem', borderBottom: `1px solid var(--border-color)` }}>
-            <h4 style={{ marginBottom: '1rem', fontSize: '1.1rem' }}>Zmiana hasła</h4>
+            <h4 style={{ marginBottom: '1rem', fontSize: '1.1rem' }}>{t('account.changePassword')}</h4>
             <form onSubmit={handlePasswordSubmit}>
               <div className="form-group">
-                <label className="form-label">Stare hasło</label>
+                <label className="form-label">{t('account.oldPassword')}</label>
                 <input
                   type="password"
                   className="form-input"
@@ -219,7 +221,7 @@ const AccountPage = () => {
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">Nowe hasło</label>
+                <label className="form-label">{t('account.newPassword')}</label>
                 <input
                   type="password"
                   className="form-input"
@@ -230,7 +232,7 @@ const AccountPage = () => {
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">Powtórz nowe hasło</label>
+                <label className="form-label">{t('account.confirmPassword')}</label>
                 <input
                   type="password"
                   className="form-input"
@@ -241,16 +243,16 @@ const AccountPage = () => {
                 />
               </div>
               <button type="submit" className="btn btn-primary">
-                Zmień hasło
+                {t('account.changePassword')}
               </button>
             </form>
           </div>
 
           <div>
-            <h4 style={{ marginBottom: '1rem', fontSize: '1.1rem' }}>Zmiana emaila</h4>
+            <h4 style={{ marginBottom: '1rem', fontSize: '1.1rem' }}>{t('account.changeEmail')}</h4>
             <form onSubmit={handleEmailSubmit}>
               <div className="form-group">
-                <label className="form-label">Nowy email</label>
+                <label className="form-label">{t('account.newEmail')}</label>
                 <input
                   type="email"
                   className="form-input"
@@ -260,22 +262,22 @@ const AccountPage = () => {
                 />
               </div>
               <button type="submit" className="btn btn-primary">
-                Zmień email
+                {t('account.changeEmail')}
               </button>
             </form>
           </div>
         </div>
 
         <div className="card" style={{ borderColor: '#f44336', border: '1px solid #f44336' }}>
-          <h3 style={{ marginBottom: '1rem', color: '#f44336' }}>Usuń konto</h3>
+          <h3 style={{ marginBottom: '1rem', color: '#f44336' }}>{t('account.deleteAccount')}</h3>
           <p style={{ marginBottom: '1rem', color: 'var(--text-tertiary)', fontSize: '0.9rem' }}>
-            Usunięcie konta jest nieodwracalne. Wszystkie Twoje dane zostaną trwale usunięte.
+            {t('account.deleteAccountWarning')}
           </p>
           <button
             className="btn btn-danger"
             onClick={() => setShowDeleteModal(true)}
           >
-            Usuń konto
+            {t('account.deleteAccount')}
           </button>
         </div>
       </div>
@@ -305,18 +307,18 @@ const AccountPage = () => {
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 style={{ color: '#f44336', marginBottom: '1rem' }}>Potwierdź usunięcie konta</h3>
+            <h3 style={{ color: '#f44336', marginBottom: '1rem' }}>{t('account.confirmDelete')}</h3>
             <p style={{ marginBottom: '1rem', color: 'var(--text-tertiary)' }}>
-              To działanie jest nieodwracalne. Wprowadź hasło aby potwierdzić usunięcie konta.
+              {t('account.confirmDeleteText')}
             </p>
             <div className="form-group">
-              <label className="form-label">Hasło</label>
+              <label className="form-label">{t('account.password')}</label>
               <input
                 type="password"
                 className="form-input"
                 value={deletePassword}
                 onChange={(e) => setDeletePassword(e.target.value)}
-                placeholder="Wprowadź hasło"
+                placeholder={t('account.enterPassword')}
                 autoFocus
               />
             </div>
@@ -326,7 +328,7 @@ const AccountPage = () => {
                 onClick={handleDeleteAccount}
                 disabled={!deletePassword}
               >
-                Usuń konto
+                {t('account.deleteAccount')}
               </button>
               <button
                 className="btn btn-secondary"
@@ -335,7 +337,7 @@ const AccountPage = () => {
                   setDeletePassword('');
                 }}
               >
-                Anuluj
+                {t('account.cancel')}
               </button>
             </div>
           </div>

@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { shootingSessionsAPI, gunsAPI, ammoAPI, settingsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 const AddShootingSessionPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { id } = useParams();
   const { user } = useAuth();
@@ -122,7 +124,7 @@ const AddShootingSessionPage = () => {
         setTargetImageFile(null);
       }
     } catch (err) {
-      setError('Błąd podczas ładowania sesji');
+      setError(t('sessions.errorLoading'));
       console.error(err);
     } finally {
       setLoading(false);
@@ -146,7 +148,7 @@ const AddShootingSessionPage = () => {
       setAmmo(ammoItems);
       setError(null);
     } catch (err) {
-      setError('Błąd podczas pobierania danych');
+      setError(t('sessions.errorLoading'));
       console.error(err);
     } finally {
       setLoading(false);
@@ -251,7 +253,7 @@ const AddShootingSessionPage = () => {
     if (!file) return;
     
     if (!file.type.startsWith('image/')) {
-      setError('Plik musi być obrazem');
+      setError(t('sessions.fileMustBeImage'));
       return;
     }
     
@@ -558,7 +560,7 @@ const AddShootingSessionPage = () => {
   };
 
   if (loading) {
-    return <div className="text-center">Ładowanie...</div>;
+    return <div className="text-center">{t('common.loading')}</div>;
   }
 
   return (
@@ -566,7 +568,7 @@ const AddShootingSessionPage = () => {
       <div style={{ marginBottom: '2rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <h2 style={{ margin: 0, textAlign: 'center', width: '100%' }}>
-            {isEditMode ? 'Edytuj sesję strzelecką' : 'Dodaj sesję strzelecką'}
+            {isEditMode ? t('sessions.editSession') : t('sessions.addSession')}
           </h2>
         </div>
 
@@ -600,7 +602,7 @@ const AddShootingSessionPage = () => {
               borderRadius: '50%',
               animation: 'spin 1s linear infinite'
             }}></div>
-            <span>Trwa analiza AI...</span>
+            <span>{t('sessions.aiAnalyzing')}</span>
             <style>{`
               @keyframes spin {
                 0% { transform: rotate(0deg); }
@@ -612,13 +614,13 @@ const AddShootingSessionPage = () => {
 
         {guns.length === 0 && (
           <div className="alert alert-info" style={{ marginBottom: '1rem' }}>
-            Najpierw dodaj broń w sekcji "Broń"
+            {t('sessions.addWeaponFirst')}
           </div>
         )}
 
         {ammo.length === 0 && (
           <div className="alert alert-info" style={{ marginBottom: '1rem' }}>
-            Najpierw dodaj amunicję w sekcji "Amunicja"
+            {t('sessions.addAmmoFirst')}
           </div>
         )}
 
@@ -647,7 +649,7 @@ const AddShootingSessionPage = () => {
                     transition: 'all 0.2s'
                   }}
                 >
-                  Standardowa
+                  {t('sessions.standard')}
                 </button>
                 <button
                   type="button"
@@ -663,7 +665,7 @@ const AddShootingSessionPage = () => {
                     transition: 'all 0.2s'
                   }}
                 >
-                  Zaawansowana
+                  {t('sessions.advanced')}
                 </button>
               </div>
             </div>
@@ -671,9 +673,9 @@ const AddShootingSessionPage = () => {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
               {/* Lewa kolumna */}
               <div>
-                <h4 style={{ margin: 0, marginBottom: '1rem', fontSize: '1.1rem', fontWeight: 'bold' }}>Sesja</h4>
+                <h4 style={{ margin: 0, marginBottom: '1rem', fontSize: '1.1rem', fontWeight: 'bold' }}>{t('sessions.session')}</h4>
                 <div className="form-group">
-                  <label className="form-label">Broń *</label>
+                  <label className="form-label">{t('sessions.weapon')} *</label>
                   <select
                     className="form-input"
                     value={formData.gun_id}
@@ -681,7 +683,7 @@ const AddShootingSessionPage = () => {
                     required
                     style={{ appearance: 'none', backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'%3E%3Cpath fill=\'%23aaa\' d=\'M6 9L1 4h10z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', paddingRight: '2.5rem' }}
                   >
-                    <option value="">Wybierz broń</option>
+                    <option value="">{t('sessions.selectWeapon')}</option>
                     {guns.map((gun) => (
                       <option key={gun.id} value={gun.id}>
                         {gun.name} {gun.caliber ? `(${gun.caliber})` : ''}
@@ -690,7 +692,7 @@ const AddShootingSessionPage = () => {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Amunicja *</label>
+                  <label className="form-label">{t('sessions.ammunition')} *</label>
                   <select
                     className="form-input"
                     value={formData.ammo_id}
@@ -698,7 +700,7 @@ const AddShootingSessionPage = () => {
                     required
                     style={{ appearance: 'none', backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'%3E%3Cpath fill=\'%23aaa\' d=\'M6 9L1 4h10z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', paddingRight: '2.5rem' }}
                   >
-                    <option value="">Wybierz amunicję</option>
+                    <option value="">{t('sessions.selectAmmunition')}</option>
                     {ammo.map((item) => (
                       <option key={item.id} value={item.id}>
                         {item.name} {item.caliber ? `(${item.caliber})` : ''}
@@ -707,7 +709,7 @@ const AddShootingSessionPage = () => {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Data *</label>
+                  <label className="form-label">{t('sessions.date')} *</label>
                   <input
                     type="date"
                     className="form-input"
@@ -718,7 +720,7 @@ const AddShootingSessionPage = () => {
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Koszt stały (np. opłata za tor)</label>
+                  <label className="form-label">{t('sessions.fixedCost')}</label>
                   <input
                     type="text"
                     className="form-input"
@@ -734,9 +736,9 @@ const AddShootingSessionPage = () => {
 
               {/* Prawa kolumna */}
               <div>
-                <h4 style={{ marginBottom: '1rem', fontSize: '1.1rem', fontWeight: 'bold' }}>Celność</h4>
+                <h4 style={{ marginBottom: '1rem', fontSize: '1.1rem', fontWeight: 'bold' }}>{t('sessions.accuracy')}</h4>
                 <div className="form-group">
-                  <label className="form-label">Dystans</label>
+                  <label className="form-label">{t('sessions.distance')}</label>
                   <input
                     type="text"
                     className="form-input"
@@ -746,7 +748,7 @@ const AddShootingSessionPage = () => {
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Liczba strzałów *</label>
+                  <label className="form-label">{t('sessions.shotsCount')} *</label>
                   <input
                     type="number"
                     min="1"
@@ -757,7 +759,7 @@ const AddShootingSessionPage = () => {
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Liczba trafień</label>
+                  <label className="form-label">{t('sessions.hitsCount')}</label>
                   <input
                     type="number"
                     min="0"
@@ -769,7 +771,7 @@ const AddShootingSessionPage = () => {
                 </div>
                 {formData.shots && formData.hits && (
                   <div className="form-group">
-                    <label className="form-label">Celność %</label>
+                    <label className="form-label">{t('sessions.accuracyPercent')}</label>
                     <input
                       type="text"
                       className="form-input"
@@ -806,13 +808,13 @@ const AddShootingSessionPage = () => {
                           opacity: targetImageUrl ? 1 : 0.6,
                           transition: 'opacity 0.2s'
                         }}
-                        title="Dodaj zdjęcie tarczy"
+                        title={t('sessions.addTargetImage')}
                       />
                       <label 
                         style={{ cursor: 'pointer', fontSize: '0.9rem' }} 
                         onClick={handleTargetIconClick}
                       >
-                        Dodaj zdjęcie tarczy
+                        {t('sessions.addTargetImage')}
                       </label>
                     </div>
                     
@@ -820,7 +822,7 @@ const AddShootingSessionPage = () => {
                       <div style={{ padding: '1rem', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid #333' }}>
                         <img 
                           src={targetImageUrl} 
-                          alt="Zdjęcie tarczy" 
+                          alt={t('sessions.targetImage')} 
                           style={{ 
                             maxWidth: '100%', 
                             maxHeight: '300px', 
@@ -843,7 +845,7 @@ const AddShootingSessionPage = () => {
                               fontSize: '0.9rem'
                             }}
                           >
-                            Usuń zdjęcie
+                            {t('sessions.deleteImage')}
                           </button>
                         )}
                         {!isEditMode && (
@@ -866,12 +868,12 @@ const AddShootingSessionPage = () => {
                               fontSize: '0.9rem'
                             }}
                           >
-                            Usuń zdjęcie
+                            {t('sessions.deleteImage')}
                           </button>
                         )}
                         {uploadingImage && (
                           <p style={{ color: '#888', fontSize: '0.9rem', marginTop: '0.5rem' }}>
-                            Przesyłanie...
+                            {t('sessions.uploading')}
                           </p>
                         )}
                       </div>
@@ -890,7 +892,7 @@ const AddShootingSessionPage = () => {
               border: `1px solid var(--border-color)`
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <label style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>Koszt całkowity:</label>
+                <label style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>{t('sessions.totalCost')}</label>
                 <div style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#4caf50' }}>
                   {calculateTotalCost()} zł
                 </div>
@@ -898,7 +900,7 @@ const AddShootingSessionPage = () => {
               <div style={{ marginTop: '0.5rem', fontSize: '0.9rem', color: 'var(--text-tertiary)' }}>
                 {formData.cost && formData.cost.trim() ? (
                   <>
-                    Koszt stały: {parseFloat(formData.cost.replace(',', '.').trim()) || 0} zł
+                    {t('sessions.fixedCost')} {parseFloat(formData.cost.replace(',', '.').trim()) || 0} zł
                     {formData.ammo_id && formData.shots && (() => {
                       const selectedAmmo = ammo.find(a => a.id === formData.ammo_id);
                       if (selectedAmmo && selectedAmmo.price_per_unit) {
@@ -942,7 +944,7 @@ const AddShootingSessionPage = () => {
                 }}
                 onClick={() => navigate('/shooting-sessions')}
               >
-                Anuluj
+                {t('sessions.cancel')}
               </button>
               <button 
                 type="submit" 
@@ -959,7 +961,7 @@ const AddShootingSessionPage = () => {
                   opacity: analyzingAI ? 0.6 : 1
                 }}
               >
-                {analyzingAI ? 'Analiza AI...' : 'Zapisz'}
+                {analyzingAI ? t('sessions.aiAnalyzing') : t('sessions.save')}
               </button>
             </div>
           </form>
