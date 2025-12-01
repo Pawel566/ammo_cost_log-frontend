@@ -741,17 +741,17 @@ const MyWeaponsPage = () => {
                                   {t('myWeapons.lastMaintenance')} {new Date(lastMaintenance.date).toLocaleDateString('pl-PL')}
                                 </span>
                                 {userSettings.maintenance_notifications_enabled && (
-                                  <span style={{ color: maintenanceStatus.color, display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                                    {maintenanceStatus.status !== 'none' && <MaintenanceStatusIcon status={maintenanceStatus.status} />}
-                                    <span>
-                                      {maintenanceStatus.message}
-                                      {(maintenanceStatus.status === 'yellow' || maintenanceStatus.status === 'red') && maintenanceStatus.reason && (
-                                        <span style={{ marginLeft: '0.5rem', fontSize: '0.8rem', opacity: 0.9 }}>
-                                          ({maintenanceStatus.reason})
-                                        </span>
-                                      )}
-                                    </span>
-                                  </span>
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+                                      {maintenanceStatus.status !== 'none' && <MaintenanceStatusIcon status={maintenanceStatus.status} />}
+                                      <span style={{ color: maintenanceStatus.color }}>{maintenanceStatus.message}</span>
+                                    </div>
+                                    {(maintenanceStatus.status === 'yellow' || maintenanceStatus.status === 'red') && maintenanceStatus.reason && (
+                                      <span style={{ fontSize: '0.8rem', color: '#aaa', marginLeft: '1.5rem' }}>
+                                        {maintenanceStatus.reason}
+                                      </span>
+                                    )}
+                                  </div>
                                 )}
                               </span>
                             )}
@@ -885,22 +885,16 @@ const MyWeaponsPage = () => {
                           {userSettings.maintenance_notifications_enabled && (
                             <li style={{ marginBottom: '0.75rem', paddingLeft: '1.5rem', position: 'relative' }}>
                               <span style={{ position: 'absolute', left: 0 }}>•</span>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                                {t('myWeapons.status')} <span style={{ 
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  marginLeft: '0.5rem'
-                                }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
                                   {maintenanceStatus.status !== 'none' && <MaintenanceStatusIcon status={maintenanceStatus.status} />}
-                                </span> 
-                                <span>
-                                  {maintenanceStatus.message}
-                                  {(maintenanceStatus.status === 'yellow' || maintenanceStatus.status === 'red') && maintenanceStatus.reason && (
-                                    <span style={{ marginLeft: '0.5rem', fontSize: '0.85rem', opacity: 0.9, display: 'block', marginTop: '0.25rem' }}>
-                                      {maintenanceStatus.reason}
-                                    </span>
-                                  )}
-                                </span>
+                                  <span style={{ color: maintenanceStatus.color }}>{maintenanceStatus.message}</span>
+                                </div>
+                                {(maintenanceStatus.status === 'yellow' || maintenanceStatus.status === 'red') && maintenanceStatus.reason && (
+                                  <span style={{ fontSize: '0.8rem', color: '#aaa', marginLeft: '1.5rem' }}>
+                                    {maintenanceStatus.reason}
+                                  </span>
+                                )}
                               </div>
                             </li>
                           )}
