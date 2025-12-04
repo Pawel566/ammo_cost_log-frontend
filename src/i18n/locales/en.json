@@ -334,6 +334,8 @@
   "settings": {
     "title": "Settings",
     "general": "General",
+    "language": "Language",
+    "currency": "Currency",
     "theme": "Theme",
     "light": "Light",
     "dark": "Dark",
@@ -354,7 +356,13 @@
     "saveSettings": "Save settings",
     "settingsSaved": "Settings have been saved",
     "errorLoading": "Error loading settings",
-    "errorSaving": "Error saving settings"
+    "errorSaving": "Error saving settings",
+    "currencies": {
+      "pln": "Zloty (PLN)",
+      "usd": "Dollar (USD)",
+      "eur": "Euro (EUR)",
+      "gbp": "Pound (GBP)"
+    }
   },
   "myWeapons": {
     "title": "My Weapons",
@@ -421,17 +429,31 @@
     "fileMustBeImage": "File must be an image",
     "noWeaponSelected": "No weapon selected",
     "activities": {
+      "cleaning": "Cleaning",
       "barrelCleaning": "Barrel cleaning",
+      "chamberCleaning": "Chamber cleaning",
       "slideCleaning": "Slide cleaning",
       "boltCleaning": "Bolt cleaning",
       "firingPinCleaning": "Firing pin cleaning",
+      "firingPinChannelCleaning": "Firing pin channel cleaning",
+      "magazineCleaning": "Magazine cleaning",
+      "lubrication": "Lubrication",
       "railLubrication": "Rail lubrication",
       "boltLubrication": "Bolt lubrication",
+      "inspection": "Inspection",
       "springWearCheck": "Spring wear check",
       "boltLatchCheck": "Bolt / latch check",
+      "gasSystemCheck": "Gas system / regulator check",
+      "pinsCheck": "Pins and pins check",
+      "magazineInspection": "Magazine inspection (springs + feeder)",
+      "railAndOpticMountCheck": "Rail and optic mount check",
+      "barrelVisualCheck": "Barrel condition check (visual)",
+      "triggerCheck": "Trigger check",
+      "safetyCheck": "Safety check",
+      "service": "Service / adjustments",
+      "opticZeroing": "Optic / collimator zeroing",
       "partsReplacement": "Parts replacement",
-      "opticCheck": "Optic check",
-      "magazineCleaning": "Magazine cleaning"
+      "opticCheck": "Optic check"
     }
   },
   "maintenance": {
@@ -470,17 +492,31 @@
     "errorLoadingMaintenance": "Error loading maintenance",
     "errorUpdating": "Error updating maintenance",
     "activities": {
+      "cleaning": "Cleaning",
       "barrelCleaning": "Barrel cleaning",
+      "chamberCleaning": "Chamber cleaning",
       "slideCleaning": "Slide cleaning",
       "boltCleaning": "Bolt cleaning",
       "firingPinCleaning": "Firing pin cleaning",
+      "firingPinChannelCleaning": "Firing pin channel cleaning",
+      "magazineCleaning": "Magazine cleaning",
+      "lubrication": "Lubrication",
       "railLubrication": "Rail lubrication",
       "boltLubrication": "Bolt lubrication",
+      "inspection": "Inspection",
       "springWearCheck": "Spring wear check",
       "boltLatchCheck": "Bolt / latch check",
+      "gasSystemCheck": "Gas system / regulator check",
+      "pinsCheck": "Pins and pins check",
+      "magazineInspection": "Magazine inspection (springs + feeder)",
+      "railAndOpticMountCheck": "Rail and optic mount check",
+      "barrelVisualCheck": "Barrel condition check (visual)",
+      "triggerCheck": "Trigger check",
+      "safetyCheck": "Safety check",
+      "service": "Service / adjustments",
+      "opticZeroing": "Optic / collimator zeroing",
       "partsReplacement": "Parts replacement",
-      "opticCheck": "Optic check",
-      "magazineCleaning": "Magazine cleaning"
+      "opticCheck": "Optic check"
     }
   },
   "homepage": {

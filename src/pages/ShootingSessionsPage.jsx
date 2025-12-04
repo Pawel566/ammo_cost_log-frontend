@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { shootingSessionsAPI, gunsAPI, ammoAPI, accountAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useCurrencyConverter } from '../hooks/useCurrencyConverter';
 
 const ShootingSessionsPage = () => {
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useTranslation();
+  const { formatCurrency } = useCurrencyConverter();
   const [sessions, setSessions] = useState([]);
   const [filteredSessions, setFilteredSessions] = useState([]);
   const [guns, setGuns] = useState([]);
@@ -49,10 +51,10 @@ const ShootingSessionsPage = () => {
   const getSkillLevelLabel = (level) => {
     if (!level) return '-';
     const levelLower = level.toLowerCase();
-    if (levelLower === 'beginner' || levelLower === 'początkujący') return t('account.beginner');
-    if (levelLower === 'intermediate' || levelLower === 'średniozaawansowany') return t('account.intermediate');
-    if (levelLower === 'advanced' || levelLower === 'zaawansowany') return t('account.advanced');
-    if (levelLower === 'expert' || levelLower === 'ekspert') return t('account.expert');
+    if (levelLower === 'beginner' || levelLower === 'początkujący') return 'Początkujący';
+    if (levelLower === 'intermediate' || levelLower === 'średniozaawansowany') return 'Średniozaawansowany';
+    if (levelLower === 'advanced' || levelLower === 'zaawansowany') return 'Zaawansowany';
+    if (levelLower === 'expert' || levelLower === 'ekspert') return 'Ekspert';
     return level;
   };
 
@@ -80,7 +82,7 @@ const ShootingSessionsPage = () => {
       setAmmo(ammoItems);
       setError(null);
     } catch (err) {
-      setError(t('common.errorLoading'));
+      setError('Błąd podczas pobierania danych');
       console.error(err);
     } finally {
       setLoading(false);
@@ -106,7 +108,8 @@ const ShootingSessionsPage = () => {
         case 'cost':
           return session.cost && session.cost.toString().includes(value);
         case 'distance':
-          return session.distance_m && session.distance_m.toString().includes(value);
+          const distanceValue = session.distance ? `${session.distance} ${session.distance_unit || 'm'}` : '';
+          return distanceValue && distanceValue.toLowerCase().includes(value);
         case 'accuracy':
           return session.accuracy_percent && session.accuracy_percent.toString().includes(value);
         default:
@@ -146,6 +149,7 @@ const ShootingSessionsPage = () => {
             bValue = b.cost || 0;
             return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
           case 'distance':
+            // Sortuj po oryginalnej wartości w metrach (distance_m) dla spójności
             aValue = a.distance_m || 0;
             bValue = b.distance_m || 0;
             return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
@@ -218,10 +222,10 @@ const ShootingSessionsPage = () => {
       await shootingSessionsAPI.delete(sessionToDelete);
       setSessions(sessions.filter(s => s.id !== sessionToDelete));
       setSessionToDelete(null);
-      setSuccess(t('common.itemDeleted', { item: t('common.session') }));
+      setSuccess(t('common.itemDeleted', { item: `${t('common.session')} ${gunType ? gunType + ' ' : ''}${gunName}` }));
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      setError(err.response?.data?.detail || t('common.errorDeleting', { item: 'session' }));
+      setError(err.response?.data?.detail || 'Błąd podczas usuwania sesji');
       console.error(err);
       setSessionToDelete(null);
     }
@@ -303,7 +307,7 @@ const ShootingSessionsPage = () => {
   }, [openMenuId]);
 
   if (loading) {
-    return <div className="text-center">{t('common.loading')}</div>;
+    return <div className="text-center">Ładowanie...</div>;
   }
 
   return (
@@ -335,34 +339,7 @@ const ShootingSessionsPage = () => {
         <div className="card">
           <h3 style={{ marginBottom: '1rem' }}>{t('sessions.history')}</h3>
           
-          <div style={{ marginBottom: '1rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-            <select
-              className="form-input"
-              style={{ width: 'auto', minWidth: '150px' }}
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
-            >
-              <option value="">{t('sessions.filterBy')}</option>
-              <option value="gun">{t('sessions.weapon')}</option>
-              <option value="ammo">{t('sessions.ammunition')}</option>
-              <option value="date">{t('sessions.date')}</option>
-              <option value="cost">{t('sessions.cost')}</option>
-              <option value="distance">{t('sessions.distance')}</option>
-              <option value="accuracy">{t('sessions.accuracy')}</option>
-            </select>
-            {filterType && (
-              <input
-                type="text"
-                className="form-input"
-                style={{ flex: 1, minWidth: '200px' }}
-                placeholder={t('sessions.enterValue')}
-                value={filterValue}
-                onChange={(e) => setFilterValue(e.target.value)}
-              />
-            )}
-          </div>
-
-          {/* Paginacja - wybór liczby elementów */}
+          {/* Filtry i paginacja */}
           <div style={{ 
             display: 'flex', 
             justifyContent: 'space-between', 
@@ -371,8 +348,35 @@ const ShootingSessionsPage = () => {
             flexWrap: 'wrap',
             gap: '1rem'
           }}>
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+              <select
+                className="form-input"
+                style={{ width: 'auto', minWidth: '150px' }}
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+              >
+                <option value="">{t('sessions.filterBy')}</option>
+                <option value="gun">{t('sessions.weapon')}</option>
+                <option value="ammo">{t('sessions.ammunition')}</option>
+                <option value="date">{t('sessions.date')}</option>
+                <option value="cost">{t('sessions.cost')}</option>
+                <option value="distance">{t('sessions.distance')}</option>
+                <option value="accuracy">{t('sessions.accuracy')}</option>
+              </select>
+              {filterType && (
+                <input
+                  type="text"
+                  className="form-input"
+                  style={{ minWidth: '200px' }}
+                  placeholder={t('sessions.enterValue')}
+                  value={filterValue}
+                  onChange={(e) => setFilterValue(e.target.value)}
+                />
+              )}
+            </div>
+            
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ color: 'var(--text-tertiary)', fontSize: '0.9rem' }}>{t('sessions.show')}</span>
+              <span style={{ color: '#aaa', fontSize: '0.9rem' }}>{t('sessions.show')}</span>
               <select
                 value={itemsPerPage}
                 onChange={(e) => {
@@ -381,9 +385,9 @@ const ShootingSessionsPage = () => {
                 }}
                 style={{
                   padding: '0.5rem',
-                  backgroundColor: 'var(--input-bg)',
-                  color: 'var(--text-primary)',
-                  border: `1px solid var(--border-color)`,
+                  backgroundColor: '#2c2c2c',
+                  color: 'white',
+                  border: '1px solid #555',
                   borderRadius: '4px',
                   fontSize: '0.9rem'
                 }}
@@ -394,11 +398,6 @@ const ShootingSessionsPage = () => {
                 <option value={100}>100</option>
               </select>
             </div>
-            {filteredSessions.length > 0 && (
-              <div style={{ color: 'var(--text-tertiary)', fontSize: '0.9rem' }}>
-                {t('common.page')} {currentPage} {t('common.of')} {Math.ceil(filteredSessions.length / itemsPerPage)} ({filteredSessions.length} {t('common.sessions')})
-              </div>
-            )}
           </div>
 
           {filteredSessions.length === 0 ? (
@@ -519,7 +518,9 @@ const ShootingSessionsPage = () => {
                     >
                       {t('sessions.accuracyPercent')}
                     </th>
-                    <th style={{ padding: '0.75rem' }}>{t('sessions.comment')}</th>
+                    {sessions.some(s => s.session_type === 'advanced') && (
+                      <th style={{ padding: '0.75rem' }}>{t('sessions.comment')}</th>
+                    )}
                     <th style={{ width: '50px', padding: '0.75rem' }}></th>
                   </tr>
                 </thead>
@@ -545,7 +546,7 @@ const ShootingSessionsPage = () => {
                       <td style={{ textAlign: 'center', padding: '0.75rem' }}>
                         <img 
                           src={session.session_type === 'advanced' ? "/assets/session_icon_AI_dark.png" : "/assets/session_icon_dark.png"}
-                          alt={session.session_type === 'advanced' ? t('sessions.advanced') : t('sessions.standard')}
+                          alt={session.session_type === 'advanced' ? "Sesja zaawansowana" : "Sesja standardowa"}
                           style={{ 
                             width: '24px', 
                             height: '24px',
@@ -557,8 +558,8 @@ const ShootingSessionsPage = () => {
                       <td>{getGunName(session.gun_id)}</td>
                       <td>{getAmmoName(session.ammo_id)}</td>
                       <td>{session.shots || '-'}</td>
-                      <td>{session.cost ? `${parseFloat(session.cost).toFixed(2).replace('.', ',')} zł` : '-'}</td>
-                      <td>{session.distance_m ? `${session.distance_m} m` : '-'}</td>
+                      <td>{session.cost ? formatCurrency(parseFloat(session.cost)) : '-'}</td>
+                      <td>{session.distance ? `${session.distance} ${session.distance_unit || 'm'}` : '-'}</td>
                       <td>{session.hits !== null && session.hits !== undefined ? session.hits : '-'}</td>
                       <td>
                         {session.accuracy_percent !== null && session.accuracy_percent !== undefined ? (
@@ -570,17 +571,19 @@ const ShootingSessionsPage = () => {
                           </span>
                         ) : '-'}
                       </td>
-                      <td 
-                        style={{ 
-                          maxWidth: '300px',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap'
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {session.ai_comment || '-'}
-                      </td>
+                      {sessions.some(s => s.session_type === 'advanced') && (
+                        <td 
+                          style={{ 
+                            maxWidth: '300px',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap'
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {session.session_type === 'advanced' ? (session.ai_comment || '-') : '-'}
+                        </td>
+                      )}
                       <td>
                         <div className="session-menu-container" style={{ position: 'relative' }}>
                           <button
@@ -599,7 +602,7 @@ const ShootingSessionsPage = () => {
                               alignItems: 'center',
                               justifyContent: 'center'
                             }}
-                            title={t('common.actions')}
+                            title="Opcje"
                           >
                             ⋮
                           </button>
@@ -634,7 +637,7 @@ const ShootingSessionsPage = () => {
                                 onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--table-hover-bg)'}
                                 onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
                               >
-                                {t('common.edit')}
+                                {t('sessions.edit')}
                               </button>
                               <button
                                 onClick={() => handleDeleteClick(session.id)}
@@ -652,7 +655,7 @@ const ShootingSessionsPage = () => {
                                 onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--table-hover-bg)'}
                                 onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
                               >
-                                {t('common.delete')}
+                                {t('sessions.delete')}
                               </button>
                             </div>
                           )}
@@ -669,7 +672,7 @@ const ShootingSessionsPage = () => {
           {filteredSessions.length > itemsPerPage && (
             <div style={{ 
               display: 'flex', 
-              justifyContent: 'center', 
+              justifyContent: 'flex-end', 
               alignItems: 'center', 
               gap: '0.5rem',
               marginTop: '1rem',
@@ -691,7 +694,7 @@ const ShootingSessionsPage = () => {
                 ←
               </button>
               <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', padding: '0 1rem' }}>
-                {t('common.page')} {currentPage} {t('common.of')} {Math.ceil(filteredSessions.length / itemsPerPage)}
+                {t('sessions.page')} {currentPage} {t('sessions.of')} {Math.ceil(filteredSessions.length / itemsPerPage)}
               </span>
               <button
                 onClick={() => setCurrentPage(prev => Math.min(Math.ceil(filteredSessions.length / itemsPerPage), prev + 1))}
@@ -770,7 +773,7 @@ const ShootingSessionsPage = () => {
                 <strong>{t('sessions.sessionType')}</strong>{' '}
                 <img 
                   src={selectedSession.session_type === 'advanced' ? "/assets/session_icon_AI_dark.png" : "/assets/session_icon_dark.png"}
-                  alt={selectedSession.session_type === 'advanced' ? t('sessions.advanced') : t('sessions.standard')}
+                  alt={selectedSession.session_type === 'advanced' ? "Sesja zaawansowana" : "Sesja standardowa"}
                   style={{ 
                     width: '20px', 
                     height: '20px',
@@ -801,12 +804,12 @@ const ShootingSessionsPage = () => {
               </div>
 
               <div>
-                <strong>{t('sessions.cost')}</strong> {selectedSession.cost ? `${parseFloat(selectedSession.cost).toFixed(2).replace('.', ',')} zł` : '-'}
+                <strong>{t('sessions.cost')}</strong> {selectedSession.cost ? formatCurrency(parseFloat(selectedSession.cost)) : '-'}
               </div>
 
-              {selectedSession.distance_m && (
+              {selectedSession.distance && (
                 <div>
-                  <strong>{t('sessions.distance')}</strong> {selectedSession.distance_m} m
+                  <strong>{t('sessions.distance')}</strong> {selectedSession.distance} {selectedSession.distance_unit || 'm'}
                 </div>
               )}
 
@@ -850,23 +853,25 @@ const ShootingSessionsPage = () => {
                 </div>
               )}
 
-              <div>
-                <div style={{ marginBottom: '0.5rem' }}>
-                  <strong>{t('sessions.aiComment')}</strong>
+              {selectedSession.session_type === 'advanced' && (
+                <div>
+                  <div style={{ marginBottom: '0.5rem' }}>
+                    <strong>{t('sessions.aiComment')}</strong>
+                  </div>
+                  <div style={{ 
+                    marginTop: '0.5rem', 
+                    padding: '0.75rem', 
+                    backgroundColor: 'var(--bg-secondary)', 
+                    borderRadius: '4px',
+                    whiteSpace: 'pre-wrap',
+                    wordWrap: 'break-word',
+                    minHeight: '100px',
+                    color: 'var(--text-primary)'
+                  }}>
+                    {selectedSession.ai_comment || '-'}
+                  </div>
                 </div>
-                <div style={{ 
-                  marginTop: '0.5rem', 
-                  padding: '0.75rem', 
-                  backgroundColor: 'var(--bg-secondary)', 
-                  borderRadius: '4px',
-                  whiteSpace: 'pre-wrap',
-                  wordWrap: 'break-word',
-                  minHeight: '100px',
-                  color: 'var(--text-primary)'
-                }}>
-                  {selectedSession.ai_comment || '-'}
-                </div>
-              </div>
+              )}
 
               {/* Zdjęcie tarczy - tylko dla właściciela sesji */}
               {selectedSession.target_image_path && user && !user.is_guest && selectedSession.user_id === user.user_id && (

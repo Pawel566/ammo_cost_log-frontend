@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { gunsAPI, ammoAPI, shootingSessionsAPI, maintenanceAPI, settingsAPI, accountAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useCurrencyConverter } from '../hooks/useCurrencyConverter';
 
 const MaintenanceStatusIcon = ({ status }) => {
   const iconSize = 48;
@@ -52,6 +53,7 @@ const DashboardPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { formatCurrency } = useCurrencyConverter();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
@@ -566,7 +568,7 @@ const DashboardPage = () => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem' }}>
                   <span style={{ color: 'var(--text-tertiary)' }}>{t('dashboard.cost')}</span>
                   <span style={{ fontWeight: 'bold', color: '#007bff' }}>
-                    {monthlyStats.cost.toFixed(2).replace('.', ',')} zł
+                    {formatCurrency(monthlyStats.cost)}
                   </span>
                 </div>
               </div>

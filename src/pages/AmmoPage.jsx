@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ammoAPI, settingsAPI } from '../services/api';
+import { useCurrencyConverter } from '../hooks/useCurrencyConverter';
 
 const COMMON_CALIBERS = [
   '9×19',
@@ -40,6 +41,7 @@ const AMMO_TYPES = [
 
 const AmmoPage = () => {
   const { t } = useTranslation();
+  const { formatCurrency } = useCurrencyConverter();
   const [ammo, setAmmo] = useState([]);
   const [filteredAmmo, setFilteredAmmo] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -780,7 +782,7 @@ const AmmoPage = () => {
                         >
                           <td style={{ padding: '0.75rem', fontWeight: '500' }}>{item.name}</td>
                           <td style={{ padding: '0.75rem' }}>{item.caliber || '-'}</td>
-                          <td style={{ padding: '0.75rem' }}>{price.toFixed(2).replace('.', ',')} zł</td>
+                          <td style={{ padding: '0.75rem' }}>{formatCurrency(price)}</td>
                           <td style={{ padding: '0.75rem' }}>{getAmmoTypeLabel(item.type)}</td>
                           <td style={{ 
                             padding: '0.75rem',

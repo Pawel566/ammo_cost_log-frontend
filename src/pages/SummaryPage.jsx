@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { shootingSessionsAPI } from '../services/api';
+import { useCurrencyConverter } from '../hooks/useCurrencyConverter';
 
-const MonthlyCostsChart = ({ data, t }) => {
+const MonthlyCostsChart = ({ data, t, formatCurrency }) => {
   if (!data || data.length === 0) return null;
 
   const width = 800;
@@ -136,6 +137,7 @@ const MonthlyCostsChart = ({ data, t }) => {
 
 const SummaryPage = () => {
   const { t } = useTranslation();
+  const { formatCurrency, convert } = useCurrencyConverter();
   const [summary, setSummary] = useState([]);
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -247,7 +249,7 @@ const SummaryPage = () => {
               <div className="card" style={{ textAlign: 'center' }}>
                 <h3 style={{ marginBottom: '0.5rem', fontSize: '0.9rem', color: '#aaa' }}>{t('summary.totalCost')}</h3>
                 <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#dc3545' }}>
-                  {getTotalCost().toFixed(2).replace('.', ',')} zł
+                  {formatCurrency(getTotalCost())}
                 </div>
               </div>
               <div className="card" style={{ textAlign: 'center' }}>
@@ -259,7 +261,7 @@ const SummaryPage = () => {
               <div className="card" style={{ textAlign: 'center' }}>
                 <h3 style={{ marginBottom: '0.5rem', fontSize: '0.9rem', color: '#aaa' }}>{t('summary.avgCostPerShot')}</h3>
                 <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#28a745' }}>
-                  {getTotalShots() > 0 ? (getTotalCost() / getTotalShots()).toFixed(2).replace('.', ',') : '0,00'} zł
+                  {getTotalShots() > 0 ? formatCurrency(getTotalCost() / getTotalShots()) : formatCurrency(0)}
                 </div>
               </div>
                 <div className="card" style={{ textAlign: 'center' }}>
@@ -286,7 +288,7 @@ const SummaryPage = () => {
             {summary.length > 0 && (
               <div className="card" style={{ marginBottom: '1.5rem' }}>
                 <h3 style={{ marginBottom: '1rem' }}>{t('summary.monthlyCosts')}</h3>
-                <MonthlyCostsChart data={summary} t={t} />
+                <MonthlyCostsChart data={summary} t={t} formatCurrency={formatCurrency} />
               </div>
             )}
 
@@ -308,13 +310,13 @@ const SummaryPage = () => {
                         <tr key={month.month}>
                           <td style={{ fontWeight: '500' }}>{formatMonth(month.month)}</td>
                           <td style={{ fontWeight: 'bold', color: '#dc3545' }}>
-                            {month.total_cost.toFixed(2).replace('.', ',')} zł
+                            {formatCurrency(month.total_cost)}
                           </td>
                           <td style={{ fontWeight: 'bold', color: '#007bff' }}>
                             {month.total_shots}
                           </td>
                           <td style={{ fontWeight: 'bold', color: '#28a745' }}>
-                            {month.total_shots > 0 ? (month.total_cost / month.total_shots).toFixed(2).replace('.', ',') : '0,00'} zł
+                            {month.total_shots > 0 ? formatCurrency(month.total_cost / month.total_shots) : formatCurrency(0)}
                           </td>
                         </tr>
                       ))}

@@ -313,6 +313,8 @@
   "settings": {
     "title": "Ustawienia",
     "general": "Ogólne",
+    "language": "Język",
+    "currency": "Waluta",
     "theme": "Motyw",
     "light": "Jasny",
     "dark": "Ciemny",
@@ -333,7 +335,13 @@
     "saveSettings": "Zapisz ustawienia",
     "settingsSaved": "Ustawienia zostały zapisane",
     "errorLoading": "Błąd podczas pobierania ustawień",
-    "errorSaving": "Błąd podczas zapisywania ustawień"
+    "errorSaving": "Błąd podczas zapisywania ustawień",
+    "currencies": {
+      "pln": "Złoty (PLN)",
+      "usd": "Dolar (USD)",
+      "eur": "Euro (EUR)",
+      "gbp": "Funt (GBP)"
+    }
   },
   "myWeapons": {
     "title": "Moja broń",
@@ -400,17 +408,31 @@
     "fileMustBeImage": "Plik musi być obrazem",
     "noWeaponSelected": "Brak wybranej broni",
     "activities": {
+      "cleaning": "Czyszczenie",
       "barrelCleaning": "Czyszczenie lufy",
+      "chamberCleaning": "Czyszczenie komory nabojowej",
       "slideCleaning": "Czyszczenie suwadła",
       "boltCleaning": "Czyszczenie zamka",
       "firingPinCleaning": "Czyszczenie iglicy",
+      "firingPinChannelCleaning": "Czyszczenie kanału iglicy",
+      "magazineCleaning": "Czyszczenie magazynków",
+      "lubrication": "Smarowanie",
       "railLubrication": "Smarowanie prowadnic",
       "boltLubrication": "Smarowanie zamka",
+      "inspection": "Kontrola",
       "springWearCheck": "Kontrola zużycia sprężyn",
       "boltLatchCheck": "Kontrola zamka / rygli",
+      "gasSystemCheck": "Kontrola przewodu gazowego / regulatora",
+      "pinsCheck": "Kontrola pinów i trzpieni",
+      "magazineInspection": "Kontrola magazynków (sprężyny + podajnik)",
+      "railAndOpticMountCheck": "Sprawdzenie szyn i montażu optyki",
+      "barrelVisualCheck": "Sprawdzenie stanu lufy (wizualnie)",
+      "triggerCheck": "Kontrola spustu",
+      "safetyCheck": "Sprawdzenie zabezpieczeń",
+      "service": "Serwis / regulacje",
+      "opticZeroing": "Kalibracja optyki / kolimatora (zeroing)",
       "partsReplacement": "Wymiana części",
-      "opticCheck": "Sprawdzenie optyki",
-      "magazineCleaning": "Czyszczenie magazynków"
+      "opticCheck": "Sprawdzenie optyki"
     }
   },
   "maintenance": {
@@ -449,17 +471,31 @@
     "errorLoadingMaintenance": "Błąd podczas pobierania konserwacji",
     "errorUpdating": "Błąd podczas aktualizacji konserwacji",
     "activities": {
+      "cleaning": "Czyszczenie",
       "barrelCleaning": "Czyszczenie lufy",
+      "chamberCleaning": "Czyszczenie komory nabojowej",
       "slideCleaning": "Czyszczenie suwadła",
       "boltCleaning": "Czyszczenie zamka",
       "firingPinCleaning": "Czyszczenie iglicy",
+      "firingPinChannelCleaning": "Czyszczenie kanału iglicy",
+      "magazineCleaning": "Czyszczenie magazynków",
+      "lubrication": "Smarowanie",
       "railLubrication": "Smarowanie prowadnic",
       "boltLubrication": "Smarowanie zamka",
+      "inspection": "Kontrola",
       "springWearCheck": "Kontrola zużycia sprężyn",
       "boltLatchCheck": "Kontrola zamka / rygli",
+      "gasSystemCheck": "Kontrola przewodu gazowego / regulatora",
+      "pinsCheck": "Kontrola pinów i trzpieni",
+      "magazineInspection": "Kontrola magazynków (sprężyny + podajnik)",
+      "railAndOpticMountCheck": "Sprawdzenie szyn i montażu optyki",
+      "barrelVisualCheck": "Sprawdzenie stanu lufy (wizualnie)",
+      "triggerCheck": "Kontrola spustu",
+      "safetyCheck": "Sprawdzenie zabezpieczeń",
+      "service": "Serwis / regulacje",
+      "opticZeroing": "Kalibracja optyki / kolimatora (zeroing)",
       "partsReplacement": "Wymiana części",
-      "opticCheck": "Sprawdzenie optyki",
-      "magazineCleaning": "Czyszczenie magazynków"
+      "opticCheck": "Sprawdzenie optyki"
     }
   },
   "homepage": {

@@ -104,17 +104,31 @@ const MyWeaponsPage = () => {
   const [expandedImage, setExpandedImage] = useState(null);
 
   const getMaintenanceActivities = () => [
+    t('myWeapons.activities.cleaning'),
     t('myWeapons.activities.barrelCleaning'),
+    t('myWeapons.activities.chamberCleaning'),
     t('myWeapons.activities.slideCleaning'),
     t('myWeapons.activities.boltCleaning'),
     t('myWeapons.activities.firingPinCleaning'),
+    t('myWeapons.activities.firingPinChannelCleaning'),
+    t('myWeapons.activities.magazineCleaning'),
+    t('myWeapons.activities.lubrication'),
     t('myWeapons.activities.railLubrication'),
     t('myWeapons.activities.boltLubrication'),
+    t('myWeapons.activities.inspection'),
     t('myWeapons.activities.springWearCheck'),
     t('myWeapons.activities.boltLatchCheck'),
+    t('myWeapons.activities.gasSystemCheck'),
+    t('myWeapons.activities.pinsCheck'),
+    t('myWeapons.activities.magazineInspection'),
+    t('myWeapons.activities.railAndOpticMountCheck'),
+    t('myWeapons.activities.barrelVisualCheck'),
+    t('myWeapons.activities.triggerCheck'),
+    t('myWeapons.activities.safetyCheck'),
+    t('myWeapons.activities.service'),
+    t('myWeapons.activities.opticZeroing'),
     t('myWeapons.activities.partsReplacement'),
-    t('myWeapons.activities.opticCheck'),
-    t('myWeapons.activities.magazineCleaning')
+    t('myWeapons.activities.opticCheck')
   ];
 
   useEffect(() => {
@@ -1352,42 +1366,69 @@ const MyWeaponsPage = () => {
                       overflowY: 'auto',
                       textAlign: 'left'
                     }}>
-                      {maintenanceActivities.map((activity) => (
-                        <label
-                          key={activity}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            padding: '0.5rem 0.5rem 0.5rem 0',
-                            cursor: 'pointer',
-                            borderRadius: '4px',
-                            margin: 0
-                          }}
-                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
-                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={maintenanceForm.activities && Array.isArray(maintenanceForm.activities) && maintenanceForm.activities.includes(activity)}
-                            onChange={(e) => {
-                              const currentActivities = maintenanceForm.activities || [];
-                              if (e.target.checked) {
-                                setMaintenanceForm({
-                                  ...maintenanceForm,
-                                  activities: [...currentActivities, activity]
-                                });
-                              } else {
-                                setMaintenanceForm({
-                                  ...maintenanceForm,
-                                  activities: currentActivities.filter(a => a !== activity)
-                                });
-                              }
+                      {maintenanceActivities.map((activity) => {
+                        const isSectionTitle = activity === t('myWeapons.activities.cleaning') ||
+                                               activity === t('myWeapons.activities.lubrication') ||
+                                               activity === t('myWeapons.activities.inspection') ||
+                                               activity === t('myWeapons.activities.service');
+                        
+                        if (isSectionTitle) {
+                          return (
+                            <div
+                              key={activity}
+                              style={{
+                                padding: '0.75rem 0.5rem 0.5rem 1rem',
+                                fontWeight: '600',
+                                fontSize: '1rem',
+                                color: 'var(--text-primary)',
+                                marginTop: '0.5rem',
+                                borderTop: '1px solid var(--border-color)',
+                                margin: '0.5rem 0 0.25rem 0',
+                                paddingTop: '0.75rem'
+                              }}
+                            >
+                              {activity}
+                            </div>
+                          );
+                        }
+                        
+                        return (
+                          <label
+                            key={activity}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              padding: '0.5rem 0.5rem 0.5rem 1rem',
+                              cursor: 'pointer',
+                              borderRadius: '4px',
+                              margin: 0
                             }}
-                            style={{ cursor: 'pointer', margin: 0, marginRight: '1rem', flexShrink: 0 }}
-                          />
-                          <span style={{ textAlign: 'left' }}>{activity}</span>
-                        </label>
-                      ))}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={maintenanceForm.activities && Array.isArray(maintenanceForm.activities) && maintenanceForm.activities.includes(activity)}
+                              onChange={(e) => {
+                                const currentActivities = maintenanceForm.activities || [];
+                                if (e.target.checked) {
+                                  setMaintenanceForm({
+                                    ...maintenanceForm,
+                                    activities: [...currentActivities, activity]
+                                  });
+                                } else {
+                                  setMaintenanceForm({
+                                    ...maintenanceForm,
+                                    activities: currentActivities.filter(a => a !== activity)
+                                  });
+                                }
+                              }}
+                              style={{ cursor: 'pointer', margin: 0, marginRight: '1rem', flexShrink: 0, width: '16px', height: '16px', minWidth: '16px' }}
+                            />
+                            <span style={{ textAlign: 'left' }}>{activity}</span>
+                          </label>
+                        );
+                      })}
                     </div>
                   )}
                 </div>

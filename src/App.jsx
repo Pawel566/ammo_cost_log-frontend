@@ -3,7 +3,8 @@ import { BrowserRouter as Router, Routes, Route, Link, useNavigate, useLocation 
 import { useTranslation } from 'react-i18next';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
-import { LanguageProvider, useLanguage } from './context/LanguageContext';
+import { LanguageProvider } from './context/LanguageContext';
+import { CurrencyProvider } from './context/CurrencyContext';
 import HomePage from './pages/HomePage';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -23,7 +24,6 @@ import './App.css';
 
 const NavbarUser = () => {
   const { user, signOut } = useAuth();
-  const { currentLanguage, changeLanguage } = useLanguage();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -51,21 +51,8 @@ const NavbarUser = () => {
     navigate('/');
   };
 
-  const handleLanguageChange = async (lang) => {
-    await changeLanguage(lang);
-  };
-
   return (
     <div className="navbar-user" ref={menuRef}>
-      <div className="language-selector">
-        <select
-          value={currentLanguage}
-          onChange={(e) => handleLanguageChange(e.target.value)}
-        >
-          <option value="pl">PL</option>
-          <option value="en">EN</option>
-        </select>
-      </div>
       {user ? (
         <div className="user-menu-container">
           <div 
@@ -197,11 +184,13 @@ function App() {
   return (
     <AuthProvider>
       <LanguageProvider>
-        <ThemeProvider>
-          <Router>
-            <AppContent />
-          </Router>
-        </ThemeProvider>
+        <CurrencyProvider>
+          <ThemeProvider>
+            <Router>
+              <AppContent />
+            </Router>
+          </ThemeProvider>
+        </CurrencyProvider>
       </LanguageProvider>
     </AuthProvider>
   );

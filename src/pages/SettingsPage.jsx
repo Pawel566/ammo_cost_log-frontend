@@ -2,15 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { settingsAPI } from '../services/api';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
+import { useCurrency } from '../context/CurrencyContext';
 
 const SettingsPage = () => {
   const { t } = useTranslation();
   const { theme, changeTheme } = useTheme();
+  const { currentLanguage, changeLanguage } = useLanguage();
+  const { currentCurrency, changeCurrency } = useCurrency();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [settings, setSettings] = useState({
     theme: theme,
+    language: currentLanguage,
+    currency: currentCurrency,
     distance_unit: 'm',
     maintenance_rounds_limit: 500,
     maintenance_days_limit: 90,
@@ -31,6 +37,13 @@ const SettingsPage = () => {
     }
   }, [theme]);
 
+  useEffect(() => {
+    // Synchronizuj walutę z kontekstem
+    if (settings.currency !== currentCurrency) {
+      setSettings(prev => ({ ...prev, currency: currentCurrency }));
+    }
+  }, [currentCurrency]);
+
   const fetchSettings = async () => {
     try {
       setLoading(true);
@@ -47,7 +60,8 @@ const SettingsPage = () => {
         ai_analysis_intensity: response.data.ai_analysis_intensity || 'normalna',
         ai_auto_comments: response.data.ai_auto_comments !== undefined 
           ? response.data.ai_auto_comments : false,
-        language: response.data.language || 'pl'
+        language: response.data.language || 'pl',
+        currency: response.data.currency || 'pln'
       });
       setError('');
     } catch (err) {
@@ -63,8 +77,20 @@ const SettingsPage = () => {
     setError('');
     setSuccess('');
     try {
-      // Zapisz wszystkie ustawienia (motyw już został zapisany przez changeTheme w handleChange)
+      // Zapisz wszystkie ustawienia
       await settingsAPI.update(settings);
+      
+      // Zaktualizuj motyw, język i walutę w kontekstach po zapisaniu
+      if (settings.theme !== theme) {
+        changeTheme(settings.theme);
+      }
+      if (settings.language !== currentLanguage) {
+        await changeLanguage(settings.language);
+      }
+      if (settings.currency !== currentCurrency) {
+        await changeCurrency(settings.currency);
+      }
+      
       setSuccess(t('settings.settingsSaved'));
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
@@ -72,19 +98,10 @@ const SettingsPage = () => {
     }
   };
 
-  const handleChange = async (field, value) => {
+  const handleChange = (field, value) => {
+    // Tylko aktualizuj stan lokalny, bez zapisywania
     const newSettings = { ...settings, [field]: value };
     setSettings(newSettings);
-    if (field === 'theme') {
-      // Zmień motyw natychmiast w kontekście
-      changeTheme(value);
-      // Zapisz motyw od razu w bazie
-      try {
-        await settingsAPI.update({ theme: value });
-      } catch (err) {
-        console.error('Błąd podczas zapisywania motywu:', err);
-      }
-    }
   };
 
   if (loading) {
@@ -107,10 +124,61 @@ const SettingsPage = () => {
         )}
 
         <form onSubmit={handleSubmit}>
+          <button type="submit" className="btn btn-primary" style={{ marginBottom: '2rem', padding: '0.75rem 2rem', fontSize: '1rem', fontWeight: '500' }}>
+            {t('settings.saveSettings')}
+          </button>
           {/* Sekcja: Ogólne */}
           <div className="card" style={{ marginBottom: '1.5rem' }}>
             <h3 style={{ marginBottom: '1.5rem', fontSize: '1.2rem', fontWeight: 'bold' }}>{t('settings.general')}</h3>
             
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                {t('settings.language')}
+              </label>
+              <select
+                value={settings.language || currentLanguage}
+                onChange={(e) => handleChange('language', e.target.value)}
+                style={{
+                  padding: '0.5rem 1rem',
+                  borderRadius: '4px',
+                  border: `1px solid var(--border-color)`,
+                  backgroundColor: 'var(--input-bg)',
+                  color: 'var(--text-primary)',
+                  fontSize: '1rem',
+                  cursor: 'pointer',
+                  minWidth: '150px'
+                }}
+              >
+                <option value="pl">Polski</option>
+                <option value="en">English</option>
+              </select>
+            </div>
+
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                {t('settings.currency')}
+              </label>
+              <select
+                value={settings.currency || currentCurrency}
+                onChange={(e) => handleChange('currency', e.target.value)}
+                style={{
+                  padding: '0.5rem 1rem',
+                  borderRadius: '4px',
+                  border: `1px solid var(--border-color)`,
+                  backgroundColor: 'var(--input-bg)',
+                  color: 'var(--text-primary)',
+                  fontSize: '1rem',
+                  cursor: 'pointer',
+                  minWidth: '150px'
+                }}
+              >
+                <option value="pln">{t('settings.currencies.pln')}</option>
+                <option value="usd">{t('settings.currencies.usd')}</option>
+                <option value="eur">{t('settings.currencies.eur')}</option>
+                <option value="gbp">{t('settings.currencies.gbp')}</option>
+              </select>
+            </div>
+
             <div style={{ marginBottom: '1.5rem' }}>
               <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
                 {t('settings.theme')}
@@ -334,10 +402,6 @@ const SettingsPage = () => {
               </label>
             </div>
           </div>
-
-          <button type="submit" className="btn btn-primary" style={{ marginTop: '1rem' }}>
-            {t('settings.saveSettings')}
-          </button>
         </form>
       </div>
     </div>
