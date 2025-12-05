@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.6.5] – 2025-01-XX
+### Dodano
+- System obsługi wielu walut (PLN, USD, EUR, GBP) z automatyczną konwersją
+- Integracja z API NBP do pobierania aktualnych kursów walut
+- Wybór jednostek odległości w ustawieniach (metry/jardy)
+- Rozszerzona lista czynności serwisowych z 11 do 25 pozycji
+- Organizacja czynności serwisowych w sekcje tematyczne (Czyszczenie, Smarowanie, Kontrola, Serwis/regulacje)
+- Tytuły sekcji w formularzu czynności serwisowych z większą czcionką i pogrubieniem
+
+### Zmieniono
+- Ulepszony interfejs formularza czynności serwisowych - tytuły sekcji nie są zaznaczalne
+- Poprawione formatowanie listy czynności serwisowych z lepszymi odstępami i wcięciami
+- Checkboxy w formularzu konserwacji są teraz bardziej kompaktowe i lepiej wyrównane
+
+## [0.6.0] – 2025-01-XX
+### Dodano
+- Wsparcie dla języka angielskiego w interfejsie użytkownika
+- Przełącznik języka w ustawieniach użytkownika (Polski/Angielski)
+- Tłumaczenia wszystkich elementów interfejsu na język angielski
+
 ## [0.5.5] – 2025-11-30
 ### Dodano
 - System rang użytkowników wyświetlany na stronie Pulpit (Dashboard)

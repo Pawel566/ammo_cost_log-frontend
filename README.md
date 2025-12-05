@@ -9,6 +9,10 @@ React frontend do aplikacji zarządzania strzelectwem z inteligentnym asystentem
 - **Analiza celności** - pomiar wyników z komentarzami AI (`gpt-4o-mini`)
 - **Statystyki** - miesięczne podsumowania i wykresy
 - **Tryb gościa i logowanie** - obsługa sesji sandboxowych i użytkowników Supabase
+- **Wielojęzyczność** - wsparcie dla języka polskiego i angielskiego
+- **Obsługa wielu walut** - automatyczna konwersja między PLN, USD, EUR, GBP z aktualnymi kursami z API NBP
+- **Jednostki odległości** - wybór między metrami a yardami w ustawieniach użytkownika
+- **Rozszerzona konserwacja** - 25 czynności serwisowych zorganizowanych w sekcje tematyczne
 
 ## 🛠️ Technologie
 
@@ -41,7 +45,7 @@ d
 
 ## 🎨 Design
 
-Szary motyw (#545454) z białym tekstem i zielonymi akcentami (#4caf50). Responsywny layout.
+Szary motyw (#545454) z białym tekstem i zielonymi akcentami (#4caf50). Responsywny layout. Wsparcie dla jasnego i ciemnego motywu.
 
 ## 🚀 Deployment
 

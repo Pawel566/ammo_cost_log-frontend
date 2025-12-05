@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { maintenanceAPI, gunsAPI } from '../services/api';
 
 const MaintenancePage = () => {
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [maintenance, setMaintenance] = useState([]);
   const [guns, setGuns] = useState([]);
@@ -22,18 +24,32 @@ const MaintenancePage = () => {
   });
   const [showActivitiesList, setShowActivitiesList] = useState(false);
 
-  const maintenanceActivities = [
-    'Czyszczenie lufy',
-    'Czyszczenie suwadła',
-    'Czyszczenie zamka',
-    'Czyszczenie iglicy',
-    'Smarowanie prowadnic',
-    'Smarowanie zamka',
-    'Kontrola zużycia sprężyn',
-    'Kontrola zamka / rygli',
-    'Wymiana części',
-    'Sprawdzenie optyki',
-    'Czyszczenie magazynków'
+  const getMaintenanceActivities = () => [
+    t('maintenance.activities.cleaning'),
+    t('maintenance.activities.barrelCleaning'),
+    t('maintenance.activities.chamberCleaning'),
+    t('maintenance.activities.slideCleaning'),
+    t('maintenance.activities.boltCleaning'),
+    t('maintenance.activities.firingPinCleaning'),
+    t('maintenance.activities.firingPinChannelCleaning'),
+    t('maintenance.activities.magazineCleaning'),
+    t('maintenance.activities.lubrication'),
+    t('maintenance.activities.railLubrication'),
+    t('maintenance.activities.boltLubrication'),
+    t('maintenance.activities.inspection'),
+    t('maintenance.activities.springWearCheck'),
+    t('maintenance.activities.boltLatchCheck'),
+    t('maintenance.activities.gasSystemCheck'),
+    t('maintenance.activities.pinsCheck'),
+    t('maintenance.activities.magazineInspection'),
+    t('maintenance.activities.railAndOpticMountCheck'),
+    t('maintenance.activities.barrelVisualCheck'),
+    t('maintenance.activities.triggerCheck'),
+    t('maintenance.activities.safetyCheck'),
+    t('maintenance.activities.service'),
+    t('maintenance.activities.opticZeroing'),
+    t('maintenance.activities.partsReplacement'),
+    t('maintenance.activities.opticCheck')
   ];
 
   useEffect(() => {
@@ -100,7 +116,7 @@ const MaintenancePage = () => {
       setMaintenance(response.data || []);
       setError('');
     } catch (err) {
-      setError('Błąd podczas pobierania konserwacji');
+      setError(t('maintenance.errorLoadingMaintenance'));
       console.error(err);
     }
   };
@@ -146,30 +162,32 @@ const MaintenancePage = () => {
       await fetchData();
     } catch (err) {
       console.error('Błąd podczas aktualizacji konserwacji:', err);
-      setError(err.response?.data?.detail || 'Błąd podczas aktualizacji konserwacji');
+      setError(err.response?.data?.detail || t('maintenance.errorUpdating'));
     }
   };
 
   const handleDeleteMaintenance = async (maintenanceId) => {
-    if (window.confirm('Czy na pewno chcesz usunąć tę konserwację?')) {
+    if (window.confirm(`${t('common.confirmDeleteItem')} ${t('common.maintenance')}?`)) {
       try {
         await maintenanceAPI.delete(maintenanceId);
         await fetchMaintenance();
         await fetchData();
       } catch (err) {
-        setError(err.response?.data?.detail || 'Błąd podczas usuwania konserwacji');
+        setError(err.response?.data?.detail || t('common.errorDeleting', { item: 'maintenance' }));
       }
     }
   };
 
   if (loading) {
-    return <div className="text-center">Ładowanie...</div>;
+    return <div className="text-center">{t('common.loading')}</div>;
   }
+
+  const maintenanceActivities = getMaintenanceActivities();
 
   return (
     <div>
       <div style={{ marginBottom: '2rem' }}>
-        <h2 style={{ marginBottom: '1.5rem' }}>Konserwacja</h2>
+        <h2 style={{ marginBottom: '1.5rem' }}>{t('maintenance.title')}</h2>
         {error && (
           <div className="alert alert-danger" style={{ marginBottom: '1rem' }}>
             {error}
@@ -178,23 +196,23 @@ const MaintenancePage = () => {
 
         {statistics && (
           <div className="card" style={{ marginBottom: '1.5rem', backgroundColor: 'var(--bg-secondary)' }}>
-            <h3 style={{ marginBottom: '1rem' }}>Statystyki</h3>
+            <h3 style={{ marginBottom: '1rem' }}>{t('maintenance.statistics')}</h3>
             {statistics.longest_without_maintenance && (
               <div style={{ marginBottom: '1rem' }}>
                 <div style={{ fontSize: '0.9rem', color: 'var(--text-tertiary)', marginBottom: '0.5rem' }}>
-                  Broń najdłużej bez konserwacji:
+                  {t('maintenance.longestWithoutMaintenance')}
                 </div>
                 <div style={{ fontSize: '1.1rem', fontWeight: '500' }}>
                   {statistics.longest_without_maintenance.gun_name}
                 </div>
                 <div style={{ fontSize: '0.9rem', color: 'var(--text-tertiary)', marginTop: '0.25rem' }}>
-                  {statistics.longest_without_maintenance.days_since} dni
+                  {statistics.longest_without_maintenance.days_since} {t('maintenance.daysSince')}
                 </div>
               </div>
             )}
             <div style={{ borderTop: `1px solid var(--border-color)`, paddingTop: '1rem' }}>
               <div style={{ fontSize: '0.9rem', color: 'var(--text-tertiary)', marginBottom: '0.75rem' }}>
-                Dni od ostatniej konserwacji:
+                {t('maintenance.daysSinceLast')}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 {statistics.guns_status && statistics.guns_status.map(stat => (
@@ -211,7 +229,7 @@ const MaintenancePage = () => {
                   >
                     <span>{stat.gun_name}</span>
                     <span style={{ color: stat.days_since_last !== null ? 'var(--text-primary)' : 'var(--text-tertiary)' }}>
-                      {stat.days_since_last !== null ? `${stat.days_since_last} dni` : 'Brak konserwacji'}
+                      {stat.days_since_last !== null ? `${stat.days_since_last} ${t('maintenance.daysSince')}` : t('maintenance.noMaintenance')}
                     </span>
                   </div>
                 ))}
@@ -222,10 +240,10 @@ const MaintenancePage = () => {
 
         <div className="card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-            <h3 style={{ margin: 0 }}>Historia konserwacji</h3>
+            <h3 style={{ margin: 0 }}>{t('maintenance.history')}</h3>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <label className="form-label" style={{ margin: 0, fontSize: '0.9rem' }}>
-                Filtruj:
+                {t('maintenance.filter')}
               </label>
               <select
                 className="form-input"
@@ -233,7 +251,7 @@ const MaintenancePage = () => {
                 onChange={(e) => setSelectedGunId(e.target.value)}
                 style={{ width: 'auto', minWidth: '200px', padding: '0.5rem' }}
               >
-                <option value="">Wszystkie</option>
+                <option value="">{t('maintenance.all')}</option>
                 {guns.map(gun => (
                   <option key={gun.id} value={gun.id}>
                     {gun.name}
@@ -245,17 +263,17 @@ const MaintenancePage = () => {
 
           {maintenance.length === 0 ? (
             <p className="text-center" style={{ color: 'var(--text-tertiary)', padding: '2rem' }}>
-              Brak konserwacji
+              {t('maintenance.noMaintenance')}
             </p>
           ) : (
             <div style={{ overflowX: 'auto' }}>
               <table className="table">
                 <thead>
                   <tr>
-                    <th>Broń</th>
-                    <th>Data</th>
-                    <th>Lista czynności</th>
-                    <th>Strzałów od poprzedniej</th>
+                    <th>{t('maintenance.weapon')}</th>
+                    <th>{t('maintenance.date')}</th>
+                    <th>{t('maintenance.activitiesList')}</th>
+                    <th>{t('maintenance.shotsSincePrevious')}</th>
                     <th style={{ width: '50px' }}></th>
                   </tr>
                 </thead>
@@ -342,7 +360,7 @@ const MaintenancePage = () => {
                                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
                                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                                 >
-                                  Szczegóły
+                                  {t('common.details')}
                                 </button>
                                 <button
                                   onClick={(e) => {
@@ -365,7 +383,7 @@ const MaintenancePage = () => {
                                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
                                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                                 >
-                                  Edytuj
+                                  {t('common.edit')}
                                 </button>
                                 <button
                                   onClick={(e) => {
@@ -388,7 +406,7 @@ const MaintenancePage = () => {
                                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
                                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                                 >
-                                  Usuń
+                                  {t('common.delete')}
                                 </button>
                               </div>
                             )}
@@ -429,7 +447,7 @@ const MaintenancePage = () => {
             style={{ maxWidth: '500px', width: '90%' }}
             onClick={(e) => e.stopPropagation()}
           >
-            <h3>Edytuj konserwację</h3>
+            <h3>{t('maintenance.editMaintenance')}</h3>
             <form onSubmit={handleUpdateMaintenance}>
               <div className="form-group">
                 <label className="form-label">Data</label>
@@ -442,7 +460,7 @@ const MaintenancePage = () => {
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">Lista czynności</label>
+                <label className="form-label">{t('maintenance.activitiesList')}</label>
                 <div style={{ border: `1px solid var(--border-color)`, borderRadius: '4px', backgroundColor: 'var(--bg-secondary)' }}>
                   <button
                     type="button"
@@ -465,8 +483,8 @@ const MaintenancePage = () => {
                   >
                     <span>
                       {maintenanceForm.activities.length > 0 
-                        ? `Wybrano: ${maintenanceForm.activities.length}` 
-                        : 'Wybierz czynności'}
+                        ? `${t('maintenance.selected')} ${maintenanceForm.activities.length}` 
+                        : t('maintenance.selectActivities')}
                     </span>
                     <span style={{ fontSize: '0.8rem' }}>
                       {showActivitiesList ? '▼' : '▶'}
@@ -480,58 +498,85 @@ const MaintenancePage = () => {
                       overflowY: 'auto',
                       textAlign: 'left'
                     }}>
-                      {maintenanceActivities.map((activity) => (
-                        <label
-                          key={activity}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            padding: '0.5rem 0.5rem 0.5rem 0',
-                            cursor: 'pointer',
-                            borderRadius: '4px',
-                            margin: 0
-                          }}
-                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
-                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={maintenanceForm.activities.includes(activity)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setMaintenanceForm({
-                                  ...maintenanceForm,
-                                  activities: [...maintenanceForm.activities, activity]
-                                });
-                              } else {
-                                setMaintenanceForm({
-                                  ...maintenanceForm,
-                                  activities: maintenanceForm.activities.filter(a => a !== activity)
-                                });
-                              }
+                      {maintenanceActivities.map((activity) => {
+                        const isSectionTitle = activity === t('maintenance.activities.cleaning') ||
+                                               activity === t('maintenance.activities.lubrication') ||
+                                               activity === t('maintenance.activities.inspection') ||
+                                               activity === t('maintenance.activities.service');
+                        
+                        if (isSectionTitle) {
+                          return (
+                            <div
+                              key={activity}
+                              style={{
+                                padding: '0.75rem 0.5rem 0.5rem 1rem',
+                                fontWeight: '600',
+                                fontSize: '1rem',
+                                color: 'var(--text-primary)',
+                                marginTop: '0.5rem',
+                                borderTop: '1px solid var(--border-color)',
+                                margin: '0.5rem 0 0.25rem 0',
+                                paddingTop: '0.75rem'
+                              }}
+                            >
+                              {activity}
+                            </div>
+                          );
+                        }
+                        
+                        return (
+                          <label
+                            key={activity}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              padding: '0.5rem 0.5rem 0.5rem 1rem',
+                              cursor: 'pointer',
+                              borderRadius: '4px',
+                              margin: 0
                             }}
-                            style={{ cursor: 'pointer', margin: 0, marginRight: '1rem', flexShrink: 0 }}
-                          />
-                          <span style={{ textAlign: 'left' }}>{activity}</span>
-                        </label>
-                      ))}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={maintenanceForm.activities.includes(activity)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setMaintenanceForm({
+                                    ...maintenanceForm,
+                                    activities: [...maintenanceForm.activities, activity]
+                                  });
+                                } else {
+                                  setMaintenanceForm({
+                                    ...maintenanceForm,
+                                    activities: maintenanceForm.activities.filter(a => a !== activity)
+                                  });
+                                }
+                              }}
+                              style={{ cursor: 'pointer', margin: 0, marginRight: '1rem', flexShrink: 0, width: '16px', height: '16px', minWidth: '16px' }}
+                            />
+                            <span style={{ textAlign: 'left' }}>{activity}</span>
+                          </label>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
               </div>
               <div className="form-group">
-                <label className="form-label">Opis:</label>
+                <label className="form-label">{t('maintenance.description')}</label>
                 <textarea
                   className="form-input"
                   value={maintenanceForm.notes}
                   onChange={(e) => setMaintenanceForm({ ...maintenanceForm, notes: e.target.value })}
                   rows={3}
-                  placeholder="Opcjonalny opis konserwacji..."
+                  placeholder={t('maintenance.descriptionPlaceholder')}
                 />
               </div>
               <div style={{ display: 'flex', gap: '1rem' }}>
                 <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>
-                  Zapisz konserwację
+                  {t('maintenance.saveMaintenance')}
                 </button>
                 <button
                   type="button"
@@ -543,7 +588,7 @@ const MaintenancePage = () => {
                     setMaintenanceForm({ date: '', notes: '', activities: [] });
                   }}
                 >
-                  Anuluj
+                  {t('maintenance.cancel')}
                 </button>
               </div>
             </form>
@@ -576,7 +621,7 @@ const MaintenancePage = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h3 style={{ margin: 0 }}>Szczegóły konserwacji</h3>
+              <h3 style={{ margin: 0 }}>{t('maintenance.maintenanceDetails')}</h3>
               <button
                 onClick={() => {
                   setShowMaintenanceDetailsModal(false);
@@ -598,7 +643,7 @@ const MaintenancePage = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: 'var(--text-tertiary)' }}>
-                  Broń
+                  {t('maintenance.weapon')}
                 </label>
                 <div style={{ padding: '0.75rem', backgroundColor: 'var(--bg-secondary)', borderRadius: '4px', color: 'var(--text-primary)' }}>
                   {selectedMaintenance.gun_name || getGunName(selectedMaintenance.gun_id)}
@@ -607,7 +652,7 @@ const MaintenancePage = () => {
 
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: 'var(--text-tertiary)' }}>
-                  Data wykonania
+                  {t('maintenance.executionDate')}
                 </label>
                 <div style={{ padding: '0.75rem', backgroundColor: 'var(--bg-secondary)', borderRadius: '4px', color: 'var(--text-primary)' }}>
                   {new Date(selectedMaintenance.date).toLocaleDateString('pl-PL')}
@@ -617,7 +662,7 @@ const MaintenancePage = () => {
               {selectedMaintenance.activities && selectedMaintenance.activities.length > 0 && (
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: 'var(--text-tertiary)' }}>
-                    Lista czynności
+                    {t('maintenance.activitiesList')}
                   </label>
                   <div style={{ padding: '0.75rem', backgroundColor: '#2c2c2c', borderRadius: '4px' }}>
                     <ul style={{ margin: 0, paddingLeft: '1.25rem', listStyle: 'disc', color: 'var(--text-primary)' }}>
@@ -632,7 +677,7 @@ const MaintenancePage = () => {
               {selectedMaintenance.notes && (
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: 'var(--text-tertiary)' }}>
-                    Opis
+                    {t('maintenance.description')}
                   </label>
                   <div style={{ padding: '0.75rem', backgroundColor: '#2c2c2c', borderRadius: '4px', color: '#fff', whiteSpace: 'pre-wrap' }}>
                     {selectedMaintenance.notes}
@@ -642,7 +687,7 @@ const MaintenancePage = () => {
 
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: 'var(--text-tertiary)' }}>
-                  Strzałów od poprzedniej konserwacji
+                  {t('maintenance.shotsSincePrevious')}
                 </label>
                 <div style={{ padding: '0.75rem', backgroundColor: 'var(--bg-secondary)', borderRadius: '4px', color: 'var(--text-primary)' }}>
                   {selectedMaintenance.rounds_since_last || 0}
@@ -651,7 +696,7 @@ const MaintenancePage = () => {
 
               {!selectedMaintenance.notes && (!selectedMaintenance.activities || selectedMaintenance.activities.length === 0) && (
                 <div style={{ color: 'var(--text-tertiary)', textAlign: 'center', padding: '1rem' }}>
-                  Brak dodatkowych informacji
+                  {t('maintenance.noAdditionalInfo')}
                 </div>
               )}
             </div>
@@ -667,7 +712,7 @@ const MaintenancePage = () => {
                 className="btn btn-primary"
                 style={{ flex: 1 }}
               >
-                Edytuj
+                {t('maintenance.edit')}
               </button>
               <button
                 onClick={() => {
@@ -677,7 +722,7 @@ const MaintenancePage = () => {
                 className="btn btn-secondary"
                 style={{ flex: 1 }}
               >
-                Zamknij
+                {t('maintenance.close')}
               </button>
             </div>
           </div>

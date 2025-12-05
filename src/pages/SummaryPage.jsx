@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { shootingSessionsAPI } from '../services/api';
+import { useCurrencyConverter } from '../hooks/useCurrencyConverter';
 
-const MonthlyCostsChart = ({ data }) => {
+const MonthlyCostsChart = ({ data, t, formatCurrency }) => {
   if (!data || data.length === 0) return null;
 
   const width = 800;
@@ -17,7 +19,11 @@ const MonthlyCostsChart = ({ data }) => {
   const formatMonthLabel = (monthString) => {
     const [year, month] = monthString.split('-');
     const date = new Date(year, month - 1);
-    const monthNames = ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru'];
+    const monthNames = [
+      t('common.months.jan'), t('common.months.feb'), t('common.months.mar'), t('common.months.apr'),
+      t('common.months.may'), t('common.months.jun'), t('common.months.jul'), t('common.months.aug'),
+      t('common.months.sep'), t('common.months.oct'), t('common.months.nov'), t('common.months.dec')
+    ];
     const monthName = monthNames[date.getMonth()];
     const yearFull = date.getFullYear();
     return { month: monthName, year: yearFull.toString() };
@@ -130,6 +136,8 @@ const MonthlyCostsChart = ({ data }) => {
 };
 
 const SummaryPage = () => {
+  const { t } = useTranslation();
+  const { formatCurrency, convert } = useCurrencyConverter();
   const [summary, setSummary] = useState([]);
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -153,7 +161,7 @@ const SummaryPage = () => {
       setSessions(allSessions);
       setError(null);
     } catch (err) {
-      setError('Błąd podczas pobierania danych');
+      setError(t('common.error'));
       console.error(err);
     } finally {
       setLoading(false);
@@ -191,11 +199,16 @@ const SummaryPage = () => {
   const formatMonth = (monthString) => {
     const [year, month] = monthString.split('-');
     const date = new Date(year, month - 1);
-    return date.toLocaleDateString('pl-PL', { year: 'numeric', month: 'long' });
+    const monthNames = [
+      t('common.months.january'), t('common.months.february'), t('common.months.march'), t('common.months.april'),
+      t('common.months.may'), t('common.months.june'), t('common.months.july'), t('common.months.august'),
+      t('common.months.september'), t('common.months.october'), t('common.months.november'), t('common.months.december')
+    ];
+    return `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
   };
 
   if (loading) {
-    return <div className="text-center">Ładowanie...</div>;
+    return <div className="text-center">{t('common.loading')}</div>;
   }
 
   const accuracyStats = getAccuracyStats();
@@ -204,12 +217,12 @@ const SummaryPage = () => {
     <div>
       <div style={{ marginBottom: '2rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-          <h2 style={{ margin: 0 }}>Podsumowanie</h2>
+          <h2 style={{ margin: 0 }}>{t('summary.title')}</h2>
           <button 
             className="btn btn-primary" 
             onClick={fetchData}
           >
-            Odśwież
+            {t('summary.refresh')}
           </button>
         </div>
 
@@ -222,49 +235,49 @@ const SummaryPage = () => {
         {summary.length === 0 && sessions.length === 0 ? (
           <div className="card">
             <p className="text-center" style={{ color: '#888', padding: '2rem' }}>
-              Brak danych do wyświetlenia
+              {t('summary.noData')}
             </p>
             <p className="text-center" style={{ color: '#888' }}>
-              Dodaj sesje strzeleckie, aby zobaczyć podsumowanie.
+              {t('summary.addSessions')}
             </p>
           </div>
         ) : (
           <>
             <div style={{ marginBottom: '1.5rem' }}>
-              <h3 style={{ marginBottom: '1rem', fontSize: '1.2rem', fontWeight: '500' }}>Podsumowanie</h3>
+              <h3 style={{ marginBottom: '1rem', fontSize: '1.2rem', fontWeight: '500' }}>{t('summary.summary')}</h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '1rem', overflowX: 'auto' }}>
               <div className="card" style={{ textAlign: 'center' }}>
-                <h3 style={{ marginBottom: '0.5rem', fontSize: '0.9rem', color: '#aaa' }}>Łączny koszt</h3>
+                <h3 style={{ marginBottom: '0.5rem', fontSize: '0.9rem', color: '#aaa' }}>{t('summary.totalCost')}</h3>
                 <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#dc3545' }}>
-                  {getTotalCost().toFixed(2).replace('.', ',')} zł
+                  {formatCurrency(getTotalCost())}
                 </div>
               </div>
               <div className="card" style={{ textAlign: 'center' }}>
-                <h3 style={{ marginBottom: '0.5rem', fontSize: '0.9rem', color: '#aaa' }}>Łączna liczba strzałów</h3>
+                <h3 style={{ marginBottom: '0.5rem', fontSize: '0.9rem', color: '#aaa' }}>{t('summary.totalShots')}</h3>
                 <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#007bff' }}>
                   {getTotalShots()}
                 </div>
               </div>
               <div className="card" style={{ textAlign: 'center' }}>
-                <h3 style={{ marginBottom: '0.5rem', fontSize: '0.9rem', color: '#aaa' }}>Średni koszt za strzał</h3>
+                <h3 style={{ marginBottom: '0.5rem', fontSize: '0.9rem', color: '#aaa' }}>{t('summary.avgCostPerShot')}</h3>
                 <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#28a745' }}>
-                  {getTotalShots() > 0 ? (getTotalCost() / getTotalShots()).toFixed(2).replace('.', ',') : '0,00'} zł
+                  {getTotalShots() > 0 ? formatCurrency(getTotalCost() / getTotalShots()) : formatCurrency(0)}
                 </div>
               </div>
                 <div className="card" style={{ textAlign: 'center' }}>
-                  <h3 style={{ marginBottom: '0.5rem', fontSize: '0.9rem', color: '#aaa' }}>Średnia celność</h3>
+                  <h3 style={{ marginBottom: '0.5rem', fontSize: '0.9rem', color: '#aaa' }}>{t('summary.avgAccuracy')}</h3>
                   <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#ff9800' }}>
                     {accuracyStats.averageAccuracy.toFixed(1).replace('.', ',')}%
                   </div>
                 </div>
                 <div className="card" style={{ textAlign: 'center' }}>
-                  <h3 style={{ marginBottom: '0.5rem', fontSize: '0.9rem', color: '#aaa' }}>Sesje celnościowe</h3>
+                  <h3 style={{ marginBottom: '0.5rem', fontSize: '0.9rem', color: '#aaa' }}>{t('summary.accuracySessions')}</h3>
                   <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#6f42c1' }}>
                     {accuracyStats.totalSessions}
                   </div>
                 </div>
                 <div className="card" style={{ textAlign: 'center' }}>
-                  <h3 style={{ marginBottom: '0.5rem', fontSize: '0.9rem', color: '#aaa' }}>Łączne trafienia</h3>
+                  <h3 style={{ marginBottom: '0.5rem', fontSize: '0.9rem', color: '#aaa' }}>{t('summary.totalHits')}</h3>
                   <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#007bff' }}>
                     {accuracyStats.totalHits}
                   </div>
@@ -274,22 +287,22 @@ const SummaryPage = () => {
 
             {summary.length > 0 && (
               <div className="card" style={{ marginBottom: '1.5rem' }}>
-                <h3 style={{ marginBottom: '1rem' }}>Koszty miesięczne</h3>
-                <MonthlyCostsChart data={summary} />
+                <h3 style={{ marginBottom: '1rem' }}>{t('summary.monthlyCosts')}</h3>
+                <MonthlyCostsChart data={summary} t={t} formatCurrency={formatCurrency} />
               </div>
             )}
 
             {summary.length > 0 && (
               <div className="card" style={{ marginBottom: '1.5rem' }}>
-                <h3 style={{ marginBottom: '1rem' }}>Podsumowanie miesięczne</h3>
+                <h3 style={{ marginBottom: '1rem' }}>{t('summary.monthlySummary')}</h3>
                 <div style={{ overflowX: 'auto' }}>
                   <table className="table">
                     <thead>
                       <tr>
-                        <th>Miesiąc</th>
-                        <th>Koszt</th>
-                        <th>Strzały</th>
-                        <th>Średni koszt za strzał</th>
+                        <th>{t('summary.month')}</th>
+                        <th>{t('summary.cost')}</th>
+                        <th>{t('summary.shots')}</th>
+                        <th>{t('summary.avgCostPerShot')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -297,13 +310,13 @@ const SummaryPage = () => {
                         <tr key={month.month}>
                           <td style={{ fontWeight: '500' }}>{formatMonth(month.month)}</td>
                           <td style={{ fontWeight: 'bold', color: '#dc3545' }}>
-                            {month.total_cost.toFixed(2).replace('.', ',')} zł
+                            {formatCurrency(month.total_cost)}
                           </td>
                           <td style={{ fontWeight: 'bold', color: '#007bff' }}>
                             {month.total_shots}
                           </td>
                           <td style={{ fontWeight: 'bold', color: '#28a745' }}>
-                            {month.total_shots > 0 ? (month.total_cost / month.total_shots).toFixed(2).replace('.', ',') : '0,00'} zł
+                            {month.total_shots > 0 ? formatCurrency(month.total_cost / month.total_shots) : formatCurrency(0)}
                           </td>
                         </tr>
                       ))}

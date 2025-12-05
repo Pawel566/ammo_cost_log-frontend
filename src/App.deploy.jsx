@@ -100,9 +100,6 @@ function AppContent() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
                 <ul className="navbar-nav">
                   <li>
-                    <Link to="/dashboard">Pulpit</Link>
-                  </li>
-                  <li>
                     <Link to="/guns">Broń</Link>
                   </li>
                   <li>

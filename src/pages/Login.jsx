@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import './HomePage.css';
 
 const Login = () => {
   const { signIn, loading } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -28,9 +30,9 @@ const Login = () => {
     setSuccess('');
     const { error } = await signIn(formData.email, formData.password);
     if (error) {
-      setError('Błąd logowania: ' + error);
+      setError(t('login.loginError', { error }));
     } else {
-      setSuccess('Zalogowano pomyślnie!');
+      setSuccess(t('login.loginSuccess'));
       setTimeout(() => {
         navigate('/dashboard');
       }, 1000);
@@ -41,49 +43,49 @@ const Login = () => {
     <div className="homepage">
       <div className="homepage-container">
         <header className="homepage-header">
-          <h1 className="app-title">Ammo Cost Log</h1>
-          <p className="app-subtitle">Śledź użycie i koszty amunicji z Ammo Cost Log.</p>
+          <h1 className="app-title">{t('login.title')}</h1>
+          <p className="app-subtitle">{t('login.subtitle')}</p>
         </header>
         <div className="homepage-content" style={{ gridTemplateColumns: '1fr', maxWidth: '500px', margin: '0 auto' }}>
           <section className="login-section">
             <div className="login-card">
               <div className="auth-buttons-large">
                 <Link to="/login" className="auth-btn-large login-btn-large active">
-                  Zaloguj się
+                  {t('login.login')}
                 </Link>
                 <Link to="/register" className="auth-btn-large register-btn-large">
-                  Zarejestruj się
+                  {t('login.register')}
                 </Link>
               </div>
               {error && <div className="error-message">{error}</div>}
               {success && <div className="success-message">{success}</div>}
               <form onSubmit={handleSubmit} className="login-form">
                 <div className="form-group">
-                  <label htmlFor="email">Email</label>
+                  <label htmlFor="email">{t('login.email')}</label>
                   <input
                     type="email"
                     id="email"
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    placeholder="Wprowadź email"
+                    placeholder={t('login.emailPlaceholder')}
                     required
                   />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="password">Hasło</label>
+                  <label htmlFor="password">{t('login.password')}</label>
                   <input
                     type="password"
                     id="password"
                     name="password"
                     value={formData.password}
                     onChange={handleInputChange}
-                    placeholder="Wprowadź hasło"
+                    placeholder={t('login.passwordPlaceholder')}
                     required
                   />
                 </div>
                 <button type="submit" className="login-btn" disabled={loading}>
-                  {loading ? 'Logowanie...' : 'Zaloguj się'}
+                  {loading ? t('login.loggingIn') : t('login.loginButton')}
                 </button>
               </form>
               <div style={{ textAlign: 'center', marginTop: '1rem' }}>
@@ -95,20 +97,20 @@ const Login = () => {
                     fontSize: '0.9rem'
                   }}
                 >
-                  Nie pamiętasz hasła?
+                  {t('login.forgotPassword')}
                 </Link>
               </div>
               <div className="guest-info">
-                <p>Kontynuuj jako gość</p>
+                <p>{t('login.continueAsGuest')}</p>
                 <Link to="/guns" className="guest-btn">
-                  Przejdź do aplikacji
+                  {t('login.goToApp')}
                 </Link>
               </div>
             </div>
           </section>
         </div>
         <footer className="homepage-footer">
-          <p>&copy; 2024 Ammo Cost Log. Wszystkie prawa zastrzeżone.</p>
+          <p>{t('login.footer')}</p>
         </footer>
       </div>
     </div>

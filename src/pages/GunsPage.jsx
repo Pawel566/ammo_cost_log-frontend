@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { gunsAPI, maintenanceAPI, shootingSessionsAPI, settingsAPI } from '../services/api';
 
 const MaintenanceStatusIcon = ({ status }) => {
-  const iconSize = 20;
+  const iconSize = 48;
   
   if (status === 'green' || status === 'ok') {
     // Zielona ikona z checkmarkiem - OK
@@ -15,22 +16,30 @@ const MaintenanceStatusIcon = ({ status }) => {
       </svg>
     );
   } else if (status === 'yellow' || status === 'warning') {
-    // Żółta ikona z wykrzyknikiem - Wkrótce wymagana
+    // Pomarańczowa ikona ostrzegawcza - Wkrótce wymagana
     return (
-      <svg width={iconSize} height={iconSize} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M10 2 L18 18 L2 18 Z" fill="#ff9800" stroke="none"/>
-        <path d="M10 6 L10 11" stroke="black" strokeWidth="2" strokeLinecap="round"/>
-        <circle cx="10" cy="14" r="1" fill="black"/>
-      </svg>
+      <img 
+        src="/assets/warning_weapon_orange.png" 
+        alt="Warning"
+        style={{ 
+          width: `${iconSize}px`, 
+          height: `${iconSize}px`,
+          objectFit: 'contain'
+        }}
+      />
     );
   } else if (status === 'red' || status === 'required') {
-    // Czerwona ikona z wykrzyknikiem - Wymagana
+    // Czerwona ikona ostrzegawcza - Wymagana
     return (
-      <svg width={iconSize} height={iconSize} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="10" cy="10" r="9" fill="#f44336" stroke="none"/>
-        <path d="M10 5 L10 11" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-        <circle cx="10" cy="14" r="1" fill="white"/>
-      </svg>
+      <img 
+        src="/assets/warning_weapon_red.png" 
+        alt="Required"
+        style={{ 
+          width: `${iconSize}px`, 
+          height: `${iconSize}px`,
+          objectFit: 'contain'
+        }}
+      />
     );
   } else {
     // Szara ikona z przekreśleniem - Nie dotyczy
@@ -108,6 +117,7 @@ const ALL_CALIBERS = [
 ];
 
 const GunsPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [guns, setGuns] = useState([]);
@@ -171,7 +181,7 @@ const GunsPage = () => {
       setGuns(items);
       setError(null);
     } catch (err) {
-      setError('Błąd podczas pobierania listy broni');
+      setError(t('guns.errorLoading'));
       console.error(err);
     } finally {
       setLoading(false);
@@ -377,9 +387,9 @@ const GunsPage = () => {
     };
 
     const messages = {
-      green: 'OK',
-      yellow: 'Wkrótce wymagana',
-      red: 'Wymagana',
+      green: t('common.ok'),
+      yellow: t('common.soonRequired'),
+      red: t('common.required'),
       none: '-'
     };
 
@@ -389,19 +399,19 @@ const GunsPage = () => {
 
     if (finalStatus === 'red') {
       if (useRounds && rounds >= roundsLimit) {
-        reason = `Wymagana konserwacja: przekroczono limit strzałów (${rounds}/${roundsLimit})`;
+        reason = `${t('common.required')}: ${roundsPercentage}% (${rounds}/${roundsLimit})`;
       } else if (!useRounds && days >= daysLimit) {
-        reason = `Wymagana konserwacja: przekroczono limit czasu (${days}/${daysLimit} dni)`;
+        reason = `${t('common.required')}: ${daysPercentage}% (${days}/${daysLimit} ${t('common.days')})`;
       } else if (useRounds) {
-        reason = `Wymagana konserwacja: ${roundsPercentage}% limitu strzałów (${rounds}/${roundsLimit})`;
+        reason = `${t('common.required')}: ${roundsPercentage}% (${rounds}/${roundsLimit})`;
       } else {
-        reason = `Wymagana konserwacja: ${daysPercentage}% limitu czasu (${days}/${daysLimit} dni)`;
+        reason = `${t('common.required')}: ${daysPercentage}% (${days}/${daysLimit} ${t('common.days')})`;
       }
     } else if (finalStatus === 'yellow') {
       if (useRounds) {
-        reason = `${roundsPercentage}% limitu strzałów (${rounds}/${roundsLimit})`;
+        reason = `${roundsPercentage}% (${rounds}/${roundsLimit})`;
       } else {
-        reason = `${daysPercentage}% limitu czasu (${days}/${daysLimit} dni)`;
+        reason = `${daysPercentage}% (${days}/${daysLimit} ${t('common.days')})`;
       }
     }
 
@@ -456,13 +466,14 @@ const GunsPage = () => {
       
       let gunName = formData.name;
       let gunType = formData.type || '';
+      const gunDisplayName = `${gunType ? gunType + ' ' : ''}${gunName}`;
       if (editingId) {
         await gunsAPI.update(editingId, gunData);
         setEditingId(null);
-        setSuccess(`${gunType ? gunType + ' ' : ''}${gunName} zaktualizowany!`);
+        setSuccess(t('common.itemUpdated', { item: gunDisplayName }));
       } else {
         await gunsAPI.create(gunData);
-        setSuccess(`${gunType ? gunType + ' ' : ''}${gunName} dodany!`);
+        setSuccess(t('common.itemAdded', { item: gunDisplayName }));
       }
       
       setFormData({ name: '', caliber: '', caliberCustom: '', type: '', notes: '' });
@@ -472,7 +483,7 @@ const GunsPage = () => {
       fetchGuns();
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Błąd podczas zapisywania broni');
+      setError(err.response?.data?.detail || t('common.errorSaving', { item: 'weapon' }));
       console.error(err);
     }
   };
@@ -513,15 +524,15 @@ const GunsPage = () => {
     const gunType = gunToDelete ? (gunToDelete.type || '') : '';
     const gunDisplayName = `${gunType ? gunType + ' ' : ''}${gunName}`;
     
-    if (window.confirm(`Czy na pewno chcesz usunąć ${gunDisplayName}?`)) {
+    if (window.confirm(`${t('common.confirmDeleteItem')} ${gunDisplayName}?`)) {
       try {
         await gunsAPI.delete(id);
-        setSuccess(`${gunType ? gunType + ' ' : ''}${gunName} usunięty!`);
+        setSuccess(t('common.itemDeleted', { item: gunDisplayName }));
         fetchGuns();
         setActiveMenuId(null);
         setTimeout(() => setSuccess(null), 3000);
       } catch (err) {
-        setError(err.response?.data?.detail || 'Błąd podczas usuwania broni');
+        setError(err.response?.data?.detail || t('common.errorDeleting', { item: 'weapon' }));
         console.error(err);
       }
     }
@@ -556,14 +567,14 @@ const GunsPage = () => {
   }, [activeMenuId]);
 
   if (loading) {
-    return <div className="text-center">Ładowanie...</div>;
+    return <div className="text-center">{t('common.loading')}</div>;
   }
 
   return (
     <div>
       <div style={{ marginBottom: '2rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-          <h2 style={{ margin: 0 }}>Broń</h2>
+          <h2 style={{ margin: 0 }}>{t('guns.title')}</h2>
           <button 
             className="btn btn-primary" 
             onClick={() => {
@@ -583,7 +594,7 @@ const GunsPage = () => {
               fontSize: '0.9rem'
             }}
           >
-            + Dodaj broń
+            {t('guns.addWeapon')}
           </button>
         </div>
 
@@ -602,11 +613,11 @@ const GunsPage = () => {
         {showForm && (
           <div className="card" style={{ marginBottom: '1.5rem' }}>
             <h3 style={{ marginBottom: '1rem' }}>
-              {editingId ? 'Edytuj broń' : 'Dodaj nową broń'}
+              {editingId ? t('guns.editWeapon') : t('guns.addNewWeapon')}
             </h3>
             <form onSubmit={handleSubmit}>
               <div className="form-group">
-                <label className="form-label">Nazwa broni *</label>
+                <label className="form-label">{t('guns.weaponName')}</label>
                 <input
                   type="text"
                   className="form-input"
@@ -616,24 +627,24 @@ const GunsPage = () => {
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">Rodzaj broni</label>
+                <label className="form-label">{t('guns.weaponType')}</label>
                 <select
                   className="form-input"
                   value={formData.type}
                   onChange={handleTypeChange}
                 >
-                  <option value="">Wybierz rodzaj</option>
-                  <option value="Pistolet">Pistolet</option>
-                  <option value="Pistolet maszynowy">Pistolet maszynowy</option>
-                  <option value="Rewolwer">Rewolwer</option>
-                  <option value="Karabinek">Karabinek</option>
-                  <option value="Karabin">Karabin</option>
-                  <option value="Strzelba">Strzelba</option>
-                  <option value="Inna">Inna</option>
+                  <option value="">{t('guns.selectType')}</option>
+                  <option value="Pistolet">{t('guns.pistol')}</option>
+                  <option value="Pistolet maszynowy">{t('guns.submachineGun')}</option>
+                  <option value="Rewolwer">{t('guns.revolver')}</option>
+                  <option value="Karabinek">{t('guns.carbine')}</option>
+                  <option value="Karabin">{t('guns.rifle')}</option>
+                  <option value="Strzelba">{t('guns.shotgun')}</option>
+                  <option value="Inna">{t('guns.other')}</option>
                 </select>
               </div>
               <div className="form-group">
-                <label className="form-label">Kaliber</label>
+                <label className="form-label">{t('guns.caliber')}</label>
                 {!useCustomCaliber ? (
                   <select
                     className="form-input"
@@ -653,12 +664,12 @@ const GunsPage = () => {
                     }}
                   >
                     <option value="">
-                      {formData.type ? 'Wybierz kaliber' : 'Najpierw wybierz rodzaj broni'}
+                      {formData.type ? t('guns.selectCaliber') : t('guns.selectTypeFirst')}
                     </option>
                     {formData.type && getAvailableCalibers().map(caliber => (
                       <option key={caliber} value={caliber}>{caliber}</option>
                     ))}
-                    {formData.type && <option value="custom">Własny kaliber...</option>}
+                    {formData.type && <option value="custom">{t('guns.customCaliber')}</option>}
                   </select>
                 ) : (
                   <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
@@ -667,7 +678,7 @@ const GunsPage = () => {
                       className="form-input"
                       value={formData.caliberCustom}
                       onChange={handleCustomCaliberChange}
-                      placeholder="Wpisz własny kaliber"
+                      placeholder={t('guns.enterCustomCaliber')}
                       style={{
                         flex: 1,
                         padding: '0.75rem',
@@ -694,13 +705,13 @@ const GunsPage = () => {
                         fontSize: '0.9rem'
                       }}
                     >
-                      Anuluj
+                      {t('common.cancel')}
                     </button>
                   </div>
                 )}
               </div>
               <div className="form-group">
-                <label className="form-label">Notatki</label>
+                <label className="form-label">{t('guns.notes')}</label>
                 <textarea
                   className="form-input"
                   rows="3"
@@ -709,7 +720,7 @@ const GunsPage = () => {
                 />
               </div>
               <button type="submit" className="btn btn-success">
-                {editingId ? 'Zapisz zmiany' : 'Dodaj broń'}
+                {editingId ? t('guns.saveChanges') : t('guns.addWeapon')}
               </button>
             </form>
           </div>
@@ -727,7 +738,7 @@ const GunsPage = () => {
           }}>
             <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
               <div>
-                <label style={{ marginRight: '0.5rem', color: '#aaa', fontSize: '0.9rem' }}>Rodzaj:</label>
+                <label style={{ marginRight: '0.5rem', color: '#aaa', fontSize: '0.9rem' }}>{t('guns.filterByType')}</label>
                 <select
                   value={typeFilter}
                   onChange={(e) => setTypeFilter(e.target.value)}
@@ -740,14 +751,14 @@ const GunsPage = () => {
                     fontSize: '0.9rem'
                   }}
                 >
-                  <option value="">Wszystkie</option>
+                  <option value="">{t('common.all')}</option>
                   {getUniqueTypes().map(type => (
                     <option key={type} value={type}>{type}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label style={{ marginRight: '0.5rem', color: '#aaa', fontSize: '0.9rem' }}>Kaliber:</label>
+                <label style={{ marginRight: '0.5rem', color: '#aaa', fontSize: '0.9rem' }}>{t('guns.filterByCaliber')}</label>
                 <select
                   value={caliberFilter}
                   onChange={(e) => setCaliberFilter(e.target.value)}
@@ -760,7 +771,7 @@ const GunsPage = () => {
                     fontSize: '0.9rem'
                   }}
                 >
-                  <option value="">Wszystkie</option>
+                  <option value="">{t('common.all')}</option>
                   {getUniqueCalibers().map(caliber => (
                     <option key={caliber} value={caliber}>{caliber}</option>
                   ))}
@@ -769,7 +780,7 @@ const GunsPage = () => {
             </div>
             
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ color: '#aaa', fontSize: '0.9rem' }}>Pokaż:</span>
+              <span style={{ color: '#aaa', fontSize: '0.9rem' }}>{t('common.show')}:</span>
               <select
                 value={itemsPerPage}
                 onChange={(e) => {
@@ -824,7 +835,7 @@ const GunsPage = () => {
           {/* Tabela */}
           {paginatedGuns.length === 0 ? (
             <p className="text-center" style={{ color: '#888', padding: '2rem' }}>
-              Brak broni spełniającej kryteria
+              {t('guns.noWeaponsMatch')}
             </p>
           ) : (
             <div style={{ overflowX: 'auto' }}>
@@ -844,7 +855,7 @@ const GunsPage = () => {
                       onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
-                      Nazwa
+                      {t('common.name')}
                     </th>
                     <th 
                       style={{ 
@@ -859,7 +870,7 @@ const GunsPage = () => {
                       onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
-                      Rodzaj
+                      {t('common.type')}
                     </th>
                     <th 
                       style={{ 
@@ -874,10 +885,10 @@ const GunsPage = () => {
                       onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
-                      Kaliber
+                      {t('guns.caliber')}
                     </th>
-                    <th style={{ padding: '0.75rem', textAlign: 'left', color: '#aaa', fontWeight: 'normal' }}>Konserwacja</th>
-                    <th style={{ padding: '0.75rem', textAlign: 'left', color: '#aaa', fontWeight: 'normal' }}>Akcje</th>
+                    <th style={{ padding: '0.75rem', textAlign: 'left', color: '#aaa', fontWeight: 'normal' }}>{t('guns.maintenance')}</th>
+                    <th style={{ padding: '0.75rem', textAlign: 'left', color: '#aaa', fontWeight: 'normal' }}>{t('common.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -947,7 +958,7 @@ const GunsPage = () => {
                                     onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
                                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                                   >
-                                    Szczegóły
+                                    {t('common.details')}
                                   </div>
                                 )}
                                 <div
@@ -961,7 +972,7 @@ const GunsPage = () => {
                                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
                                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                         >
-                          Edytuj
+                          {t('common.edit')}
                                 </div>
                                 <div
                           onClick={() => handleDelete(gun.id)}
@@ -973,7 +984,7 @@ const GunsPage = () => {
                                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
                                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                         >
-                          Usuń
+                          {t('common.delete')}
                                 </div>
                               </div>
                             )}

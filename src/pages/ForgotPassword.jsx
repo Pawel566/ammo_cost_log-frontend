@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { authAPI } from '../services/api';
 import './HomePage.css';
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -18,10 +20,10 @@ const ForgotPassword = () => {
 
     try {
       const response = await authAPI.forgotPassword(email);
-      setSuccess(response.data.message || 'Jeśli podany email istnieje w systemie, wysłaliśmy link do resetowania hasła.');
+      setSuccess(response.data.message || t('forgotPassword.success'));
       setEmail('');
     } catch (err) {
-      setError(err.response?.data?.detail || 'Wystąpił błąd podczas wysyłania emaila resetującego.');
+      setError(err.response?.data?.detail || t('forgotPassword.error'));
     } finally {
       setLoading(false);
     }
@@ -31,8 +33,8 @@ const ForgotPassword = () => {
     <div className="homepage">
       <div className="homepage-container">
         <header className="homepage-header">
-          <h1 className="app-title">Ammo Cost Log</h1>
-          <p className="app-subtitle">Odzyskaj dostęp do konta</p>
+          <h1 className="app-title">{t('forgotPassword.title')}</h1>
+          <p className="app-subtitle">{t('forgotPassword.subtitle')}</p>
         </header>
         <div className="homepage-content" style={{ gridTemplateColumns: '1fr', maxWidth: '500px', margin: '0 auto' }}>
           <section className="login-section">
@@ -43,7 +45,7 @@ const ForgotPassword = () => {
                   {success}
                   <div style={{ marginTop: '15px' }}>
                     <Link to="/login" className="register-btn" style={{ display: 'inline-block' }}>
-                      Wróć do logowania
+                      {t('forgotPassword.backToLogin')}
                     </Link>
                   </div>
                 </div>
@@ -52,7 +54,7 @@ const ForgotPassword = () => {
                 <>
                   <form onSubmit={handleSubmit} className="login-form">
                     <div className="form-group">
-                      <label htmlFor="email">Email</label>
+                      <label htmlFor="email">{t('forgotPassword.email')}</label>
                       <input
                         type="email"
                         id="email"
@@ -62,12 +64,12 @@ const ForgotPassword = () => {
                           setEmail(e.target.value);
                           setError('');
                         }}
-                        placeholder="Wprowadź email"
+                        placeholder={t('forgotPassword.emailPlaceholder')}
                         required
                       />
                     </div>
                     <button type="submit" className="login-btn" disabled={loading}>
-                      {loading ? 'Wysyłanie...' : 'Wyślij link resetujący'}
+                      {loading ? t('forgotPassword.sending') : t('forgotPassword.sendButton')}
                     </button>
                   </form>
                   <div style={{ textAlign: 'center', marginTop: '1rem' }}>
@@ -79,7 +81,7 @@ const ForgotPassword = () => {
                         fontSize: '0.9rem'
                       }}
                     >
-                      Wróć do logowania
+                      {t('forgotPassword.backToLogin')}
                     </Link>
                   </div>
                 </>
@@ -88,7 +90,7 @@ const ForgotPassword = () => {
           </section>
         </div>
         <footer className="homepage-footer">
-          <p>&copy; 2024 Ammo Cost Log. Wszystkie prawa zastrzeżone.</p>
+          <p>{t('forgotPassword.footer')}</p>
         </footer>
       </div>
     </div>
@@ -96,6 +98,10 @@ const ForgotPassword = () => {
 };
 
 export default ForgotPassword;
+
+
+
+
 
 
 

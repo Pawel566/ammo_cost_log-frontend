@@ -144,4 +144,16 @@ export const authAPI = {
   forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
 };
 
+// Currency Rates API
+export const currencyRatesAPI = {
+  getLatest: () => api.get('/currency-rates/latest'),
+  getLatestByCode: (code) => api.get(`/currency-rates/latest/${code}`),
+  convert: (amount, fromCurrency, toCurrency) => api.post('/currency-rates/convert', {
+    amount,
+    from_currency: fromCurrency,
+    to_currency: toCurrency
+  }),
+  getRate: (currency) => api.get(`/currency-rates/rate/${currency}`),
+};
+
 export default api;

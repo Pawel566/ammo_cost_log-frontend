@@ -2,11 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { shootingSessionsAPI, gunsAPI, ammoAPI, settingsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useCurrencyConverter } from '../hooks/useCurrencyConverter';
 
 const AddShootingSessionPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { user } = useAuth();
+  const { formatCurrency, getCurrencySymbol } = useCurrencyConverter();
   const isEditMode = !!id;
   const [guns, setGuns] = useState([]);
   const [ammo, setAmmo] = useState([]);
@@ -82,14 +84,15 @@ const AddShootingSessionPage = () => {
         }
       }
       
-      // Konwersja dystansu z metrów na jednostki użytkownika
+      // Użyj przeliczonych wartości z API (distance i distance_unit)
       let distanceDisplay = '';
-      if (session.distance_m) {
+      if (session.distance && session.distance_unit) {
+        distanceDisplay = `${session.distance} ${session.distance_unit}`;
+      } else if (session.distance_m) {
+        // Fallback dla starych danych
         const distanceInMeters = session.distance_m;
-        // Użyj aktualnej wartości distanceUnit (może być jeszcze 'm' jeśli ustawienia nie zostały załadowane)
         const currentUnit = distanceUnit || 'm';
         if (currentUnit === 'yd') {
-          // Konwersja metrów na jardy: 1 m = 1.09361 yd
           const distanceInYards = Math.round(distanceInMeters * 1.09361);
           distanceDisplay = `${distanceInYards} yd`;
         } else {
@@ -892,19 +895,19 @@ const AddShootingSessionPage = () => {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <label style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>Koszt całkowity:</label>
                 <div style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#4caf50' }}>
-                  {calculateTotalCost()} zł
+                  {formatCurrency(calculateTotalCost())}
                 </div>
               </div>
               <div style={{ marginTop: '0.5rem', fontSize: '0.9rem', color: 'var(--text-tertiary)' }}>
                 {formData.cost && formData.cost.trim() ? (
                   <>
-                    Koszt stały: {parseFloat(formData.cost.replace(',', '.').trim()) || 0} zł
+                    Koszt stały: {formatCurrency(parseFloat(formData.cost.replace(',', '.').trim()) || 0)}
                     {formData.ammo_id && formData.shots && (() => {
                       const selectedAmmo = ammo.find(a => a.id === formData.ammo_id);
                       if (selectedAmmo && selectedAmmo.price_per_unit) {
                         const shots = parseInt(formData.shots, 10);
                         if (!isNaN(shots) && shots > 0) {
-                          return ` + (${shots} × ${selectedAmmo.price_per_unit.toFixed(2).replace('.', ',')} zł)`;
+                          return ` + (${shots} × ${formatCurrency(selectedAmmo.price_per_unit)})`;
                         }
                       }
                       return null;
@@ -916,13 +919,13 @@ const AddShootingSessionPage = () => {
                     if (selectedAmmo && selectedAmmo.price_per_unit) {
                       const shots = parseInt(formData.shots, 10);
                       if (!isNaN(shots) && shots > 0) {
-                        return `${shots} × ${selectedAmmo.price_per_unit.toFixed(2).replace('.', ',')} zł`;
+                        return `${shots} × ${formatCurrency(selectedAmmo.price_per_unit)}`;
                       }
                     }
-                    return '0,00 zł';
+                    return formatCurrency(0);
                   })()
                 ) : (
-                  '0,00 zł'
+                  formatCurrency(0)
                 )}
               </div>
             </div>

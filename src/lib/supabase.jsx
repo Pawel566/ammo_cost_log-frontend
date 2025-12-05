@@ -8,11 +8,16 @@ let supabase = null;
 if (supabaseUrl && supabaseAnonKey && supabaseUrl !== 'https://your-project-id.supabase.co') {
   try {
     supabase = createClient(supabaseUrl, supabaseAnonKey)
+    console.log('Supabase client initialized successfully')
   } catch (e) {
-    console.warn('Failed to initialize Supabase client:', e)
+    console.error('Failed to initialize Supabase client:', e)
   }
 } else {
-  console.warn('Supabase credentials not found. Authentication will be disabled.')
+  if (import.meta.env.MODE === 'production') {
+    console.error('Supabase credentials not found in production! Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel environment variables.')
+  } else {
+    console.warn('Supabase credentials not found. Authentication will be disabled.')
+  }
 }
 
 export { supabase }

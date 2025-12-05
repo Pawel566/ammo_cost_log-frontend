@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
+import { LanguageProvider } from './context/LanguageContext';
+import { CurrencyProvider } from './context/CurrencyContext';
 import HomePage from './pages/HomePage';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -21,6 +24,7 @@ import './App.css';
 
 const NavbarUser = () => {
   const { user, signOut } = useAuth();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
@@ -60,20 +64,20 @@ const NavbarUser = () => {
           {isMenuOpen && (
             <div className="user-menu-dropdown">
               <div className="user-menu-item" onClick={() => { setIsMenuOpen(false); navigate('/account'); }}>
-                Moje konto
+                {t('userMenu.myAccount')}
               </div>
               <div className="user-menu-item" onClick={() => { setIsMenuOpen(false); navigate('/my-weapons'); }}>
-                Moja broń i wyposażenie
+                {t('userMenu.myWeapons')}
               </div>
               <div className="user-menu-item" onClick={() => { setIsMenuOpen(false); navigate('/maintenance'); }}>
-                Konserwacja
+                {t('userMenu.maintenance')}
               </div>
               <div className="user-menu-item" onClick={() => { setIsMenuOpen(false); navigate('/settings'); }}>
-                Ustawienia
+                {t('userMenu.settings')}
               </div>
               <div className="user-menu-divider"></div>
               <div className="user-menu-item" onClick={handleLogout}>
-                Wyloguj
+                {t('userMenu.logout')}
               </div>
             </div>
           )}
@@ -87,6 +91,7 @@ function AppContent() {
   const location = useLocation();
   const navigate = useNavigate();
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const isHomePage = location.pathname === '/' || location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/forgot-password' || location.pathname === '/reset-password';
 
   // Check for password reset token in URL and redirect to reset-password page
@@ -132,19 +137,16 @@ function AppContent() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
                 <ul className="navbar-nav">
                   <li>
-                    <Link to="/dashboard">Pulpit</Link>
+                    <Link to="/guns">{t('nav.guns')}</Link>
                   </li>
                   <li>
-                    <Link to="/guns">Broń</Link>
+                    <Link to="/ammo">{t('nav.ammo')}</Link>
                   </li>
                   <li>
-                    <Link to="/ammo">Amunicja</Link>
+                    <Link to="/shooting-sessions">{t('nav.shootingSessions')}</Link>
                   </li>
                   <li>
-                    <Link to="/shooting-sessions">Sesje strzeleckie</Link>
-                  </li>
-                  <li>
-                    <Link to="/summary">Podsumowanie</Link>
+                    <Link to="/summary">{t('nav.summary')}</Link>
                   </li>
                 </ul>
                 <NavbarUser />
@@ -181,11 +183,15 @@ function AppContent() {
 function App() {
   return (
     <AuthProvider>
-      <ThemeProvider>
-        <Router>
-          <AppContent />
-        </Router>
-      </ThemeProvider>
+      <LanguageProvider>
+        <CurrencyProvider>
+          <ThemeProvider>
+            <Router>
+              <AppContent />
+            </Router>
+          </ThemeProvider>
+        </CurrencyProvider>
+      </LanguageProvider>
     </AuthProvider>
   );
 }

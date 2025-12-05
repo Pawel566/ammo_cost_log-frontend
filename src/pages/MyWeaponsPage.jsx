@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { gunsAPI, attachmentsAPI, shootingSessionsAPI, ammoAPI, maintenanceAPI, settingsAPI } from '../services/api';
 import imageCompression from 'browser-image-compression';
 
 const MaintenanceStatusIcon = ({ status }) => {
-  const iconSize = 20;
+  const iconSize = 48;
   
   if (status === 'green' || status === 'ok') {
     // Zielona ikona z checkmarkiem - OK
@@ -15,22 +16,30 @@ const MaintenanceStatusIcon = ({ status }) => {
       </svg>
     );
   } else if (status === 'yellow' || status === 'warning') {
-    // Żółta ikona z wykrzyknikiem - Wkrótce wymagana
+    // Pomarańczowa ikona ostrzegawcza - Wkrótce wymagana
     return (
-      <svg width={iconSize} height={iconSize} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M10 2 L18 18 L2 18 Z" fill="#ff9800" stroke="none"/>
-        <path d="M10 6 L10 11" stroke="black" strokeWidth="2" strokeLinecap="round"/>
-        <circle cx="10" cy="14" r="1" fill="black"/>
-      </svg>
+      <img 
+        src="/assets/warning_weapon_orange.png" 
+        alt="Warning"
+        style={{ 
+          width: `${iconSize}px`, 
+          height: `${iconSize}px`,
+          objectFit: 'contain'
+        }}
+      />
     );
   } else if (status === 'red' || status === 'required') {
-    // Czerwona ikona z wykrzyknikiem - Wymagana
+    // Czerwona ikona ostrzegawcza - Wymagana
     return (
-      <svg width={iconSize} height={iconSize} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="10" cy="10" r="9" fill="#f44336" stroke="none"/>
-        <path d="M10 5 L10 11" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-        <circle cx="10" cy="14" r="1" fill="white"/>
-      </svg>
+      <img 
+        src="/assets/warning_weapon_red.png" 
+        alt="Required"
+        style={{ 
+          width: `${iconSize}px`, 
+          height: `${iconSize}px`,
+          objectFit: 'contain'
+        }}
+      />
     );
   } else {
     // Szara ikona z przekreśleniem - Nie dotyczy
@@ -60,6 +69,7 @@ const AddGunImageIcon = ({ onClick }) => {
 };
 
 const MyWeaponsPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [guns, setGuns] = useState([]);
@@ -93,18 +103,32 @@ const MyWeaponsPage = () => {
   const [openImageMenu, setOpenImageMenu] = useState(null);
   const [expandedImage, setExpandedImage] = useState(null);
 
-  const maintenanceActivities = [
-    'Czyszczenie lufy',
-    'Czyszczenie suwadła',
-    'Czyszczenie zamka',
-    'Czyszczenie iglicy',
-    'Smarowanie prowadnic',
-    'Smarowanie zamka',
-    'Kontrola zużycia sprężyn',
-    'Kontrola zamka / rygli',
-    'Wymiana części',
-    'Sprawdzenie optyki',
-    'Czyszczenie magazynków'
+  const getMaintenanceActivities = () => [
+    t('myWeapons.activities.cleaning'),
+    t('myWeapons.activities.barrelCleaning'),
+    t('myWeapons.activities.chamberCleaning'),
+    t('myWeapons.activities.slideCleaning'),
+    t('myWeapons.activities.boltCleaning'),
+    t('myWeapons.activities.firingPinCleaning'),
+    t('myWeapons.activities.firingPinChannelCleaning'),
+    t('myWeapons.activities.magazineCleaning'),
+    t('myWeapons.activities.lubrication'),
+    t('myWeapons.activities.railLubrication'),
+    t('myWeapons.activities.boltLubrication'),
+    t('myWeapons.activities.inspection'),
+    t('myWeapons.activities.springWearCheck'),
+    t('myWeapons.activities.boltLatchCheck'),
+    t('myWeapons.activities.gasSystemCheck'),
+    t('myWeapons.activities.pinsCheck'),
+    t('myWeapons.activities.magazineInspection'),
+    t('myWeapons.activities.railAndOpticMountCheck'),
+    t('myWeapons.activities.barrelVisualCheck'),
+    t('myWeapons.activities.triggerCheck'),
+    t('myWeapons.activities.safetyCheck'),
+    t('myWeapons.activities.service'),
+    t('myWeapons.activities.opticZeroing'),
+    t('myWeapons.activities.partsReplacement'),
+    t('myWeapons.activities.opticCheck')
   ];
 
   useEffect(() => {
@@ -205,7 +229,7 @@ const MyWeaponsPage = () => {
       setGuns(uniqueGuns);
       setError('');
     } catch (err) {
-      setError('Błąd podczas pobierania listy broni');
+      setError(t('myWeapons.errorLoading'));
       console.error(err);
     } finally {
       setLoading(false);
@@ -295,18 +319,18 @@ const MyWeaponsPage = () => {
       fetchGunDetails(expandedGun);
       fetchGuns();
     } catch (err) {
-      setError(err.response?.data?.detail || 'Błąd podczas dodawania wyposażenia');
+      setError(err.response?.data?.detail || t('myWeapons.errorAddingAttachment'));
     }
   };
 
   const handleDeleteAttachment = async (attachmentId) => {
-    if (window.confirm('Czy na pewno chcesz usunąć to wyposażenie?')) {
+    if (window.confirm(`${t('common.confirmDeleteItem')} ${t('myWeapons.attachment')}?`)) {
       try {
         await attachmentsAPI.delete(attachmentId);
         fetchGunDetails(expandedGun);
         fetchGuns();
       } catch (err) {
-        setError(err.response?.data?.detail || 'Błąd podczas usuwania wyposażenia');
+        setError(err.response?.data?.detail || t('common.errorDeleting', { item: 'equipment' }));
       }
     }
   };
@@ -314,7 +338,7 @@ const MyWeaponsPage = () => {
   const handleAddMaintenance = async (e) => {
     e.preventDefault();
     if (!expandedGun && !editingMaintenance) {
-      setError('Brak wybranej broni');
+      setError(t('myWeapons.noWeaponSelected'));
       return;
     }
     try {
@@ -351,7 +375,7 @@ const MyWeaponsPage = () => {
       await fetchAllMaintenance();
       fetchGuns();
     } catch (err) {
-      setError(err.response?.data?.detail || 'Błąd podczas zapisywania konserwacji');
+      setError(err.response?.data?.detail || t('common.errorSaving', { item: 'maintenance' }));
       console.error(err);
     }
   };
@@ -371,29 +395,29 @@ const MyWeaponsPage = () => {
   };
 
   const handleDeleteMaintenance = async (maintenanceId) => {
-    if (window.confirm('Czy na pewno chcesz usunąć tę konserwację?')) {
+    if (window.confirm(`${t('common.confirmDeleteItem')} ${t('common.maintenance')}?`)) {
       try {
         await maintenanceAPI.delete(maintenanceId);
         await fetchGunDetails(expandedGun);
         await fetchAllMaintenance();
         fetchGuns();
       } catch (err) {
-        setError(err.response?.data?.detail || 'Błąd podczas usuwania konserwacji');
+        setError(err.response?.data?.detail || t('common.errorDeleting', { item: 'maintenance' }));
       }
     }
   };
 
   const getAttachmentTypeLabel = (type) => {
     const labels = {
-      optic: 'Celownik',
-      light: 'Latarka',
-      laser: 'Laser',
-      suppressor: 'Tłumik',
-      bipod: 'Dwójnóg',
-      compensator: 'Kompensator',
-      grip: 'Chwyt',
-      trigger: 'Spust',
-      other: 'Inne'
+      optic: t('myWeapons.optic'),
+      light: t('myWeapons.light'),
+      laser: t('myWeapons.laser'),
+      suppressor: t('myWeapons.suppressor'),
+      bipod: t('myWeapons.bipod'),
+      compensator: t('myWeapons.compensator'),
+      grip: t('myWeapons.grip'),
+      trigger: t('myWeapons.trigger'),
+      other: t('myWeapons.other')
     };
     return labels[type] || type;
   };
@@ -405,16 +429,16 @@ const MyWeaponsPage = () => {
   const getGunTypeLabel = (type) => {
     // Mapowanie starych wartości na nowe
     if (type === 'Broń krótka') {
-      return 'Pistolet';
+      return t('guns.pistol');
     }
     
     const labels = {
-      pistol: 'Pistolet',
-      rifle: 'Karabin',
-      shotgun: 'Strzelba',
-      other: 'Inne'
+      pistol: t('guns.pistol'),
+      rifle: t('guns.rifle'),
+      shotgun: t('guns.shotgun'),
+      other: t('guns.other')
     };
-    return labels[type?.toLowerCase()] || type || 'Inne';
+    return labels[type?.toLowerCase()] || type || t('guns.other');
   };
 
   const getLastMaintenance = (gunId) => {
@@ -521,27 +545,27 @@ const MyWeaponsPage = () => {
 
     if (finalStatus === 'red') {
       color = '#f44336';
-      message = 'Wymagana';
+      message = t('common.required');
       if (useRounds && rounds >= roundsLimit) {
-        reason = `Wymagana konserwacja: przekroczono limit strzałów (${rounds}/${roundsLimit})`;
+        reason = `${t('common.required')}: ${t('common.shots')} ${rounds}/${roundsLimit}`;
       } else if (!useRounds && days >= daysLimit) {
-        reason = `Wymagana konserwacja: przekroczono limit czasu (${days}/${daysLimit} dni)`;
+        reason = `${t('common.required')}: ${days}/${daysLimit} ${t('common.days')}`;
       } else if (useRounds) {
-        reason = `Wymagana konserwacja: ${roundsPercentage}% limitu strzałów (${rounds}/${roundsLimit})`;
+        reason = `${roundsPercentage}% ${t('common.shots')} (${rounds}/${roundsLimit})`;
       } else {
-        reason = `Wymagana konserwacja: ${daysPercentage}% limitu czasu (${days}/${daysLimit} dni)`;
+        reason = `${daysPercentage}% ${t('common.days')} (${days}/${daysLimit} ${t('common.days')})`;
       }
     } else if (finalStatus === 'yellow') {
       color = '#ff9800';
-      message = 'Wkrótce wymagana';
+      message = t('common.soonRequired');
       if (useRounds) {
-        reason = `${roundsPercentage}% limitu strzałów (${rounds}/${roundsLimit})`;
+        reason = `${roundsPercentage}% ${t('common.shots')} (${rounds}/${roundsLimit})`;
       } else {
-        reason = `${daysPercentage}% limitu czasu (${days}/${daysLimit} dni)`;
+        reason = `${daysPercentage}% ${t('common.days')} (${days}/${daysLimit} ${t('common.days')})`;
       }
     } else {
       color = '#4caf50';
-      message = 'OK';
+      message = t('common.ok');
       reason = '';
     }
 
@@ -576,7 +600,7 @@ const MyWeaponsPage = () => {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      setError('Plik musi być obrazem');
+      setError(t('myWeapons.fileMustBeImage'));
       return;
     }
 
@@ -602,7 +626,7 @@ const MyWeaponsPage = () => {
       await fetchGuns();
       setOpenImageMenu(null);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Błąd podczas przesyłania zdjęcia');
+      setError(err.response?.data?.detail || t('myWeapons.errorUploadingImage'));
       console.error(err);
     }
     
@@ -610,7 +634,7 @@ const MyWeaponsPage = () => {
   };
 
   const handleImageDelete = async (gunId) => {
-    if (!window.confirm('Czy na pewno chcesz usunąć zdjęcie?')) {
+    if (!window.confirm(`${t('common.confirmDeleteItem')} image?`)) {
       return;
     }
 
@@ -622,7 +646,7 @@ const MyWeaponsPage = () => {
       await fetchGuns();
       setOpenImageMenu(null);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Błąd podczas usuwania zdjęcia');
+      setError(err.response?.data?.detail || t('common.errorDeleting', { item: 'image' }));
       console.error(err);
     }
   };
@@ -635,20 +659,22 @@ const MyWeaponsPage = () => {
   };
 
   if (loading) {
-    return <div className="text-center">Ładowanie...</div>;
+    return <div className="text-center">{t('common.loading')}</div>;
   }
+
+  const maintenanceActivities = getMaintenanceActivities();
 
   return (
     <div>
       <div style={{ marginBottom: '2rem' }}>
-        <h2 style={{ marginBottom: '1.5rem' }}>Moja broń</h2>
+        <h2 style={{ marginBottom: '1.5rem' }}>{t('myWeapons.title')}</h2>
         {error && (
           <div className="alert alert-danger" style={{ marginBottom: '1rem' }}>
             {error}
           </div>
         )}
         {guns.length === 0 ? (
-          <p className="text-center">Brak dodanej broni</p>
+          <p className="text-center">{t('myWeapons.noWeapons')}</p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {guns.map((gun) => {
@@ -721,25 +747,25 @@ const MyWeaponsPage = () => {
                         <div style={{ fontSize: '0.85rem', color: '#888', marginTop: '0.5rem', display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
                           <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
                             {attCount > 0 && (
-                              <span>{attCount} {attCount === 1 ? 'dodatek' : attCount < 5 ? 'dodatki' : 'dodatków'}</span>
+                              <span>{attCount} {attCount === 1 ? t('myWeapons.attachment') : attCount < 5 ? t('myWeapons.attachments') : t('myWeapons.attachmentsMany')}</span>
                             )}
                             {lastMaintenance && (
                               <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                 <span style={{ color: '#007bff' }}>
-                                  Ostatnia konserwacja: {new Date(lastMaintenance.date).toLocaleDateString('pl-PL')}
+                                  {t('myWeapons.lastMaintenance')} {new Date(lastMaintenance.date).toLocaleDateString('pl-PL')}
                                 </span>
                                 {userSettings.maintenance_notifications_enabled && (
-                                  <span style={{ color: maintenanceStatus.color, display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                                    {maintenanceStatus.status !== 'none' && <MaintenanceStatusIcon status={maintenanceStatus.status} />}
-                                    <span>
-                                      {maintenanceStatus.message}
-                                      {(maintenanceStatus.status === 'yellow' || maintenanceStatus.status === 'red') && maintenanceStatus.reason && (
-                                        <span style={{ marginLeft: '0.5rem', fontSize: '0.8rem', opacity: 0.9 }}>
-                                          ({maintenanceStatus.reason})
-                                        </span>
-                                      )}
-                                    </span>
-                                  </span>
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+                                      {maintenanceStatus.status !== 'none' && <MaintenanceStatusIcon status={maintenanceStatus.status} />}
+                                      <span style={{ color: maintenanceStatus.color }}>{maintenanceStatus.message}</span>
+                                    </div>
+                                    {(maintenanceStatus.status === 'yellow' || maintenanceStatus.status === 'red') && maintenanceStatus.reason && (
+                                      <span style={{ fontSize: '0.8rem', color: '#aaa', marginLeft: '1.5rem' }}>
+                                        {maintenanceStatus.reason}
+                                      </span>
+                                    )}
+                                  </div>
                                 )}
                               </span>
                             )}
@@ -810,7 +836,7 @@ const MyWeaponsPage = () => {
                                 style={{ display: 'none' }}
                                 onClick={(e) => e.stopPropagation()}
                               />
-                              Dodaj zdjęcie
+                              {t('myWeapons.addImage')}
                             </label>
                             {weaponImages[gun.id] && (
                               <button
@@ -833,7 +859,7 @@ const MyWeaponsPage = () => {
                                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
                                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                               >
-                                Usuń zdjęcie
+                                {t('myWeapons.deleteImage')}
                               </button>
                             )}
                           </div>
@@ -849,46 +875,40 @@ const MyWeaponsPage = () => {
                       {/* Karta statystyk */}
                       <div className="card">
                         <h3 style={{ margin: 0, marginBottom: '1rem', fontSize: '1.2rem', fontWeight: 'bold' }}>
-                          Statystyki broni
+                          {t('myWeapons.weaponStats')}
                         </h3>
                         <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                           <li style={{ marginBottom: '0.75rem', paddingLeft: '1.5rem', position: 'relative' }}>
                             <span style={{ position: 'absolute', left: 0 }}>•</span>
-                            Łączna liczba strzałów: {getTotalShots(gun.id)}
+                            {t('myWeapons.totalShots')} {getTotalShots(gun.id)}
                           </li>
                           <li style={{ marginBottom: '0.75rem', paddingLeft: '1.5rem', position: 'relative' }}>
                             <span style={{ position: 'absolute', left: 0 }}>•</span>
-                            Średnia celność: {getAverageAccuracy(gun.id).toFixed(1).replace('.', ',')}%
+                            {t('myWeapons.avgAccuracy')} {getAverageAccuracy(gun.id).toFixed(1).replace('.', ',')}%
                           </li>
                           <li style={{ marginBottom: '0.75rem', paddingLeft: '1.5rem', position: 'relative' }}>
                             <span style={{ position: 'absolute', left: 0 }}>•</span>
-                            Ostatnia konserwacja: {lastMaintenance 
+                            {t('myWeapons.lastMaintenance')} {lastMaintenance 
                               ? new Date(lastMaintenance.date).toLocaleDateString('pl-PL')
-                              : 'Brak'}
+                              : t('common.none')}
                           </li>
                           <li style={{ marginBottom: '0.75rem', paddingLeft: '1.5rem', position: 'relative' }}>
                             <span style={{ position: 'absolute', left: 0 }}>•</span>
-                            Strzałów od ostatniej konserwacji: {calculateRoundsSinceLastMaintenance(gun.id)}
+                            {t('myWeapons.shotsSinceMaintenance')} {calculateRoundsSinceLastMaintenance(gun.id)}
                           </li>
                           {userSettings.maintenance_notifications_enabled && (
                             <li style={{ marginBottom: '0.75rem', paddingLeft: '1.5rem', position: 'relative' }}>
                               <span style={{ position: 'absolute', left: 0 }}>•</span>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                                Status: <span style={{ 
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  marginLeft: '0.5rem'
-                                }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
                                   {maintenanceStatus.status !== 'none' && <MaintenanceStatusIcon status={maintenanceStatus.status} />}
-                                </span> 
-                                <span>
-                                  {maintenanceStatus.message}
-                                  {(maintenanceStatus.status === 'yellow' || maintenanceStatus.status === 'red') && maintenanceStatus.reason && (
-                                    <span style={{ marginLeft: '0.5rem', fontSize: '0.85rem', opacity: 0.9, display: 'block', marginTop: '0.25rem' }}>
-                                      {maintenanceStatus.reason}
-                                    </span>
-                                  )}
-                                </span>
+                                  <span style={{ color: maintenanceStatus.color }}>{maintenanceStatus.message}</span>
+                                </div>
+                                {(maintenanceStatus.status === 'yellow' || maintenanceStatus.status === 'red') && maintenanceStatus.reason && (
+                                  <span style={{ fontSize: '0.8rem', color: '#aaa', marginLeft: '1.5rem' }}>
+                                    {maintenanceStatus.reason}
+                                  </span>
+                                )}
                               </div>
                             </li>
                           )}
@@ -898,7 +918,7 @@ const MyWeaponsPage = () => {
                       {/* Karta dodatków */}
                       <div className="card">
                         <h3 style={{ margin: 0, marginBottom: '1rem', fontSize: '1.2rem', fontWeight: 'bold' }}>
-                          Dodatki
+                          {t('myWeapons.attachments')}
                         </h3>
                         {attachments[gun.id]?.length > 0 ? (
                           <div style={{ marginBottom: '1rem' }}>
@@ -909,7 +929,7 @@ const MyWeaponsPage = () => {
                             ))}
                           </div>
                         ) : (
-                          <p style={{ color: '#888', marginBottom: '1rem' }}>Brak dodatków</p>
+                          <p style={{ color: '#888', marginBottom: '1rem' }}>{t('myWeapons.noAttachments')}</p>
                         )}
                         <button
                           onClick={(e) => {
@@ -929,14 +949,14 @@ const MyWeaponsPage = () => {
                             gap: '0.25rem'
                           }}
                         >
-                          <span>+</span> Dodaj dodatek
+                          <span>+</span> {t('myWeapons.addAttachment')}
                         </button>
                       </div>
 
                       {/* Karta konserwacji */}
                       <div className="card">
                         <h3 style={{ margin: 0, marginBottom: '1rem', fontSize: '1.2rem', fontWeight: 'bold' }}>
-                          Konserwacja
+                          {t('myWeapons.maintenance')}
                         </h3>
                         {maintenance[gun.id] && Array.isArray(maintenance[gun.id]) && maintenance[gun.id].length > 0 ? (
                           <div style={{ marginBottom: '1rem' }}>
@@ -962,7 +982,7 @@ const MyWeaponsPage = () => {
                                     </div>
                                     {maint.activities && maint.activities.length > 0 && (
                                       <div style={{ fontSize: '0.9rem', color: 'var(--text-tertiary)' }}>
-                                        <div style={{ marginBottom: '0.25rem', fontWeight: '500' }}>Wykonane czynności:</div>
+                                        <div style={{ marginBottom: '0.25rem', fontWeight: '500' }}>{t('myWeapons.activities')}</div>
                                         <ul style={{ margin: 0, paddingLeft: '1.25rem', listStyle: 'disc' }}>
                                           {maint.activities.map((activity, idx) => (
                                             <li key={idx} style={{ marginBottom: '0.15rem' }}>{activity}</li>
@@ -1034,7 +1054,7 @@ const MyWeaponsPage = () => {
                                           onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
                                           onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                                         >
-                                          Szczegóły
+                                          {t('common.details')}
                                         </button>
                                         <button
                                           onClick={(e) => {
@@ -1057,7 +1077,7 @@ const MyWeaponsPage = () => {
                                           onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
                                           onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                                         >
-                                          Edytuj
+                                          {t('common.edit')}
                                         </button>
                                         <button
                                           onClick={(e) => {
@@ -1080,7 +1100,7 @@ const MyWeaponsPage = () => {
                                           onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
                                           onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                                         >
-                                          Usuń
+                                          {t('common.delete')}
                                         </button>
                                       </div>
                                     )}
@@ -1089,7 +1109,7 @@ const MyWeaponsPage = () => {
                               ))}
                           </div>
                         ) : (
-                          <p style={{ color: '#888', marginBottom: '1rem' }}>Brak konserwacji</p>
+                          <p style={{ color: '#888', marginBottom: '1rem' }}>{t('myWeapons.noMaintenance')}</p>
                         )}
                         <button
                           onClick={(e) => {
@@ -1116,23 +1136,23 @@ const MyWeaponsPage = () => {
                             gap: '0.25rem'
                           }}
                         >
-                          <span>+</span> Dodaj konserwację
+                          <span>+</span> {t('myWeapons.addMaintenance')}
                         </button>
                       </div>
 
                       {/* Karta historii użytkowania */}
                       <div className="card">
                         <h3 style={{ margin: 0, marginBottom: '1rem', fontSize: '1.2rem', fontWeight: 'bold' }}>
-                          Historia użytkowania
+                          {t('myWeapons.usageHistory')}
                         </h3>
                         {sessions[gun.id] && Array.isArray(sessions[gun.id]) && sessions[gun.id].length > 0 ? (
                           <div style={{ overflowX: 'auto' }}>
                             <table className="table" style={{ width: '100%' }}>
                               <thead>
                                 <tr>
-                                  <th>Data</th>
-                                  <th>Amunicja</th>
-                                  <th>Strzały</th>
+                                  <th>{t('myWeapons.date')}</th>
+                                  <th>{t('myWeapons.ammunition')}</th>
+                                  <th>{t('myWeapons.shots')}</th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -1152,7 +1172,7 @@ const MyWeaponsPage = () => {
                             </table>
                           </div>
                         ) : (
-                          <p style={{ color: '#888' }}>Brak sesji</p>
+                          <p style={{ color: '#888' }}>{t('myWeapons.noSessions')}</p>
                         )}
                       </div>
                     </div>
@@ -1181,7 +1201,7 @@ const MyWeaponsPage = () => {
               }}
             >
               <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>+</div>
-              <h3 style={{ margin: 0, color: '#007bff' }}>Dodaj nową broń</h3>
+              <h3 style={{ margin: 0, color: '#007bff' }}>{t('myWeapons.addNewWeapon')}</h3>
             </div>
           </div>
         )}
@@ -1208,29 +1228,29 @@ const MyWeaponsPage = () => {
             style={{ maxWidth: '500px', width: '90%' }}
             onClick={(e) => e.stopPropagation()}
           >
-            <h3>Dodaj wyposażenie</h3>
+            <h3>{t('myWeapons.addAttachment')}</h3>
             <form onSubmit={handleAddAttachment}>
               <div className="form-group">
-                <label className="form-label">Typ</label>
+                <label className="form-label">{t('myWeapons.attachmentType')}</label>
                 <select
                   className="form-input"
                   value={attachmentForm.type}
                   onChange={(e) => setAttachmentForm({ ...attachmentForm, type: e.target.value })}
                   required
                 >
-                  <option value="optic">Celownik</option>
-                  <option value="light">Latarka</option>
-                  <option value="laser">Laser</option>
-                  <option value="suppressor">Tłumik</option>
-                  <option value="bipod">Dwójnóg</option>
-                  <option value="compensator">Kompensator</option>
-                  <option value="grip">Chwyt</option>
-                  <option value="trigger">Spust</option>
-                  <option value="other">Inne</option>
+                  <option value="optic">{t('myWeapons.optic')}</option>
+                  <option value="light">{t('myWeapons.light')}</option>
+                  <option value="laser">{t('myWeapons.laser')}</option>
+                  <option value="suppressor">{t('myWeapons.suppressor')}</option>
+                  <option value="bipod">{t('myWeapons.bipod')}</option>
+                  <option value="compensator">{t('myWeapons.compensator')}</option>
+                  <option value="grip">{t('myWeapons.grip')}</option>
+                  <option value="trigger">{t('myWeapons.trigger')}</option>
+                  <option value="other">{t('myWeapons.other')}</option>
                 </select>
               </div>
               <div className="form-group">
-                <label className="form-label">Nazwa</label>
+                <label className="form-label">{t('myWeapons.attachmentName')}</label>
                 <input
                   type="text"
                   className="form-input"
@@ -1240,7 +1260,7 @@ const MyWeaponsPage = () => {
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">Notatki</label>
+                <label className="form-label">{t('myWeapons.attachmentNotes')}</label>
                 <textarea
                   className="form-input"
                   value={attachmentForm.notes}
@@ -1250,14 +1270,14 @@ const MyWeaponsPage = () => {
               </div>
               <div style={{ display: 'flex', gap: '1rem' }}>
                 <button type="submit" className="btn btn-primary">
-                  Dodaj
+                  {t('myWeapons.add')}
                 </button>
                 <button
                   type="button"
                   className="btn btn-secondary"
                   onClick={() => setShowAttachmentModal(false)}
                 >
-                  Anuluj
+                  {t('myWeapons.cancel')}
                 </button>
               </div>
             </form>
@@ -1295,10 +1315,10 @@ const MyWeaponsPage = () => {
             style={{ maxWidth: '500px', width: '90%' }}
             onClick={(e) => e.stopPropagation()}
           >
-            <h3>{editingMaintenance ? 'Edytuj konserwację' : 'Dodaj konserwację'}</h3>
+            <h3>{editingMaintenance ? t('myWeapons.editMaintenance') : t('myWeapons.addMaintenance')}</h3>
             <form onSubmit={handleAddMaintenance}>
               <div className="form-group">
-                <label className="form-label">Data</label>
+                <label className="form-label">{t('myWeapons.maintenanceDate')}</label>
                 <input
                   type="date"
                   className="form-input"
@@ -1308,7 +1328,7 @@ const MyWeaponsPage = () => {
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">Lista czynności</label>
+                <label className="form-label">{t('myWeapons.activitiesList')}</label>
                 <div style={{ border: `1px solid var(--border-color)`, borderRadius: '4px', backgroundColor: 'var(--bg-secondary)' }}>
                   <button
                     type="button"
@@ -1331,8 +1351,8 @@ const MyWeaponsPage = () => {
                   >
                     <span>
                       {maintenanceForm.activities && Array.isArray(maintenanceForm.activities) && maintenanceForm.activities.length > 0 
-                        ? `Wybrano: ${maintenanceForm.activities.length}` 
-                        : 'Wybierz czynności'}
+                        ? `${t('myWeapons.selected')} ${maintenanceForm.activities.length}` 
+                        : t('myWeapons.selectActivities')}
                     </span>
                     <span style={{ fontSize: '0.8rem' }}>
                       {showActivitiesList ? '▼' : '▶'}
@@ -1346,59 +1366,86 @@ const MyWeaponsPage = () => {
                       overflowY: 'auto',
                       textAlign: 'left'
                     }}>
-                      {maintenanceActivities.map((activity) => (
-                        <label
-                          key={activity}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            padding: '0.5rem 0.5rem 0.5rem 0',
-                            cursor: 'pointer',
-                            borderRadius: '4px',
-                            margin: 0
-                          }}
-                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
-                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={maintenanceForm.activities && Array.isArray(maintenanceForm.activities) && maintenanceForm.activities.includes(activity)}
-                            onChange={(e) => {
-                              const currentActivities = maintenanceForm.activities || [];
-                              if (e.target.checked) {
-                                setMaintenanceForm({
-                                  ...maintenanceForm,
-                                  activities: [...currentActivities, activity]
-                                });
-                              } else {
-                                setMaintenanceForm({
-                                  ...maintenanceForm,
-                                  activities: currentActivities.filter(a => a !== activity)
-                                });
-                              }
+                      {maintenanceActivities.map((activity) => {
+                        const isSectionTitle = activity === t('myWeapons.activities.cleaning') ||
+                                               activity === t('myWeapons.activities.lubrication') ||
+                                               activity === t('myWeapons.activities.inspection') ||
+                                               activity === t('myWeapons.activities.service');
+                        
+                        if (isSectionTitle) {
+                          return (
+                            <div
+                              key={activity}
+                              style={{
+                                padding: '0.75rem 0.5rem 0.5rem 1rem',
+                                fontWeight: '600',
+                                fontSize: '1rem',
+                                color: 'var(--text-primary)',
+                                marginTop: '0.5rem',
+                                borderTop: '1px solid var(--border-color)',
+                                margin: '0.5rem 0 0.25rem 0',
+                                paddingTop: '0.75rem'
+                              }}
+                            >
+                              {activity}
+                            </div>
+                          );
+                        }
+                        
+                        return (
+                          <label
+                            key={activity}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              padding: '0.5rem 0.5rem 0.5rem 1rem',
+                              cursor: 'pointer',
+                              borderRadius: '4px',
+                              margin: 0
                             }}
-                            style={{ cursor: 'pointer', margin: 0, marginRight: '1rem', flexShrink: 0 }}
-                          />
-                          <span style={{ textAlign: 'left' }}>{activity}</span>
-                        </label>
-                      ))}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={maintenanceForm.activities && Array.isArray(maintenanceForm.activities) && maintenanceForm.activities.includes(activity)}
+                              onChange={(e) => {
+                                const currentActivities = maintenanceForm.activities || [];
+                                if (e.target.checked) {
+                                  setMaintenanceForm({
+                                    ...maintenanceForm,
+                                    activities: [...currentActivities, activity]
+                                  });
+                                } else {
+                                  setMaintenanceForm({
+                                    ...maintenanceForm,
+                                    activities: currentActivities.filter(a => a !== activity)
+                                  });
+                                }
+                              }}
+                              style={{ cursor: 'pointer', margin: 0, marginRight: '1rem', flexShrink: 0, width: '16px', height: '16px', minWidth: '16px' }}
+                            />
+                            <span style={{ textAlign: 'left' }}>{activity}</span>
+                          </label>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
               </div>
               <div className="form-group">
-                <label className="form-label">Opis:</label>
+                <label className="form-label">{t('myWeapons.maintenanceDescription')}</label>
                 <textarea
                   className="form-input"
                   value={maintenanceForm.notes}
                   onChange={(e) => setMaintenanceForm({ ...maintenanceForm, notes: e.target.value })}
                   rows={3}
-                  placeholder="Opcjonalny opis konserwacji..."
+                  placeholder={t('myWeapons.descriptionPlaceholder')}
                 />
               </div>
               <div style={{ display: 'flex', gap: '1rem' }}>
                 <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>
-                  Zapisz konserwację
+                  {t('myWeapons.saveMaintenance')}
                 </button>
                 <button
                   type="button"
@@ -1414,7 +1461,7 @@ const MyWeaponsPage = () => {
                     });
                   }}
                 >
-                  Anuluj
+                  {t('myWeapons.cancel')}
                 </button>
               </div>
             </form>
@@ -1447,7 +1494,7 @@ const MyWeaponsPage = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h3 style={{ margin: 0 }}>Szczegóły konserwacji</h3>
+              <h3 style={{ margin: 0 }}>{t('myWeapons.maintenanceDetails')}</h3>
               <button
                 onClick={() => {
                   setShowMaintenanceDetailsModal(false);
@@ -1469,7 +1516,7 @@ const MyWeaponsPage = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#aaa' }}>
-                  Data wykonania
+                  {t('myWeapons.executionDate')}
                 </label>
                 <div style={{ padding: '0.75rem', backgroundColor: 'var(--bg-secondary)', borderRadius: '4px', color: 'var(--text-primary)' }}>
                   {new Date(selectedMaintenance.date).toLocaleDateString('pl-PL')}
@@ -1479,7 +1526,7 @@ const MyWeaponsPage = () => {
               {selectedMaintenance.activities && selectedMaintenance.activities.length > 0 && (
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#aaa' }}>
-                    Lista czynności
+                    {t('myWeapons.activitiesList')}
                   </label>
                   <div style={{ padding: '0.75rem', backgroundColor: '#2c2c2c', borderRadius: '4px' }}>
                     <ul style={{ margin: 0, paddingLeft: '1.25rem', listStyle: 'disc', color: 'var(--text-primary)' }}>
@@ -1494,7 +1541,7 @@ const MyWeaponsPage = () => {
               {selectedMaintenance.notes && (
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#aaa' }}>
-                    Opis
+                    {t('myWeapons.description')}
                   </label>
                   <div style={{ padding: '0.75rem', backgroundColor: '#2c2c2c', borderRadius: '4px', color: '#fff', whiteSpace: 'pre-wrap' }}>
                     {selectedMaintenance.notes}
@@ -1504,7 +1551,7 @@ const MyWeaponsPage = () => {
 
               {!selectedMaintenance.notes && (!selectedMaintenance.activities || selectedMaintenance.activities.length === 0) && (
                 <div style={{ color: '#888', textAlign: 'center', padding: '1rem' }}>
-                  Brak dodatkowych informacji
+                  {t('myWeapons.noAdditionalInfo')}
                 </div>
               )}
             </div>
@@ -1520,7 +1567,7 @@ const MyWeaponsPage = () => {
                 className="btn btn-primary"
                 style={{ flex: 1 }}
               >
-                Edytuj
+                {t('myWeapons.edit')}
               </button>
               <button
                 onClick={() => {
@@ -1530,7 +1577,7 @@ const MyWeaponsPage = () => {
                 className="btn btn-secondary"
                 style={{ flex: 1 }}
               >
-                Zamknij
+                {t('myWeapons.close')}
               </button>
             </div>
           </div>
