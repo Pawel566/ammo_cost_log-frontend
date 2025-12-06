@@ -29,6 +29,7 @@ const AddShootingSessionPage = () => {
     shots: '',
     distance_m: '',
     hits: '',
+    group_cm: '',
     cost: ''
   });
 
@@ -107,6 +108,7 @@ const AddShootingSessionPage = () => {
         shots: session.shots ? session.shots.toString() : '',
         distance_m: distanceDisplay || '',
         hits: session.hits !== null && session.hits !== undefined ? session.hits.toString() : '',
+        group_cm: session.group_cm !== null && session.group_cm !== undefined ? session.group_cm.toString() : '',
         cost: fixedCost
       });
       
@@ -165,6 +167,51 @@ const AddShootingSessionPage = () => {
       }
     }
     return '0';
+  };
+
+  const calculateFinalScore = () => {
+    if (!formData.shots || !formData.hits) {
+      return null;
+    }
+    
+    const shots = parseInt(formData.shots, 10);
+    const hits = parseInt(formData.hits, 10);
+    
+    if (shots <= 0 || isNaN(hits)) {
+      return null;
+    }
+    
+    const accuracy = hits / shots;
+    
+    if (formData.group_cm && formData.distance_m) {
+      const groupCm = parseFloat(formData.group_cm);
+      const distanceStr = formData.distance_m.trim();
+      let distanceInMeters = 0;
+      
+      if (distanceUnit === 'yd') {
+        const distanceInYards = parseFloat(distanceStr.replace(' yd', '').trim());
+        if (!isNaN(distanceInYards) && distanceInYards > 0) {
+          distanceInMeters = distanceInYards * 0.9144;
+        } else {
+          return null;
+        }
+      } else {
+        distanceInMeters = parseFloat(distanceStr.replace(' m', '').trim());
+        if (isNaN(distanceInMeters) || distanceInMeters <= 0) {
+          return null;
+        }
+      }
+      
+      if (!isNaN(groupCm) && groupCm > 0 && distanceInMeters > 0) {
+        const moa = (groupCm / distanceInMeters) * 34.38;
+        const effective_moa = moa * distanceInMeters / 100;
+        const precision = Math.max(0, 1 - (effective_moa / 10));
+        const final = (accuracy * 0.4) + (precision * 0.6);
+        return Math.round(final * 100);
+      }
+    }
+    
+    return Math.round(accuracy * 100);
   };
 
   const calculateTotalCost = () => {
@@ -406,6 +453,13 @@ const AddShootingSessionPage = () => {
           sessionData.hits = Number(hitsValue);
         }
       }
+      
+      if (formData.group_cm) {
+        const groupCmValue = parseFloat(formData.group_cm);
+        if (!isNaN(groupCmValue) && groupCmValue > 0) {
+          sessionData.group_cm = Number(groupCmValue);
+        }
+      }
 
       // Koszt stały + koszt amunicji
       const selectedAmmo = ammo.find(a => a.id === formData.ammo_id);
@@ -434,6 +488,7 @@ const AddShootingSessionPage = () => {
           shots: sessionData.shots,
           distance_m: normalize(sessionData.distance_m),
           hits: normalize(sessionData.hits),
+          group_cm: normalize(sessionData.group_cm),
           cost: normalize(sessionData.cost),
           session_type: sessionMode  // 'standard' or 'advanced'
         };
@@ -770,22 +825,40 @@ const AddShootingSessionPage = () => {
                     onChange={(e) => setFormData({ ...formData, hits: e.target.value })}
                   />
                 </div>
-                {formData.shots && formData.hits && (
-                  <div className="form-group">
-                    <label className="form-label">Celność %</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      value={`${calculateAccuracy()}%`}
-                      readOnly
-                      style={{ 
-                        backgroundColor: 'var(--bg-secondary)',
-                        color: parseFloat(calculateAccuracy()) >= 80 ? '#4caf50' : parseFloat(calculateAccuracy()) >= 60 ? '#ffc107' : parseFloat(calculateAccuracy()) > 0 ? '#dc3545' : '#4caf50',
-                        fontWeight: 'bold'
-                      }}
-                    />
-                  </div>
-                )}
+                <div className="form-group">
+                  <label className="form-label">Grupa strzałów (cm)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.1"
+                    className="form-input"
+                    value={formData.group_cm}
+                    onChange={(e) => setFormData({ ...formData, group_cm: e.target.value })}
+                    placeholder="np. 5.5"
+                  />
+                </div>
+                {formData.shots && formData.hits && (() => {
+                  const finalScore = calculateFinalScore();
+                  if (finalScore !== null) {
+                    return (
+                      <div className="form-group">
+                        <label className="form-label">Wynik końcowy</label>
+                        <input
+                          type="text"
+                          className="form-input"
+                          value={`${finalScore}/100`}
+                          readOnly
+                          style={{ 
+                            backgroundColor: 'var(--bg-secondary)',
+                            color: finalScore >= 80 ? '#4caf50' : finalScore >= 60 ? '#ffc107' : finalScore > 0 ? '#dc3545' : '#4caf50',
+                            fontWeight: 'bold'
+                          }}
+                        />
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
                 
                 {/* Zdjęcie tarczy - tylko w trybie zaawansowanym i dla zalogowanych użytkowników */}
                 {sessionMode === 'advanced' && user && !user.is_guest && (

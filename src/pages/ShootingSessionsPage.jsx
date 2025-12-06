@@ -58,6 +58,54 @@ const ShootingSessionsPage = () => {
     return level;
   };
 
+  const getQualityMessage = (score, skillLevel) => {
+    if (score === null || score === undefined) return null;
+    
+    const roundedScore = Math.round(score);
+    const levelLower = (skillLevel || 'beginner').toLowerCase();
+    
+    // Określ poziom użytkownika
+    let level;
+    if (levelLower === 'beginner' || levelLower === 'początkujący') {
+      level = 'beginner';
+    } else if (levelLower === 'intermediate' || levelLower === 'średniozaawansowany') {
+      level = 'intermediate';
+    } else if (levelLower === 'advanced' || levelLower === 'zaawansowany' || levelLower === 'expert' || levelLower === 'ekspert') {
+      level = 'advanced';
+    } else {
+      level = 'beginner'; // domyślnie
+    }
+    
+    // Komunikaty dla początkujących
+    if (level === 'beginner') {
+      if (roundedScore >= 90) return 'Świetny wynik! Jak na poziom początkujący — naprawdę imponujące.';
+      if (roundedScore >= 80) return 'Bardzo dobra sesja! Zaczynasz łapać powtarzalność.';
+      if (roundedScore >= 60) return 'Dobre strzelanie. Widać szybki progres.';
+      if (roundedScore >= 40) return 'Stabilnie. Widać podstawy i kontrolę nad bronią.';
+      return 'Początek drogi — takie wyniki są normalne na starcie.';
+    }
+    
+    // Komunikaty dla średniozaawansowanych
+    if (level === 'intermediate') {
+      if (roundedScore >= 90) return 'Świetny poziom — równa, kontrolowana praca.';
+      if (roundedScore >= 80) return 'Bardzo dobra sesja. Widać powtarzalność.';
+      if (roundedScore >= 60) return 'Dobre, solidne strzelanie.';
+      if (roundedScore >= 40) return 'Przeciętnie. Warto wrócić do spokojnych serii.';
+      return 'Słaba sesja — coś poszło nie tak. Przeanalizuj chwyt i tempo.';
+    }
+    
+    // Komunikaty dla zaawansowanych
+    if (level === 'advanced') {
+      if (roundedScore >= 90) return 'Top forma. Precyzyjna, kontrolowana robota.';
+      if (roundedScore >= 80) return 'Bardzo dobra sesja — technika trzymana.';
+      if (roundedScore >= 60) return 'OK, ale stać Cię na więcej.';
+      if (roundedScore >= 40) return 'Słabo jak na Twój poziom — spróbuj spokojnych serii.';
+      return 'Poniżej Twoich standardów — sprawdź technikę, zmęczenie lub sprzęt.';
+    }
+    
+    return null;
+  };
+
   useEffect(() => {
     applyFilters();
     setCurrentPage(1); // Resetuj do pierwszej strony przy zmianie filtrów
@@ -111,7 +159,8 @@ const ShootingSessionsPage = () => {
           const distanceValue = session.distance ? `${session.distance} ${session.distance_unit || 'm'}` : '';
           return distanceValue && distanceValue.toLowerCase().includes(value);
         case 'accuracy':
-          return session.accuracy_percent && session.accuracy_percent.toString().includes(value);
+          return (session.final_score && session.final_score.toString().includes(value)) || 
+                 (session.accuracy_percent && session.accuracy_percent.toString().includes(value));
         default:
           return true;
       }
@@ -158,8 +207,10 @@ const ShootingSessionsPage = () => {
             bValue = b.hits !== null && b.hits !== undefined ? b.hits : 0;
             return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
           case 'accuracy':
-            aValue = a.accuracy_percent !== null && a.accuracy_percent !== undefined ? a.accuracy_percent : 0;
-            bValue = b.accuracy_percent !== null && b.accuracy_percent !== undefined ? b.accuracy_percent : 0;
+            aValue = a.final_score !== null && a.final_score !== undefined ? a.final_score : 
+                     (a.accuracy_percent !== null && a.accuracy_percent !== undefined ? a.accuracy_percent : 0);
+            bValue = b.final_score !== null && b.final_score !== undefined ? b.final_score : 
+                     (b.accuracy_percent !== null && b.accuracy_percent !== undefined ? b.accuracy_percent : 0);
             return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
           case 'type':
             
@@ -468,31 +519,7 @@ const ShootingSessionsPage = () => {
                       onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
-                      {t('sessions.shots')}
-                    </th>
-                    <th 
-                      style={{ 
-                        cursor: 'pointer',
-                        userSelect: 'none',
-                        padding: '0.75rem'
-                      }}
-                      onClick={() => handleSort('cost')}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
-                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                    >
-                      {t('sessions.cost')}
-                    </th>
-                    <th 
-                      style={{ 
-                        cursor: 'pointer',
-                        userSelect: 'none',
-                        padding: '0.75rem'
-                      }}
-                      onClick={() => handleSort('distance')}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
-                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                    >
-                      {t('sessions.distance')}
+                      Strzały
                     </th>
                     <th 
                       style={{ 
@@ -504,7 +531,7 @@ const ShootingSessionsPage = () => {
                       onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
-                      {t('sessions.hits')}
+                      Trafienia
                     </th>
                     <th 
                       style={{ 
@@ -516,7 +543,22 @@ const ShootingSessionsPage = () => {
                       onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
-                      {t('sessions.accuracyPercent')}
+                      Celność
+                    </th>
+                    <th style={{ padding: '0.75rem' }}>
+                      MOA
+                    </th>
+                    <th 
+                      style={{ 
+                        cursor: 'pointer',
+                        userSelect: 'none',
+                        padding: '0.75rem'
+                      }}
+                      onClick={() => handleSort('accuracy')}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    >
+                      Jakość
                     </th>
                     {sessions.some(s => s.session_type === 'advanced') && (
                       <th style={{ padding: '0.75rem' }}>{t('sessions.comment')}</th>
@@ -558,8 +600,6 @@ const ShootingSessionsPage = () => {
                       <td>{getGunName(session.gun_id)}</td>
                       <td>{getAmmoName(session.ammo_id)}</td>
                       <td>{session.shots || '-'}</td>
-                      <td>{session.cost ? formatCurrency(parseFloat(session.cost)) : '-'}</td>
-                      <td>{session.distance ? `${session.distance} ${session.distance_unit || 'm'}` : '-'}</td>
                       <td>{session.hits !== null && session.hits !== undefined ? session.hits : '-'}</td>
                       <td>
                         {session.accuracy_percent !== null && session.accuracy_percent !== undefined ? (
@@ -570,6 +610,59 @@ const ShootingSessionsPage = () => {
                             {parseFloat(session.accuracy_percent).toFixed(0)}%
                           </span>
                         ) : '-'}
+                      </td>
+                      <td>
+                        {(() => {
+                          if (session.group_cm && session.distance_m) {
+                            const groupCm = parseFloat(session.group_cm);
+                            const distanceM = parseFloat(session.distance_m);
+                            if (!isNaN(groupCm) && !isNaN(distanceM) && distanceM > 0) {
+                              const moa = (groupCm / distanceM) * 34.38;
+                              const effective_moa = moa * distanceM / 100;
+                              return effective_moa.toFixed(2);
+                            }
+                          }
+                          return '-';
+                        })()}
+                      </td>
+                      <td>
+                        {(() => {
+                          const score = session.final_score !== null && session.final_score !== undefined 
+                            ? session.final_score 
+                            : null;
+                          if (score !== null) {
+                            const roundedScore = Math.round(score);
+                            let color;
+                            if (roundedScore >= 80) {
+                              color = '#4caf50'; // Zielony
+                            } else if (roundedScore >= 50) {
+                              color = '#ff9800'; // Pomarańczowy
+                            } else {
+                              color = '#dc3545'; // Czerwony
+                            }
+                            const message = getQualityMessage(score, userSkillLevel);
+                            return (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                                <span style={{ 
+                                  color: color,
+                                  fontWeight: 'bold'
+                                }}>
+                                  {roundedScore}/100
+                                </span>
+                                {message && (
+                                  <span style={{ 
+                                    fontSize: '0.75rem',
+                                    color: 'var(--text-tertiary)',
+                                    lineHeight: '1.2'
+                                  }}>
+                                    {message}
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          }
+                          return '-';
+                        })()}
                       </td>
                       {sessions.some(s => s.session_type === 'advanced') && (
                         <td 
@@ -769,6 +862,7 @@ const ShootingSessionsPage = () => {
             </h2>
 
             <div style={{ display: 'grid', gap: '1rem' }}>
+              {/* 1️⃣ Typ sesji */}
               <div>
                 <strong>{t('sessions.sessionType')}</strong>{' '}
                 <img 
@@ -787,55 +881,103 @@ const ShootingSessionsPage = () => {
                 </span>
               </div>
 
+              {/* 2️⃣ Data */}
               <div>
                 <strong>{t('sessions.date')}</strong> {new Date(selectedSession.date).toLocaleDateString('pl-PL')}
               </div>
 
+              {/* 3️⃣ Poziom użytkownika */}
+              {userSkillLevel && (
+                <div>
+                  <strong>{t('sessions.experienceLevel')}</strong> {getSkillLevelLabel(userSkillLevel)}
+                </div>
+              )}
+
+              {/* 4️⃣ Jakość sesji */}
+              {(() => {
+                const score = selectedSession.final_score !== null && selectedSession.final_score !== undefined 
+                  ? selectedSession.final_score 
+                  : null;
+                if (score !== null) {
+                  const roundedScore = Math.round(score);
+                  return (
+                    <div>
+                      <strong>Jakość sesji:</strong>{' '}
+                      <span style={{ 
+                        color: roundedScore >= 80 ? '#4caf50' : roundedScore >= 60 ? '#ffc107' : '#dc3545',
+                        fontWeight: 'bold'
+                      }}>
+                        {roundedScore}/100
+                      </span>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
+
+              {/* 5️⃣ MOA */}
+              {(() => {
+                if (selectedSession.group_cm && selectedSession.distance_m) {
+                  const groupCm = parseFloat(selectedSession.group_cm);
+                  const distanceM = parseFloat(selectedSession.distance_m);
+                  if (!isNaN(groupCm) && !isNaN(distanceM) && distanceM > 0) {
+                    const moa = (groupCm / distanceM) * 34.38;
+                    const effective_moa = moa * distanceM / 100;
+                    return (
+                      <div>
+                        <strong>MOA:</strong> {effective_moa.toFixed(2)}
+                      </div>
+                    );
+                  }
+                }
+                return null;
+              })()}
+
+              {/* 6️⃣ Celność */}
+              {selectedSession.accuracy_percent !== null && selectedSession.accuracy_percent !== undefined && (
+                <div>
+                  <strong>Celność:</strong>{' '}
+                  <span style={{ 
+                    color: parseFloat(selectedSession.accuracy_percent) >= 80 ? '#4caf50' : parseFloat(selectedSession.accuracy_percent) >= 60 ? '#ffc107' : '#dc3545',
+                    fontWeight: 'bold'
+                  }}>
+                    {parseFloat(selectedSession.accuracy_percent).toFixed(0)}%
+                  </span>
+                </div>
+              )}
+
+              {/* 7️⃣ Broń */}
               <div>
                 <strong>{t('sessions.weapon')}</strong> {getGunName(selectedSession.gun_id)}
               </div>
 
+              {/* 8️⃣ Amunicja */}
               <div>
                 <strong>{t('sessions.ammunition')}</strong> {getAmmoName(selectedSession.ammo_id)}
               </div>
 
+              {/* 9️⃣ Liczba strzałów */}
               <div>
                 <strong>{t('sessions.shotsCount')}</strong> {selectedSession.shots || '-'}
               </div>
 
-              <div>
-                <strong>{t('sessions.cost')}</strong> {selectedSession.cost ? formatCurrency(parseFloat(selectedSession.cost)) : '-'}
-              </div>
-
-              {selectedSession.distance && (
-                <div>
-                  <strong>{t('sessions.distance')}</strong> {selectedSession.distance} {selectedSession.distance_unit || 'm'}
-                </div>
-              )}
-
+              {/* 🔟 Liczba trafień */}
               {selectedSession.hits !== null && selectedSession.hits !== undefined && (
                 <div>
                   <strong>{t('sessions.hitsCount')}</strong> {selectedSession.hits}
                 </div>
               )}
 
-              {selectedSession.accuracy_percent !== null && selectedSession.accuracy_percent !== undefined && (
+              {/* 1️⃣1️⃣ Dystans */}
+              {selectedSession.distance && (
                 <div>
-                  <strong>{t('sessions.accuracy')}</strong>{' '}
-                  <span style={{ 
-                    color: parseFloat(selectedSession.accuracy_percent) >= 80 ? '#4caf50' : parseFloat(selectedSession.accuracy_percent) >= 60 ? '#ffc107' : '#dc3545',
-                    fontWeight: 'bold'
-                  }}>
-                    {parseFloat(selectedSession.accuracy_percent).toFixed(1)}%
-                  </span>
+                  <strong>{t('sessions.distance')}</strong> {selectedSession.distance} {selectedSession.distance_unit || 'm'}
                 </div>
               )}
 
-              {userSkillLevel && (
-                <div>
-                  <strong>{t('sessions.experienceLevel')}</strong> {getSkillLevelLabel(userSkillLevel)}
-                </div>
-              )}
+              <div>
+                <strong>{t('sessions.cost')}</strong> {selectedSession.cost ? formatCurrency(parseFloat(selectedSession.cost)) : '-'}
+              </div>
 
               {selectedSession.notes && (
                 <div>
