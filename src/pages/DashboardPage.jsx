@@ -16,28 +16,24 @@ const MaintenanceStatusIcon = ({ status }) => {
       </svg>
     );
   } else if (status === 'yellow' || status === 'warning') {
+    // Pomarańczowa ikona ostrzegawcza - Wkrótce wymagana
     return (
-      <img 
-        src="/assets/warning_weapon_orange.png" 
-        alt="Warning"
-        style={{ 
-          width: `${iconSize}px`, 
-          height: `${iconSize}px`,
-          objectFit: 'contain'
-        }}
-      />
+      <svg width={iconSize} height={iconSize} viewBox="0 0 1536.000000 1024.000000" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style={{ display: 'inline-block', flexShrink: 0, verticalAlign: 'middle', overflow: 'visible' }}>
+        <g transform="translate(0.000000,1024.000000) scale(0.100000,-0.100000)" fill="#ff9800" stroke="none">
+          <path d="M7217 8129 c-91 -13 -202 -72 -272 -143 -51 -52 -103 -137 -337 -541 -152 -264 -368 -637 -480 -830 -428 -733 -744 -1275 -816 -1400 -41 -71 -125 -215 -187 -320 -62 -104 -200 -341 -307 -525 -108 -184 -281 -481 -386 -660 -105 -179 -200 -355 -213 -390 -16 -49 -22 -87 -21 -155 1 -207 104 -370 292 -465 141 -70 -89 -65 2835 -65 2540 0 2653 1 2715 18 335 95 510 433 374 722 -10 22 -93 168 -184 325 -92 157 -242 416 -335 575 -92 160 -234 403 -315 540 -81 138 -201 342 -267 455 -66 113 -245 419 -398 680 -153 261 -335 572 -405 690 -70 118 -194 330 -275 470 -514 885 -519 893 -656 965 -113 59 -219 75 -362 54z m199 -376 c31 -22 109 -151 484 -793 259 -445 570 -976 775 -1325 84 -143 271 -462 415 -710 144 -247 281 -481 305 -520 23 -38 104 -176 180 -305 76 -129 209 -354 295 -500 228 -386 230 -390 230 -442 0 -55 -31 -106 -80 -130 -33 -17 -182 -18 -2685 -18 -2550 0 -2652 1 -2690 19 -61 28 -78 53 -83 121 -5 70 -35 12 313 605 126 215 259 442 296 505 37 63 174 297 304 520 131 223 357 610 503 860 145 250 317 545 382 655 64 110 152 261 195 335 153 266 588 1006 621 1058 48 73 84 94 155 90 36 -3 66 -11 85 -25z"/>
+          <path d="M6347 5638 c-9 -7 -23 -30 -32 -50 -12 -29 -21 -38 -40 -38 -13 0 -35 -10 -49 -22 -31 -28 -186 -384 -193 -443 -7 -54 15 -73 94 -81 103 -11 183 -75 183 -147 0 -16 -69 -206 -154 -421 -186 -474 -190 -486 -191 -561 0 -73 39 -162 89 -200 66 -50 98 -55 382 -55 328 0 309 -9 304 145 -2 70 6 108 56 298 l57 217 227 0 c242 0 307 7 380 42 55 27 141 110 168 164 27 53 76 206 102 321 l21 92 267 3 c248 3 270 5 313 24 49 23 92 70 110 122 8 23 23 37 55 51 58 26 60 33 56 267 -2 155 -11 173 -82 183 -38 5 -47 11 -63 42 -10 19 -28 41 -39 48 -31 19 -76 4 -95 -32 -8 -18 -21 -35 -27 -39 -6 -4 -403 -8 -883 -8 -779 0 -873 2 -887 16 -9 8 -16 22 -16 29 0 36 -79 58 -113 33z m1213 -753 c0 -55 -75 -275 -113 -333 -53 -79 -107 -92 -368 -92 -164 0 -179 1 -179 18 0 17 36 137 45 152 3 4 33 -7 67 -25 133 -71 316 -89 333 -33 9 25 -6 41 -69 77 -70 39 -152 116 -205 190 l-42 61 265 0 c226 0 266 -2 266 -15z"/>
+        </g>
+      </svg>
     );
   } else if (status === 'red' || status === 'required') {
+    // Czerwona ikona ostrzegawcza - Wymagana
     return (
-      <img 
-        src="/assets/warning_weapon_red.png" 
-        alt="Required"
-        style={{ 
-          width: `${iconSize}px`, 
-          height: `${iconSize}px`,
-          objectFit: 'contain'
-        }}
-      />
+      <svg width={iconSize} height={iconSize} viewBox="0 0 1536.000000 1024.000000" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style={{ display: 'inline-block', flexShrink: 0, verticalAlign: 'middle', overflow: 'visible' }}>
+        <g transform="translate(0.000000,1024.000000) scale(0.100000,-0.100000)" fill="#f44336" stroke="none">
+          <path d="M7217 8129 c-91 -13 -202 -72 -272 -143 -51 -52 -103 -137 -337 -541 -152 -264 -368 -637 -480 -830 -428 -733 -744 -1275 -816 -1400 -41 -71 -125 -215 -187 -320 -62 -104 -200 -341 -307 -525 -108 -184 -281 -481 -386 -660 -105 -179 -200 -355 -213 -390 -16 -49 -22 -87 -21 -155 1 -207 104 -370 292 -465 141 -70 -89 -65 2835 -65 2540 0 2653 1 2715 18 335 95 510 433 374 722 -10 22 -93 168 -184 325 -92 157 -242 416 -335 575 -92 160 -234 403 -315 540 -81 138 -201 342 -267 455 -66 113 -245 419 -398 680 -153 261 -335 572 -405 690 -70 118 -194 330 -275 470 -514 885 -519 893 -656 965 -113 59 -219 75 -362 54z m199 -376 c31 -22 109 -151 484 -793 259 -445 570 -976 775 -1325 84 -143 271 -462 415 -710 144 -247 281 -481 305 -520 23 -38 104 -176 180 -305 76 -129 209 -354 295 -500 228 -386 230 -390 230 -442 0 -55 -31 -106 -80 -130 -33 -17 -182 -18 -2685 -18 -2550 0 -2652 1 -2690 19 -61 28 -78 53 -83 121 -5 70 -35 12 313 605 126 215 259 442 296 505 37 63 174 297 304 520 131 223 357 610 503 860 145 250 317 545 382 655 64 110 152 261 195 335 153 266 588 1006 621 1058 48 73 84 94 155 90 36 -3 66 -11 85 -25z"/>
+          <path d="M6347 5638 c-9 -7 -23 -30 -32 -50 -12 -29 -21 -38 -40 -38 -13 0 -35 -10 -49 -22 -31 -28 -186 -384 -193 -443 -7 -54 15 -73 94 -81 103 -11 183 -75 183 -147 0 -16 -69 -206 -154 -421 -186 -474 -190 -486 -191 -561 0 -73 39 -162 89 -200 66 -50 98 -55 382 -55 328 0 309 -9 304 145 -2 70 6 108 56 298 l57 217 227 0 c242 0 307 7 380 42 55 27 141 110 168 164 27 53 76 206 102 321 l21 92 267 3 c248 3 270 5 313 24 49 23 92 70 110 122 8 23 23 37 55 51 58 26 60 33 56 267 -2 155 -11 173 -82 183 -38 5 -47 11 -63 42 -10 19 -28 41 -39 48 -31 19 -76 4 -95 -32 -8 -18 -21 -35 -27 -39 -6 -4 -403 -8 -883 -8 -779 0 -873 2 -887 16 -9 8 -16 22 -16 29 0 36 -79 58 -113 33z m1213 -753 c0 -55 -75 -275 -113 -333 -53 -79 -107 -92 -368 -92 -164 0 -179 1 -179 18 0 17 36 137 45 152 3 4 33 -7 67 -25 133 -71 316 -89 333 -33 9 25 -6 41 -69 77 -70 39 -152 116 -205 190 l-42 61 265 0 c226 0 266 -2 266 -15z"/>
+        </g>
+      </svg>
     );
   } else {
     return (
@@ -60,6 +56,11 @@ const DashboardPage = () => {
   // Dane do wyświetlenia
   const [mostUsedGun, setMostUsedGun] = useState(null);
   const [mostUsedGunImage, setMostUsedGunImage] = useState(null);
+  const [mostUsedGunStats, setMostUsedGunStats] = useState({
+    sessionsCount: 0,
+    shotsCount: 0,
+    totalCost: 0
+  });
   const [monthlyStats, setMonthlyStats] = useState(null);
   const [lowAmmoAlerts, setLowAmmoAlerts] = useState([]);
   const [maintenanceAlerts, setMaintenanceAlerts] = useState([]);
@@ -89,14 +90,19 @@ const DashboardPage = () => {
   };
 
   const calculateRoundsSinceLastMaintenance = (gunId) => {
-    const lastMaint = getLastMaintenance(gunId);
-    if (!lastMaint) return 0;
-
     const gunSessions = sessions.filter(s => s.gun_id === gunId);
     if (!gunSessions || gunSessions.length === 0) return 0;
 
+    const lastMaint = getLastMaintenance(gunId);
+    
+    // Jeśli nie ma konserwacji, liczymy wszystkie strzały od pierwszej sesji
+    if (!lastMaint) {
+      return gunSessions.reduce((sum, session) => sum + (session.shots || 0), 0);
+    }
+
     const maintenanceDate = new Date(lastMaint.date);
     
+    // Jeśli jest konserwacja, liczymy tylko strzały po dacie konserwacji
     let totalRounds = 0;
     gunSessions.forEach(session => {
       const sessionDate = new Date(session.date);
@@ -278,9 +284,31 @@ const DashboardPage = () => {
       });
       
       if (mostUsedGunId) {
-        const gun = gunsData.find(g => g.id === mostUsedGunId);
+        const gun = gunsData.find(g => {
+          const gId = typeof g.id === 'string' ? parseInt(g.id, 10) : g.id;
+          const mId = typeof mostUsedGunId === 'string' ? parseInt(mostUsedGunId, 10) : mostUsedGunId;
+          return gId === mId || g.id === mostUsedGunId;
+        });
         if (gun) {
           setMostUsedGun(gun);
+          
+          // Oblicz statystyki dla tej broni
+          const gunSessions = sessionsData.filter(s => {
+            const sGunId = typeof s.gun_id === 'string' ? parseInt(s.gun_id, 10) : s.gun_id;
+            const gId = typeof gun.id === 'string' ? parseInt(gun.id, 10) : gun.id;
+            return sGunId === gId || s.gun_id === gun.id;
+          });
+          
+          const sessionsCount = gunSessions.length;
+          const shotsCount = gunSessions.reduce((sum, s) => sum + (s.shots || 0), 0);
+          const totalCost = gunSessions.reduce((sum, s) => sum + (parseFloat(s.cost) || 0), 0);
+          
+          setMostUsedGunStats({
+            sessionsCount,
+            shotsCount,
+            totalCost
+          });
+          
           // Pobierz zdjęcie broni
           try {
             const imageRes = await gunsAPI.getImage(gun.id);
@@ -467,7 +495,7 @@ const DashboardPage = () => {
                   marginBottom: '1rem',
                   width: '100%',
                   height: '180px',
-                  backgroundColor: 'var(--bg-secondary)',
+                  backgroundColor: 'rgb(84, 84, 84)',
                   borderRadius: '8px',
                   overflow: 'hidden',
                   padding: 0
@@ -512,6 +540,29 @@ const DashboardPage = () => {
                 }}>
                   {mostUsedGun.name}
                 </div>
+                
+                {/* Statystyki broni */}
+                <div style={{ 
+                  display: 'grid', 
+                  gap: '0.75rem',
+                  marginBottom: '1rem'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: 'var(--text-tertiary)' }}>{t('dashboard.sessions')}</span>
+                    <span style={{ fontWeight: 'bold' }}>{mostUsedGunStats.sessionsCount}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: 'var(--text-tertiary)' }}>{t('dashboard.shots')}</span>
+                    <span style={{ fontWeight: 'bold' }}>{mostUsedGunStats.shotsCount}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem' }}>
+                    <span style={{ color: 'var(--text-tertiary)' }}>{t('dashboard.cost')}</span>
+                    <span style={{ fontWeight: 'bold', color: '#007bff' }}>
+                      {formatCurrency(mostUsedGunStats.totalCost)}
+                    </span>
+                  </div>
+                </div>
+                
                 <button
                   className="btn btn-primary"
                   onClick={() => navigate(`/shooting-sessions?gun_id=${mostUsedGun.id}`)}
@@ -595,6 +646,43 @@ const DashboardPage = () => {
                 }}>
                   {rankInfo.rank || "Nowicjusz"}
                 </div>
+                {/* Ikona rangi */}
+                {(() => {
+                  const rankName = rankInfo.rank || "Nowicjusz";
+                  const rankMap = {
+                    "Nowicjusz": 1,
+                    "Adepciak": 2,
+                    "Stabilny Strzelec": 3,
+                    "Celny Strzelec": 4,
+                    "Precyzyjny Strzelec": 5,
+                    "Zaawansowany Strzelec": 6
+                  };
+                  const rankNumber = rankMap[rankName];
+                  if (rankNumber) {
+                    return (
+                      <div style={{ 
+                        textAlign: 'center', 
+                        marginBottom: '1rem',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center'
+                      }}>
+                        <img 
+                          src={`/badges/rank_${String(rankNumber).padStart(2, '0')}.png`}
+                          alt={rankName}
+                          style={{ 
+                            maxWidth: '180px',
+                            maxHeight: '180px',
+                            width: 'auto',
+                            height: 'auto',
+                            objectFit: 'contain'
+                          }}
+                        />
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
                 <div style={{ 
                   textAlign: 'center', 
                   marginBottom: '1rem',
@@ -762,9 +850,9 @@ const DashboardPage = () => {
               <div>
                 {maintenanceAlerts.slice(0, 3).map((alert, index) => (
                   <div key={alert.gun.id} style={{ marginBottom: index < maintenanceAlerts.length - 1 ? '1rem' : '0' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.1rem' }}>
                       <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
-                        {alert.status.status !== 'none' && <MaintenanceStatusIcon status={alert.status.status} />}
+                        {(alert.status.status === 'yellow' || alert.status.status === 'red') && <MaintenanceStatusIcon status={alert.status.status} />}
                         <Link 
                           to={`/my-weapons?gun_id=${alert.gun.id}`}
                           style={{ 

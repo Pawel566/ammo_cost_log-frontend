@@ -164,22 +164,59 @@ const AccountPage = () => {
                 </div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                <div>
-                  <div style={{ fontSize: '0.9rem', color: 'var(--text-tertiary)', marginBottom: '0.25rem' }}>
-                    {t('account.rank')}
-                  </div>
-                  <div style={{ 
-                    fontSize: '1rem', 
-                    fontWeight: '500', 
-                    color: '#007bff'
-                  }}>
-                    {rankInfo ? (rankInfo.rank || t('account.beginner')) : t('common.loading')}
-                  </div>
-                  {rankInfo && (
-                    <div style={{ fontSize: '0.85rem', color: 'var(--text-tertiary)', marginTop: '0.25rem' }}>
-                      {rankInfo.passed_sessions || 0} {t('account.passedSessions')}
+                <div style={{ display: 'flex', gap: '1em', alignItems: 'flex-start' }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '0.9rem', color: 'var(--text-tertiary)', marginBottom: '0.25rem' }}>
+                      {t('account.rank')}
                     </div>
-                  )}
+                    <div style={{ 
+                      fontSize: '1rem', 
+                      fontWeight: '500', 
+                      color: '#007bff',
+                      marginBottom: '0.25rem'
+                    }}>
+                      {rankInfo ? (rankInfo.rank || t('account.beginner')) : t('common.loading')}
+                    </div>
+                    {rankInfo && (
+                      <div style={{ 
+                        fontSize: '0.85rem', 
+                        color: 'var(--text-tertiary)'
+                      }}>
+                        {rankInfo.passed_sessions || 0} {t('account.passedSessions')}
+                      </div>
+                    )}
+                  </div>
+                  {/* Ikona rangi */}
+                  {rankInfo && (() => {
+                    const rankName = rankInfo.rank || "Nowicjusz";
+                    const rankMap = {
+                      "Nowicjusz": 1,
+                      "Adepciak": 2,
+                      "Stabilny Strzelec": 3,
+                      "Celny Strzelec": 4,
+                      "Precyzyjny Strzelec": 5,
+                      "Zaawansowany Strzelec": 6
+                    };
+                    const rankNumber = rankMap[rankName];
+                    if (rankNumber) {
+                      return (
+                        <img 
+                          src={`/badges/rank_${String(rankNumber).padStart(2, '0')}.png`}
+                          alt={rankName}
+                          style={{ 
+                            maxWidth: '80px',
+                            maxHeight: '80px',
+                            width: 'auto',
+                            height: 'auto',
+                            objectFit: 'contain',
+                            flexShrink: 0,
+                            marginTop: '0.5rem'
+                          }}
+                        />
+                      );
+                    }
+                    return null;
+                  })()}
                 </div>
               </div>
             </div>

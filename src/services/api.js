@@ -71,6 +71,7 @@ export const gunsAPI = {
 export const ammoAPI = {
   getAll: () => api.get('/ammo'),
   create: (ammoData) => api.post('/ammo', ammoData),
+  update: (id, ammoData) => api.put(`/ammo/${id}`, ammoData),
   delete: (id) => api.delete(`/ammo/${id}`),
   addQuantity: (id, amount) => api.post(`/ammo/${id}/add`, { amount })
 };
@@ -105,6 +106,7 @@ export const sessionsAPI = {
 // Attachments API
 export const attachmentsAPI = {
   getForGun: (gunId) => api.get(`/guns/${gunId}/attachments`),
+  getById: (attachmentId) => api.get(`/attachments/${attachmentId}`),
   create: (gunId, data) => api.post(`/guns/${gunId}/attachments`, data),
   delete: (attachmentId) => api.delete(`/attachments/${attachmentId}`),
 };

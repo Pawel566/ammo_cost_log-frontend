@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { shootingSessionsAPI, gunsAPI, ammoAPI, accountAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -7,6 +7,7 @@ import { useCurrencyConverter } from '../hooks/useCurrencyConverter';
 
 const ShootingSessionsPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { t } = useTranslation();
   const { formatCurrency } = useCurrencyConverter();
@@ -19,6 +20,7 @@ const ShootingSessionsPage = () => {
   const [success, setSuccess] = useState(null);
   const [filterType, setFilterType] = useState('');
   const [filterValue, setFilterValue] = useState('');
+  const [filterGunId, setFilterGunId] = useState(null);
   const [openMenuId, setOpenMenuId] = useState(null);
   const [selectedSession, setSelectedSession] = useState(null);
   const [sessionToDelete, setSessionToDelete] = useState(null);
@@ -37,6 +39,26 @@ const ShootingSessionsPage = () => {
     fetchData();
     fetchSkillLevel();
   }, []);
+
+  // Obsługa parametru gun_id z URL
+  useEffect(() => {
+    const gunId = searchParams.get('gun_id');
+    if (gunId && guns.length > 0) {
+      const gunIdNum = parseInt(gunId);
+      const gun = guns.find(g => {
+        const gId = typeof g.id === 'string' ? parseInt(g.id) : g.id;
+        return gId === gunIdNum || g.id === gunId;
+      });
+      if (gun) {
+        setFilterType('gun');
+        setFilterValue(gun.name);
+        setFilterGunId(gunIdNum);
+      }
+    } else if (!gunId) {
+      // Resetuj filterGunId tylko gdy nie ma parametru w URL
+      setFilterGunId(null);
+    }
+  }, [searchParams, guns]);
 
   const fetchSkillLevel = async () => {
     try {
@@ -107,9 +129,11 @@ const ShootingSessionsPage = () => {
   };
 
   useEffect(() => {
-    applyFilters();
-    setCurrentPage(1); // Resetuj do pierwszej strony przy zmianie filtrów
-  }, [filterType, filterValue, sessions, sortColumn, sortDirection]);
+    if (sessions.length > 0 || filterGunId !== null) {
+      applyFilters();
+      setCurrentPage(1); // Resetuj do pierwszej strony przy zmianie filtrów
+    }
+  }, [filterType, filterValue, filterGunId, sessions, guns, ammo, sortColumn, sortDirection]);
 
   const fetchData = async () => {
     try {
@@ -140,12 +164,22 @@ const ShootingSessionsPage = () => {
   const applyFilters = () => {
     let filtered = [...sessions];
 
-    
-    if (filterType && filterValue) {
+    // Jeśli mamy filterGunId (z URL), filtruj bezpośrednio po ID
+    if (filterGunId !== null && filterType === 'gun') {
+      filtered = filtered.filter(session => {
+        if (!session.gun_id) return false;
+        // Normalizuj typy ID do porównania
+        const sessionGunId = typeof session.gun_id === 'string' ? parseInt(session.gun_id, 10) : Number(session.gun_id);
+        const filterId = typeof filterGunId === 'string' ? parseInt(filterGunId, 10) : Number(filterGunId);
+        const matches = sessionGunId === filterId;
+        return matches;
+      });
+    } else if (filterType && filterValue) {
       filtered = filtered.filter(session => {
       const value = filterValue.toLowerCase();
       switch (filterType) {
         case 'gun':
+          // Filtruj po nazwie (gdy nie ma filterGunId)
           const gun = guns.find(g => g.id === session.gun_id);
           return gun && gun.name.toLowerCase().includes(value);
         case 'ammo':
@@ -404,7 +438,10 @@ const ShootingSessionsPage = () => {
                 className="form-input"
                 style={{ width: 'auto', minWidth: '150px' }}
                 value={filterType}
-                onChange={(e) => setFilterType(e.target.value)}
+                onChange={(e) => {
+                  setFilterType(e.target.value);
+                  setFilterGunId(null); // Resetuj filterGunId przy ręcznej zmianie filtra
+                }}
               >
                 <option value="">{t('sessions.filterBy')}</option>
                 <option value="gun">{t('sessions.weapon')}</option>
@@ -421,7 +458,12 @@ const ShootingSessionsPage = () => {
                   style={{ minWidth: '200px' }}
                   placeholder={t('sessions.enterValue')}
                   value={filterValue}
-                  onChange={(e) => setFilterValue(e.target.value)}
+                  onChange={(e) => {
+                    setFilterValue(e.target.value);
+                    if (filterType !== 'gun') {
+                      setFilterGunId(null); // Resetuj filterGunId gdy zmieniamy wartość innego filtra
+                    }
+                  }}
                 />
               )}
             </div>
@@ -558,7 +600,7 @@ const ShootingSessionsPage = () => {
                       onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
-                      Jakość
+                      Punktacja końcowa
                     </th>
                     {sessions.some(s => s.session_type === 'advanced') && (
                       <th style={{ padding: '0.75rem' }}>{t('sessions.comment')}</th>
@@ -893,7 +935,7 @@ const ShootingSessionsPage = () => {
                 </div>
               )}
 
-              {/* 4️⃣ Jakość sesji */}
+              {/* 4️⃣ Punktacja końcowa */}
               {(() => {
                 const score = selectedSession.final_score !== null && selectedSession.final_score !== undefined 
                   ? selectedSession.final_score 
@@ -902,7 +944,7 @@ const ShootingSessionsPage = () => {
                   const roundedScore = Math.round(score);
                   return (
                     <div>
-                      <strong>Jakość sesji:</strong>{' '}
+                      <strong>Punktacja końcowa:</strong>{' '}
                       <span style={{ 
                         color: roundedScore >= 80 ? '#4caf50' : roundedScore >= 60 ? '#ffc107' : '#dc3545',
                         fontWeight: 'bold'

@@ -20,6 +20,7 @@ import AccountPage from './pages/AccountPage';
 import MyWeaponsPage from './pages/MyWeaponsPage';
 import MaintenancePage from './pages/MaintenancePage';
 import SettingsPage from './pages/SettingsPage';
+import AttachmentDetailsPage from './pages/AttachmentDetailsPage';
 import './App.css';
 
 const NavbarUser = () => {
@@ -131,7 +132,7 @@ function AppContent() {
         <nav className="navbar">
           <div className="container">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Link to="/" className="navbar-brand">
+              <Link to="/dashboard" className="navbar-brand">
                 🎯 Ammo Cost Log
               </Link>
               <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
@@ -174,6 +175,7 @@ function AppContent() {
           <Route path="/my-weapons" element={<MyWeaponsPage />} />
           <Route path="/maintenance" element={<MaintenancePage />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/attachment/:id" element={<AttachmentDetailsPage />} />
         </Routes>
       </main>
     </div>

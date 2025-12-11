@@ -18,28 +18,22 @@ const MaintenanceStatusIcon = ({ status }) => {
   } else if (status === 'yellow' || status === 'warning') {
     // Pomarańczowa ikona ostrzegawcza - Wkrótce wymagana
     return (
-      <img 
-        src="/assets/warning_weapon_orange.png" 
-        alt="Warning"
-        style={{ 
-          width: `${iconSize}px`, 
-          height: `${iconSize}px`,
-          objectFit: 'contain'
-        }}
-      />
+      <svg width={iconSize} height={iconSize} viewBox="0 0 1536.000000 1024.000000" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style={{ display: 'inline-block', flexShrink: 0, verticalAlign: 'middle', overflow: 'visible' }}>
+        <g transform="translate(0.000000,1024.000000) scale(0.100000,-0.100000)" fill="#ff9800" stroke="none">
+          <path d="M7217 8129 c-91 -13 -202 -72 -272 -143 -51 -52 -103 -137 -337 -541 -152 -264 -368 -637 -480 -830 -428 -733 -744 -1275 -816 -1400 -41 -71 -125 -215 -187 -320 -62 -104 -200 -341 -307 -525 -108 -184 -281 -481 -386 -660 -105 -179 -200 -355 -213 -390 -16 -49 -22 -87 -21 -155 1 -207 104 -370 292 -465 141 -70 -89 -65 2835 -65 2540 0 2653 1 2715 18 335 95 510 433 374 722 -10 22 -93 168 -184 325 -92 157 -242 416 -335 575 -92 160 -234 403 -315 540 -81 138 -201 342 -267 455 -66 113 -245 419 -398 680 -153 261 -335 572 -405 690 -70 118 -194 330 -275 470 -514 885 -519 893 -656 965 -113 59 -219 75 -362 54z m199 -376 c31 -22 109 -151 484 -793 259 -445 570 -976 775 -1325 84 -143 271 -462 415 -710 144 -247 281 -481 305 -520 23 -38 104 -176 180 -305 76 -129 209 -354 295 -500 228 -386 230 -390 230 -442 0 -55 -31 -106 -80 -130 -33 -17 -182 -18 -2685 -18 -2550 0 -2652 1 -2690 19 -61 28 -78 53 -83 121 -5 70 -35 12 313 605 126 215 259 442 296 505 37 63 174 297 304 520 131 223 357 610 503 860 145 250 317 545 382 655 64 110 152 261 195 335 153 266 588 1006 621 1058 48 73 84 94 155 90 36 -3 66 -11 85 -25z"/>
+          <path d="M6347 5638 c-9 -7 -23 -30 -32 -50 -12 -29 -21 -38 -40 -38 -13 0 -35 -10 -49 -22 -31 -28 -186 -384 -193 -443 -7 -54 15 -73 94 -81 103 -11 183 -75 183 -147 0 -16 -69 -206 -154 -421 -186 -474 -190 -486 -191 -561 0 -73 39 -162 89 -200 66 -50 98 -55 382 -55 328 0 309 -9 304 145 -2 70 6 108 56 298 l57 217 227 0 c242 0 307 7 380 42 55 27 141 110 168 164 27 53 76 206 102 321 l21 92 267 3 c248 3 270 5 313 24 49 23 92 70 110 122 8 23 23 37 55 51 58 26 60 33 56 267 -2 155 -11 173 -82 183 -38 5 -47 11 -63 42 -10 19 -28 41 -39 48 -31 19 -76 4 -95 -32 -8 -18 -21 -35 -27 -39 -6 -4 -403 -8 -883 -8 -779 0 -873 2 -887 16 -9 8 -16 22 -16 29 0 36 -79 58 -113 33z m1213 -753 c0 -55 -75 -275 -113 -333 -53 -79 -107 -92 -368 -92 -164 0 -179 1 -179 18 0 17 36 137 45 152 3 4 33 -7 67 -25 133 -71 316 -89 333 -33 9 25 -6 41 -69 77 -70 39 -152 116 -205 190 l-42 61 265 0 c226 0 266 -2 266 -15z"/>
+        </g>
+      </svg>
     );
   } else if (status === 'red' || status === 'required') {
     // Czerwona ikona ostrzegawcza - Wymagana
     return (
-      <img 
-        src="/assets/warning_weapon_red.png" 
-        alt="Required"
-        style={{ 
-          width: `${iconSize}px`, 
-          height: `${iconSize}px`,
-          objectFit: 'contain'
-        }}
-      />
+      <svg width={iconSize} height={iconSize} viewBox="0 0 1536.000000 1024.000000" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style={{ display: 'inline-block', flexShrink: 0, verticalAlign: 'middle', overflow: 'visible' }}>
+        <g transform="translate(0.000000,1024.000000) scale(0.100000,-0.100000)" fill="#f44336" stroke="none">
+          <path d="M7217 8129 c-91 -13 -202 -72 -272 -143 -51 -52 -103 -137 -337 -541 -152 -264 -368 -637 -480 -830 -428 -733 -744 -1275 -816 -1400 -41 -71 -125 -215 -187 -320 -62 -104 -200 -341 -307 -525 -108 -184 -281 -481 -386 -660 -105 -179 -200 -355 -213 -390 -16 -49 -22 -87 -21 -155 1 -207 104 -370 292 -465 141 -70 -89 -65 2835 -65 2540 0 2653 1 2715 18 335 95 510 433 374 722 -10 22 -93 168 -184 325 -92 157 -242 416 -335 575 -92 160 -234 403 -315 540 -81 138 -201 342 -267 455 -66 113 -245 419 -398 680 -153 261 -335 572 -405 690 -70 118 -194 330 -275 470 -514 885 -519 893 -656 965 -113 59 -219 75 -362 54z m199 -376 c31 -22 109 -151 484 -793 259 -445 570 -976 775 -1325 84 -143 271 -462 415 -710 144 -247 281 -481 305 -520 23 -38 104 -176 180 -305 76 -129 209 -354 295 -500 228 -386 230 -390 230 -442 0 -55 -31 -106 -80 -130 -33 -17 -182 -18 -2685 -18 -2550 0 -2652 1 -2690 19 -61 28 -78 53 -83 121 -5 70 -35 12 313 605 126 215 259 442 296 505 37 63 174 297 304 520 131 223 357 610 503 860 145 250 317 545 382 655 64 110 152 261 195 335 153 266 588 1006 621 1058 48 73 84 94 155 90 36 -3 66 -11 85 -25z"/>
+          <path d="M6347 5638 c-9 -7 -23 -30 -32 -50 -12 -29 -21 -38 -40 -38 -13 0 -35 -10 -49 -22 -31 -28 -186 -384 -193 -443 -7 -54 15 -73 94 -81 103 -11 183 -75 183 -147 0 -16 -69 -206 -154 -421 -186 -474 -190 -486 -191 -561 0 -73 39 -162 89 -200 66 -50 98 -55 382 -55 328 0 309 -9 304 145 -2 70 6 108 56 298 l57 217 227 0 c242 0 307 7 380 42 55 27 141 110 168 164 27 53 76 206 102 321 l21 92 267 3 c248 3 270 5 313 24 49 23 92 70 110 122 8 23 23 37 55 51 58 26 60 33 56 267 -2 155 -11 173 -82 183 -38 5 -47 11 -63 42 -10 19 -28 41 -39 48 -31 19 -76 4 -95 -32 -8 -18 -21 -35 -27 -39 -6 -4 -403 -8 -883 -8 -779 0 -873 2 -887 16 -9 8 -16 22 -16 29 0 36 -79 58 -113 33z m1213 -753 c0 -55 -75 -275 -113 -333 -53 -79 -107 -92 -368 -92 -164 0 -179 1 -179 18 0 17 36 137 45 152 3 4 33 -7 67 -25 133 -71 316 -89 333 -33 9 25 -6 41 -69 77 -70 39 -152 116 -205 190 l-42 61 265 0 c226 0 266 -2 266 -15z"/>
+        </g>
+      </svg>
     );
   } else {
     // Szara ikona z przekreśleniem - Nie dotyczy
@@ -86,7 +80,14 @@ const MyWeaponsPage = () => {
   const [selectedMaintenance, setSelectedMaintenance] = useState(null);
   const [editingMaintenance, setEditingMaintenance] = useState(null);
   const [openMaintenanceMenu, setOpenMaintenanceMenu] = useState(null);
-  const [attachmentForm, setAttachmentForm] = useState({ type: 'optic', name: '', notes: '' });
+  const [attachmentForm, setAttachmentForm] = useState({ 
+    type: 'red_dot', 
+    name: '', 
+    notes: '',
+    precision_help: 'low',
+    recoil_reduction: 'none',
+    ergonomics: 'medium'
+  });
   const [maintenanceForm, setMaintenanceForm] = useState({ 
     date: new Date().toISOString().split('T')[0], 
     notes: '',
@@ -102,6 +103,7 @@ const MyWeaponsPage = () => {
   const [weaponImages, setWeaponImages] = useState({});
   const [openImageMenu, setOpenImageMenu] = useState(null);
   const [expandedImage, setExpandedImage] = useState(null);
+  const [confirmModal, setConfirmModal] = useState({ show: false, title: '', message: '', onConfirm: null, itemName: '' });
 
   const getMaintenanceActivities = () => [
     t('myWeapons.activities.cleaning'),
@@ -216,6 +218,25 @@ const MyWeaponsPage = () => {
     }
   }, [expandedGun]);
 
+  // Resetuj typ dodatku jeśli nie jest dozwolony dla aktualnej broni
+  useEffect(() => {
+    if (expandedGun && showAttachmentModal) {
+      const currentGun = guns.find(g => g.id === expandedGun);
+      const allowedTypes = getAllowedAttachmentTypes(currentGun?.type);
+      if (!allowedTypes.includes(attachmentForm.type) && allowedTypes.length > 0) {
+        const firstAllowed = allowedTypes[0];
+        const defaults = getAttachmentDefaults(firstAllowed);
+        setAttachmentForm({
+          ...attachmentForm,
+          type: firstAllowed,
+          precision_help: defaults.precision_help,
+          recoil_reduction: defaults.recoil_reduction,
+          ergonomics: defaults.ergonomics
+        });
+      }
+    }
+  }, [expandedGun, showAttachmentModal]);
+
   const fetchGuns = async () => {
     try {
       setLoading(true);
@@ -310,12 +331,77 @@ const MyWeaponsPage = () => {
     }
   };
 
+  const getAllowedAttachmentTypes = (gunType) => {
+    if (!gunType) return ['red_dot', 'reflex', 'lpvo', 'magnifier', 'suppressor', 'compensator', 'foregrip', 'angled_grip', 'bipod', 'tactical_light'];
+    
+    const normalizedType = gunType.toLowerCase().trim();
+    
+    // Mapowanie typów broni na dozwolone typy dodatków
+    // Obsługujemy różne formaty: polskie nazwy, angielskie, stare formaty
+    if (normalizedType === 'pistol' || normalizedType === 'pistolet' || normalizedType.includes('broń krótka')) {
+      // Pistolet
+      return ['red_dot', 'reflex', 'compensator', 'suppressor', 'tactical_light'];
+    } else if (normalizedType.includes('pistolet maszynowy') || normalizedType.includes('pcc') || normalizedType.includes('pm') || normalizedType.includes('pdw')) {
+      // Pistolet maszynowy (PCC, PM, PDW)
+      return ['red_dot', 'reflex', 'lpvo', 'magnifier', 'suppressor', 'compensator', 'foregrip', 'angled_grip', 'tactical_light'];
+    } else if (normalizedType === 'karabinek' || normalizedType === 'carbine' || normalizedType.includes('ar-15') || normalizedType.includes('ak') || normalizedType.includes('grot') || normalizedType.includes('mcx')) {
+      // Karabinek (AR-15, AK, Grot, SIG MCX)
+      return ['red_dot', 'reflex', 'lpvo', 'magnifier', 'suppressor', 'compensator', 'foregrip', 'angled_grip', 'bipod', 'tactical_light'];
+    } else if (normalizedType === 'rifle' || normalizedType === 'karabin' || normalizedType.includes('bolt-action') || normalizedType.includes('dmr') || normalizedType.includes('precyzyjna')) {
+      // Karabin (długa broń precyzyjna, bolt-action, DMR)
+      return ['lpvo', 'red_dot', 'suppressor', 'compensator', 'bipod'];
+    } else if (normalizedType === 'shotgun' || normalizedType === 'strzelba') {
+      // Strzelba (Shotgun)
+      return ['red_dot', 'reflex', 'compensator', 'suppressor', 'tactical_light'];
+    } else if (normalizedType === 'rewolwer' || normalizedType === 'revolver') {
+      // Rewolwer
+      return ['red_dot', 'reflex', 'compensator', 'tactical_light'];
+    } else {
+      // Inna - wszystkie typy dozwolone
+      return ['red_dot', 'reflex', 'lpvo', 'magnifier', 'suppressor', 'compensator', 'foregrip', 'angled_grip', 'bipod', 'tactical_light'];
+    }
+  };
+
+  const getAttachmentDefaults = (type) => {
+    const defaults = {
+      red_dot: { precision_help: 'low', recoil_reduction: 'none', ergonomics: 'medium' },
+      reflex: { precision_help: 'low', recoil_reduction: 'none', ergonomics: 'high' },
+      lpvo: { precision_help: 'medium', recoil_reduction: 'none', ergonomics: 'low' },
+      magnifier: { precision_help: 'medium', recoil_reduction: 'none', ergonomics: 'low' },
+      suppressor: { precision_help: 'low', recoil_reduction: 'medium', ergonomics: 'none' },
+      compensator: { precision_help: 'none', recoil_reduction: 'high', ergonomics: 'none' },
+      foregrip: { precision_help: 'low', recoil_reduction: 'low', ergonomics: 'medium' },
+      angled_grip: { precision_help: 'low', recoil_reduction: 'none', ergonomics: 'high' },
+      bipod: { precision_help: 'high', recoil_reduction: 'medium', ergonomics: 'low' },
+      tactical_light: { precision_help: 'none', recoil_reduction: 'none', ergonomics: 'low' }
+    };
+    return defaults[type] || { precision_help: 'none', recoil_reduction: 'none', ergonomics: 'none' };
+  };
+
+  const handleAttachmentTypeChange = (type) => {
+    const defaults = getAttachmentDefaults(type);
+    setAttachmentForm({
+      ...attachmentForm,
+      type: type,
+      precision_help: defaults.precision_help,
+      recoil_reduction: defaults.recoil_reduction,
+      ergonomics: defaults.ergonomics
+    });
+  };
+
   const handleAddAttachment = async (e) => {
     e.preventDefault();
     try {
       await attachmentsAPI.create(expandedGun, attachmentForm);
       setShowAttachmentModal(false);
-      setAttachmentForm({ type: 'optic', name: '', notes: '' });
+      setAttachmentForm({ 
+        type: 'red_dot', 
+        name: '', 
+        notes: '',
+        precision_help: 'low',
+        recoil_reduction: 'none',
+        ergonomics: 'medium'
+      });
       fetchGunDetails(expandedGun);
       fetchGuns();
     } catch (err) {
@@ -323,16 +409,24 @@ const MyWeaponsPage = () => {
     }
   };
 
-  const handleDeleteAttachment = async (attachmentId) => {
-    if (window.confirm(`${t('common.confirmDeleteItem')} ${t('myWeapons.attachment')}?`)) {
-      try {
-        await attachmentsAPI.delete(attachmentId);
-        fetchGunDetails(expandedGun);
-        fetchGuns();
-      } catch (err) {
-        setError(err.response?.data?.detail || t('common.errorDeleting', { item: 'equipment' }));
+  const handleDeleteAttachment = async (attachmentId, attachmentName) => {
+    setConfirmModal({
+      show: true,
+      title: 'Usuń dodatek',
+      message: `Czy na pewno chcesz usunąć dodatek "${attachmentName}"?`,
+      itemName: attachmentName,
+      onConfirm: async () => {
+        try {
+          await attachmentsAPI.delete(attachmentId);
+          setConfirmModal({ show: false, title: '', message: '', onConfirm: null, itemName: '' });
+          fetchGunDetails(expandedGun);
+          fetchGuns();
+        } catch (err) {
+          setError(err.response?.data?.detail || t('common.errorDeleting', { item: 'equipment' }));
+          setConfirmModal({ show: false, title: '', message: '', onConfirm: null, itemName: '' });
+        }
       }
-    }
+    });
   };
 
   const handleAddMaintenance = async (e) => {
@@ -394,30 +488,40 @@ const MyWeaponsPage = () => {
     setShowMaintenanceModal(true);
   };
 
-  const handleDeleteMaintenance = async (maintenanceId) => {
-    if (window.confirm(`${t('common.confirmDeleteItem')} ${t('common.maintenance')}?`)) {
-      try {
-        await maintenanceAPI.delete(maintenanceId);
-        await fetchGunDetails(expandedGun);
-        await fetchAllMaintenance();
-        fetchGuns();
-      } catch (err) {
-        setError(err.response?.data?.detail || t('common.errorDeleting', { item: 'maintenance' }));
+  const handleDeleteMaintenance = async (maintenanceId, maintenanceDate) => {
+    const dateStr = maintenanceDate ? new Date(maintenanceDate).toLocaleDateString('pl-PL') : '';
+    setConfirmModal({
+      show: true,
+      title: 'Usuń konserwację',
+      message: `Czy na pewno chcesz usunąć konserwację z dnia ${dateStr}?`,
+      itemName: dateStr,
+      onConfirm: async () => {
+        try {
+          await maintenanceAPI.delete(maintenanceId);
+          setConfirmModal({ show: false, title: '', message: '', onConfirm: null, itemName: '' });
+          await fetchGunDetails(expandedGun);
+          await fetchAllMaintenance();
+          fetchGuns();
+        } catch (err) {
+          setError(err.response?.data?.detail || t('common.errorDeleting', { item: 'maintenance' }));
+          setConfirmModal({ show: false, title: '', message: '', onConfirm: null, itemName: '' });
+        }
       }
-    }
+    });
   };
 
   const getAttachmentTypeLabel = (type) => {
     const labels = {
-      optic: t('myWeapons.optic'),
-      light: t('myWeapons.light'),
-      laser: t('myWeapons.laser'),
-      suppressor: t('myWeapons.suppressor'),
-      bipod: t('myWeapons.bipod'),
-      compensator: t('myWeapons.compensator'),
-      grip: t('myWeapons.grip'),
-      trigger: t('myWeapons.trigger'),
-      other: t('myWeapons.other')
+      red_dot: 'Kolimator (Red Dot)',
+      reflex: 'Otwarty kolimator / Reflex Sight',
+      lpvo: 'Optyka LPVO',
+      magnifier: 'Powiększalnik (Magnifier)',
+      suppressor: 'Tłumik (suppressor)',
+      compensator: 'Hamulec wylotowy / kompensator',
+      foregrip: 'Chwyt pionowy (foregrip)',
+      angled_grip: 'Chwyt kątowy (angled grip)',
+      bipod: 'Dwójnóg (bipod)',
+      tactical_light: 'Latarka taktyczna'
     };
     return labels[type] || type;
   };
@@ -451,15 +555,19 @@ const MyWeaponsPage = () => {
   };
 
   const calculateRoundsSinceLastMaintenance = (gunId) => {
-    const lastMaint = getLastMaintenance(gunId);
-    if (!lastMaint) return 0;
-
     const gunSessions = sessions[gunId];
     if (!gunSessions || !Array.isArray(gunSessions)) return 0;
 
+    const lastMaint = getLastMaintenance(gunId);
+    
+    // Jeśli nie ma konserwacji, liczymy wszystkie strzały od pierwszej sesji
+    if (!lastMaint) {
+      return gunSessions.reduce((sum, session) => sum + (session.shots || 0), 0);
+    }
+
     const maintenanceDate = new Date(lastMaint.date);
     
-    // Sumuj strzały tylko z sesji po dacie konserwacji
+    // Jeśli jest konserwacja, liczymy tylko strzały po dacie konserwacji
     let totalRounds = 0;
     gunSessions.forEach(session => {
       const sessionDate = new Date(session.date);
@@ -501,12 +609,42 @@ const MyWeaponsPage = () => {
 
   const getMaintenanceStatus = (gunId) => {
     const lastMaint = getLastMaintenance(gunId);
-    if (!lastMaint) {
-      return { status: 'none', color: '#888', message: '-' };
-    }
-
+    
     const rounds = calculateRoundsSinceLastMaintenance(gunId);
     const days = calculateDaysSinceLastMaintenance(gunId);
+    
+    // Jeśli nie ma konserwacji, sprawdź czy broń ma sesje bez konserwacji
+    if (!lastMaint) {
+      const gunSessions = sessions[gunId];
+      if (!gunSessions || !Array.isArray(gunSessions) || gunSessions.length === 0) {
+        return { status: 'none', color: '#888', message: '-', reason: '' };
+      }
+      const totalShots = gunSessions.reduce((sum, s) => sum + (s.shots || 0), 0);
+      const roundsLimit = userSettings.maintenance_rounds_limit || 500;
+      const roundsPercentage = Math.round((totalShots / roundsLimit) * 100);
+      
+      if (totalShots >= roundsLimit) {
+        return { 
+          status: 'red', 
+          color: '#f44336', 
+          message: t('common.required'),
+          reason: `${t('common.required')}: ${roundsPercentage}% (${totalShots}/${roundsLimit})`,
+          rounds: totalShots,
+          days: null
+        };
+      } else if (roundsPercentage >= 75) {
+        return {
+          status: 'yellow',
+          color: '#ff9800',
+          message: t('common.soonRequired'),
+          reason: `${roundsPercentage}% (${totalShots}/${roundsLimit})`,
+          rounds: totalShots,
+          days: null
+        };
+      }
+      // Jeśli nie przekroczono limitu strzałów, zwróć status 'green'
+      return { status: 'green', color: '#4caf50', message: t('common.ok'), reason: '', rounds: totalShots, days: null };
+    }
 
     const roundsLimit = userSettings.maintenance_rounds_limit || 500;
     const daysLimit = userSettings.maintenance_days_limit || 90;
@@ -634,21 +772,26 @@ const MyWeaponsPage = () => {
   };
 
   const handleImageDelete = async (gunId) => {
-    if (!window.confirm(`${t('common.confirmDeleteItem')} image?`)) {
-      return;
-    }
-
-    try {
-      setError('');
-      await gunsAPI.deleteImage(gunId);
-      
-      setWeaponImages({ ...weaponImages, [gunId]: null });
-      await fetchGuns();
-      setOpenImageMenu(null);
-    } catch (err) {
-      setError(err.response?.data?.detail || t('common.errorDeleting', { item: 'image' }));
-      console.error(err);
-    }
+    setConfirmModal({
+      show: true,
+      title: 'Usuń zdjęcie',
+      message: 'Czy na pewno chcesz usunąć zdjęcie broni?',
+      itemName: 'zdjęcie',
+      onConfirm: async () => {
+        try {
+          setError('');
+          await gunsAPI.deleteImage(gunId);
+          setWeaponImages({ ...weaponImages, [gunId]: null });
+          await fetchGuns();
+          setOpenImageMenu(null);
+          setConfirmModal({ show: false, title: '', message: '', onConfirm: null, itemName: '' });
+        } catch (err) {
+          setError(err.response?.data?.detail || t('common.errorDeleting', { item: 'image' }));
+          console.error(err);
+          setConfirmModal({ show: false, title: '', message: '', onConfirm: null, itemName: '' });
+        }
+      }
+    });
   };
 
   const handleImageClick = (gunId, e) => {
@@ -754,19 +897,6 @@ const MyWeaponsPage = () => {
                                 <span style={{ color: '#007bff' }}>
                                   {t('myWeapons.lastMaintenance')} {new Date(lastMaintenance.date).toLocaleDateString('pl-PL')}
                                 </span>
-                                {userSettings.maintenance_notifications_enabled && (
-                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
-                                      {maintenanceStatus.status !== 'none' && <MaintenanceStatusIcon status={maintenanceStatus.status} />}
-                                      <span style={{ color: maintenanceStatus.color }}>{maintenanceStatus.message}</span>
-                                    </div>
-                                    {(maintenanceStatus.status === 'yellow' || maintenanceStatus.status === 'red') && maintenanceStatus.reason && (
-                                      <span style={{ fontSize: '0.8rem', color: '#aaa', marginLeft: '1.5rem' }}>
-                                        {maintenanceStatus.reason}
-                                      </span>
-                                    )}
-                                  </div>
-                                )}
                               </span>
                             )}
                           </div>
@@ -896,23 +1026,22 @@ const MyWeaponsPage = () => {
                             <span style={{ position: 'absolute', left: 0 }}>•</span>
                             {t('myWeapons.shotsSinceMaintenance')} {calculateRoundsSinceLastMaintenance(gun.id)}
                           </li>
-                          {userSettings.maintenance_notifications_enabled && (
-                            <li style={{ marginBottom: '0.75rem', paddingLeft: '1.5rem', position: 'relative' }}>
-                              <span style={{ position: 'absolute', left: 0 }}>•</span>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
-                                  {maintenanceStatus.status !== 'none' && <MaintenanceStatusIcon status={maintenanceStatus.status} />}
-                                  <span style={{ color: maintenanceStatus.color }}>{maintenanceStatus.message}</span>
-                                </div>
-                                {(maintenanceStatus.status === 'yellow' || maintenanceStatus.status === 'red') && maintenanceStatus.reason && (
-                                  <span style={{ fontSize: '0.8rem', color: '#aaa', marginLeft: '1.5rem' }}>
-                                    {maintenanceStatus.reason}
-                                  </span>
-                                )}
-                              </div>
-                            </li>
-                          )}
                         </ul>
+                        {userSettings.maintenance_notifications_enabled && (maintenanceStatus.status === 'yellow' || maintenanceStatus.status === 'red') && (
+                          <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+                              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <MaintenanceStatusIcon status={maintenanceStatus.status} />
+                                <span style={{ color: maintenanceStatus.color }}>{maintenanceStatus.message}</span>
+                              </div>
+                              {maintenanceStatus.reason && (
+                                <span style={{ fontSize: '0.8rem', color: '#aaa', marginLeft: '3.5rem', marginTop: '0.1rem' }}>
+                                  {maintenanceStatus.reason}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       {/* Karta dodatków */}
@@ -922,11 +1051,54 @@ const MyWeaponsPage = () => {
                         </h3>
                         {attachments[gun.id]?.length > 0 ? (
                           <div style={{ marginBottom: '1rem' }}>
-                            {attachments[gun.id].map((att) => (
-                              <div key={att.id} style={{ marginBottom: '0.5rem' }}>
-                                {getAttachmentTypeLabel(att.type)} - {att.name}
-                              </div>
-                            ))}
+                            <div style={{ fontWeight: '500', marginBottom: '0.5rem' }}>Dodatki:</div>
+                            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                              {attachments[gun.id].map((att) => (
+                                <li key={att.id} style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                  <a
+                                    href={`/attachment/${att.id}`}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      e.preventDefault();
+                                      navigate(`/attachment/${att.id}`);
+                                    }}
+                                    style={{
+                                      color: '#007bff',
+                                      textDecoration: 'none',
+                                      cursor: 'pointer',
+                                      flex: 1
+                                    }}
+                                    onMouseEnter={(e) => e.target.style.textDecoration = 'underline'}
+                                    onMouseLeave={(e) => e.target.style.textDecoration = 'none'}
+                                  >
+                                    - {getAttachmentTypeLabel(att.type)}: {att.name}
+                                  </a>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeleteAttachment(att.id, `${getAttachmentTypeLabel(att.type)}: ${att.name}`);
+                                    }}
+                                    style={{
+                                      background: 'none',
+                                      border: 'none',
+                                      color: '#f44336',
+                                      cursor: 'pointer',
+                                      fontSize: '1rem',
+                                      padding: '0.25rem 0.5rem',
+                                      borderRadius: '4px',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center'
+                                    }}
+                                    onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(244, 67, 54, 0.1)'}
+                                    onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                                    title="Usuń dodatek"
+                                  >
+                                    ×
+                                  </button>
+                                </li>
+                              ))}
+                            </ul>
                           </div>
                         ) : (
                           <p style={{ color: '#888', marginBottom: '1rem' }}>{t('myWeapons.noAttachments')}</p>
@@ -1083,7 +1255,7 @@ const MyWeaponsPage = () => {
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             setOpenMaintenanceMenu(null);
-                                            handleDeleteMaintenance(maint.id);
+                                            handleDeleteMaintenance(maint.id, maint.date);
                                           }}
                                           style={{
                                             width: '100%',
@@ -1221,7 +1393,17 @@ const MyWeaponsPage = () => {
             justifyContent: 'center',
             zIndex: 1000
           }}
-          onClick={() => setShowAttachmentModal(false)}
+          onClick={() => {
+            setShowAttachmentModal(false);
+            setAttachmentForm({ 
+              type: 'red_dot', 
+              name: '', 
+              notes: '',
+              precision_help: 'low',
+              recoil_reduction: 'none',
+              ergonomics: 'medium'
+            });
+          }}
         >
           <div
             className="card"
@@ -1231,26 +1413,7 @@ const MyWeaponsPage = () => {
             <h3>{t('myWeapons.addAttachment')}</h3>
             <form onSubmit={handleAddAttachment}>
               <div className="form-group">
-                <label className="form-label">{t('myWeapons.attachmentType')}</label>
-                <select
-                  className="form-input"
-                  value={attachmentForm.type}
-                  onChange={(e) => setAttachmentForm({ ...attachmentForm, type: e.target.value })}
-                  required
-                >
-                  <option value="optic">{t('myWeapons.optic')}</option>
-                  <option value="light">{t('myWeapons.light')}</option>
-                  <option value="laser">{t('myWeapons.laser')}</option>
-                  <option value="suppressor">{t('myWeapons.suppressor')}</option>
-                  <option value="bipod">{t('myWeapons.bipod')}</option>
-                  <option value="compensator">{t('myWeapons.compensator')}</option>
-                  <option value="grip">{t('myWeapons.grip')}</option>
-                  <option value="trigger">{t('myWeapons.trigger')}</option>
-                  <option value="other">{t('myWeapons.other')}</option>
-                </select>
-              </div>
-              <div className="form-group">
-                <label className="form-label">{t('myWeapons.attachmentName')}</label>
+                <label className="form-label">Nazwa</label>
                 <input
                   type="text"
                   className="form-input"
@@ -1260,22 +1423,111 @@ const MyWeaponsPage = () => {
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">{t('myWeapons.attachmentNotes')}</label>
-                <textarea
+                <label className="form-label">Typ</label>
+                <select
                   className="form-input"
-                  value={attachmentForm.notes}
-                  onChange={(e) => setAttachmentForm({ ...attachmentForm, notes: e.target.value })}
-                  rows={3}
-                />
+                  value={attachmentForm.type}
+                  onChange={(e) => handleAttachmentTypeChange(e.target.value)}
+                  required
+                >
+                  {(() => {
+                    const currentGun = guns.find(g => g.id === expandedGun);
+                    const allowedTypes = getAllowedAttachmentTypes(currentGun?.type);
+                    const allOptions = [
+                      { value: 'red_dot', label: 'Kolimator (Red Dot)' },
+                      { value: 'reflex', label: 'Otwarty kolimator / Reflex Sight' },
+                      { value: 'lpvo', label: 'Optyka LPVO' },
+                      { value: 'magnifier', label: 'Powiększalnik (Magnifier)' },
+                      { value: 'suppressor', label: 'Tłumik (suppressor)' },
+                      { value: 'compensator', label: 'Hamulec wylotowy / kompensator' },
+                      { value: 'foregrip', label: 'Chwyt pionowy (foregrip)' },
+                      { value: 'angled_grip', label: 'Chwyt kątowy (angled grip)' },
+                      { value: 'bipod', label: 'Dwójnóg (bipod)' },
+                      { value: 'tactical_light', label: 'Latarka taktyczna' }
+                    ];
+                    
+                    return allOptions
+                      .filter(option => allowedTypes.includes(option.value))
+                      .map(option => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ));
+                  })()}
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Pomoc precyzji</label>
+                <select
+                  className="form-input"
+                  value={attachmentForm.precision_help}
+                  disabled
+                  style={{ backgroundColor: 'var(--bg-secondary)', cursor: 'not-allowed', opacity: 0.7 }}
+                  required
+                >
+                  <option value="none">none</option>
+                  <option value="low">low</option>
+                  <option value="medium">medium</option>
+                  <option value="high">high</option>
+                </select>
+                <small style={{ color: '#888', fontSize: '0.85rem', marginTop: '0.25rem', display: 'block' }}>
+                  Automatycznie ustawiane na podstawie typu
+                </small>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Redukcja odrzutu</label>
+                <select
+                  className="form-input"
+                  value={attachmentForm.recoil_reduction}
+                  disabled
+                  style={{ backgroundColor: 'var(--bg-secondary)', cursor: 'not-allowed', opacity: 0.7 }}
+                  required
+                >
+                  <option value="none">none</option>
+                  <option value="low">low</option>
+                  <option value="medium">medium</option>
+                  <option value="high">high</option>
+                </select>
+                <small style={{ color: '#888', fontSize: '0.85rem', marginTop: '0.25rem', display: 'block' }}>
+                  Automatycznie ustawiane na podstawie typu
+                </small>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Ergonomia</label>
+                <select
+                  className="form-input"
+                  value={attachmentForm.ergonomics}
+                  disabled
+                  style={{ backgroundColor: 'var(--bg-secondary)', cursor: 'not-allowed', opacity: 0.7 }}
+                  required
+                >
+                  <option value="none">none</option>
+                  <option value="low">low</option>
+                  <option value="medium">medium</option>
+                  <option value="high">high</option>
+                </select>
+                <small style={{ color: '#888', fontSize: '0.85rem', marginTop: '0.25rem', display: 'block' }}>
+                  Automatycznie ustawiane na podstawie typu
+                </small>
               </div>
               <div style={{ display: 'flex', gap: '1rem' }}>
                 <button type="submit" className="btn btn-primary">
-                  {t('myWeapons.add')}
+                  Dodaj wyposażenie
                 </button>
                 <button
                   type="button"
                   className="btn btn-secondary"
-                  onClick={() => setShowAttachmentModal(false)}
+                  onClick={() => {
+                    setShowAttachmentModal(false);
+                    setAttachmentForm({ 
+                      type: 'red_dot', 
+                      name: '', 
+                      notes: '',
+                      precision_help: 'low',
+                      recoil_reduction: 'none',
+                      ergonomics: 'medium'
+                    });
+                  }}
                 >
                   {t('myWeapons.cancel')}
                 </button>
@@ -1629,6 +1881,52 @@ const MyWeaponsPage = () => {
           >
             ×
           </button>
+        </div>
+      )}
+
+      {confirmModal.show && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 3000
+          }}
+          onClick={() => setConfirmModal({ show: false, title: '', message: '', onConfirm: null, itemName: '' })}
+        >
+          <div
+            className="card"
+            style={{ maxWidth: '400px', width: '90%' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 style={{ margin: 0, marginBottom: '1rem', color: '#f44336' }}>{confirmModal.title}</h3>
+            <p style={{ marginBottom: '1.5rem', color: 'var(--text-primary)' }}>{confirmModal.message}</p>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setConfirmModal({ show: false, title: '', message: '', onConfirm: null, itemName: '' })}
+                className="btn btn-secondary"
+              >
+                Anuluj
+              </button>
+              <button
+                onClick={() => {
+                  if (confirmModal.onConfirm) {
+                    confirmModal.onConfirm();
+                  }
+                }}
+                className="btn btn-primary"
+                style={{ backgroundColor: '#f44336', borderColor: '#f44336' }}
+              >
+                Usuń
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
