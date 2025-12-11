@@ -51,3 +51,191 @@ lerna-debug.log*
 
 # AI Assistant instructions
 AGENTS.md
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Testing
+coverage/
+.nyc_output/
+
+# Production builds
+build/
+dist/
+dist-ssr/
+.next/
+out/
+
+# Vercel
+.vercel
+
+# Turbo
+.turbo
+
+# Cache
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Package manager locks (optional - some teams commit these)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# Storybook
+storybook-static/
+
+# TypeScript
+*.tsbuildinfo
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variable files
+.env
+.env.development
+.env.test
+.env.production
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Vite
+.vite/
+
+# Editor
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Additional build outputs
+.vite/
+.vercel/
+.netlify/
+.next/
+out/
+.turbo/
+
+# Testing
+coverage/
+.nyc_output/
+.jest/
+
+# TypeScript
+*.tsbuildinfo
+
+# Vite
+vite.config.*.timestamp-*
+
+# React
+.react/
+
+# Storybook
+storybook-static/
+.out/
+
+# Svelte
+.svelte-kit/
+
+# Rollup
+.rollup.cache/
+
+# Webpack
+.webpack/
+
+# Parcel
+.parcel-cache/
+.parcel/
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+*.orig
+*.bak
+*.backup
+
+# Package manager
+.pnp/
+.pnp.js
+.yarn/
+.yarn-integrity
+.npm/
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+
+# Lock files (optional - uncomment if you don't want to commit them)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# Environment files
+.env
+.env.*
+!.env.example
+!.env.template
+
+# Local development
+.local/
+local/
+
+# Editor
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.iml
+*.sublime-project
+*.sublime-workspace
+
+# Debug
+.vscode/launch.json
+.vscode/tasks.json
+
+# Misc
+*.log
+*.pid
+*.seed
+*.pid.lock
+.npm
+.eslintcache
+.stylelintcache

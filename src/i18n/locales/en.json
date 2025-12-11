@@ -182,7 +182,7 @@
     "selectType": "Select type (optional)",
     "pricePerUnit": "Price per unit *",
     "pricePlaceholder": "1.50",
-    "unitsInPackage": "Quantity in package (optional)",
+    "unitsInPackage": "Quantity in package",
     "addAmmo": "Add ammunition",
     "filterByCaliber": "Caliber:",
     "filterByType": "Type:",

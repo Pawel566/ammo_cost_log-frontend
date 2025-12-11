@@ -3,27 +3,42 @@ import { useTranslation } from 'react-i18next';
 import { ammoAPI, settingsAPI } from '../services/api';
 import { useCurrencyConverter } from '../hooks/useCurrencyConverter';
 
-const COMMON_CALIBERS = [
-  '9×19',
-  '.45 ACP',
-  '.40 S&W',
-  '.380 ACP',
-  '.22 LR',
-  '10 mm Auto',
-  '.357 SIG',
-  '5.56×45 / .223 Rem',
-  '7.62×39',
-  '7.62×51 / .308 Win',
-  '7.62×54R (Mosin Nagant)',
-  '.30-06 Springfield',
-  '6.5 Creedmoor',
-  '.300 WinMag',
-  '.338 Lapua Magnum',
-  '12/70',
-  '12/76',
-  '.243 Win',
-  '.270 Win',
-  '20/70'
+const CALIBERS = [
+  // Pistoletowe (pistol)
+  { name: '9×19', ammo_class: 'pistol' },
+  { name: '.45 ACP', ammo_class: 'pistol' },
+  { name: '.40 S&W', ammo_class: 'pistol' },
+  { name: '.380 ACP (9×17)', ammo_class: 'pistol' },
+  { name: '.32 ACP', ammo_class: 'pistol' },
+  { name: '10 mm Auto', ammo_class: 'pistol' },
+  { name: '.357 SIG', ammo_class: 'pistol' },
+  { name: '.22 LR', ammo_class: 'pistol' },
+  
+  // Rewolwerowe (revolver)
+  { name: '.38 Special', ammo_class: 'revolver' },
+  { name: '.357 Magnum', ammo_class: 'revolver' },
+  { name: '.44 Magnum', ammo_class: 'revolver' },
+  { name: '.44 Special', ammo_class: 'revolver' },
+  { name: '.45 Colt', ammo_class: 'revolver' },
+  { name: '.454 Casull', ammo_class: 'revolver' },
+  
+  // Karabinowe (rifle)
+  { name: '5.56×45 / .223 Rem', ammo_class: 'rifle' },
+  { name: '7.62×39', ammo_class: 'rifle' },
+  { name: '7.62×51 / .308 Win', ammo_class: 'rifle' },
+  { name: '7.62×54R', ammo_class: 'rifle' },
+  { name: '6.5 Creedmoor', ammo_class: 'rifle' },
+  { name: '.30-06 Springfield', ammo_class: 'rifle' },
+  { name: '.300 WinMag', ammo_class: 'rifle' },
+  { name: '.243 Win', ammo_class: 'rifle' },
+  { name: '.270 Win', ammo_class: 'rifle' },
+  { name: '.22 LR', ammo_class: 'rifle' },
+  
+  // Strzelbowe (shotgun)
+  { name: '12/70', ammo_class: 'shotgun' },
+  { name: '12/76', ammo_class: 'shotgun' },
+  { name: '20/70', ammo_class: 'shotgun' },
+  { name: '.410 bore', ammo_class: 'shotgun' }
 ];
 
 const AMMO_TYPES = [
@@ -39,6 +54,14 @@ const AMMO_TYPES = [
   { value: 'Slug', label: 'Slug' }
 ];
 
+const AMMO_CATEGORIES = [
+  { value: 'pistol', label: 'Amunicja do pistoletu/PM' },
+  { value: 'revolver', label: 'Amunicja do rewolweru' },
+  { value: 'rifle', label: 'Amunicja karabinowa' },
+  { value: 'shotgun', label: 'Amunicja do strzelby' },
+  { value: 'other', label: 'Inna' }
+];
+
 const AmmoPage = () => {
   const { t } = useTranslation();
   const { formatCurrency } = useCurrencyConverter();
@@ -48,11 +71,13 @@ const AmmoPage = () => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     caliber: '',
     caliberCustom: '',
     type: '',
+    category: '',
     price_per_unit: '',
     units_in_package: ''
   });
@@ -72,6 +97,7 @@ const AmmoPage = () => {
   
   // Menu akcji
   const [activeMenuId, setActiveMenuId] = useState(null);
+  const [confirmModal, setConfirmModal] = useState({ show: false, title: '', message: '', onConfirm: null, itemName: '' });
   
   // Ustawienia użytkownika
   const [userSettings, setUserSettings] = useState({
@@ -191,6 +217,43 @@ const AmmoPage = () => {
     return [...new Set(types)].sort();
   };
 
+  const getAvailableCalibers = () => {
+    if (!formData.category || formData.category === 'other') {
+      // Dla kategorii "other" lub brak kategorii - pokaż wszystkie
+      return CALIBERS.map(c => c.name);
+    }
+    // Filtruj kalibry według wybranej kategorii
+    return CALIBERS
+      .filter(c => c.ammo_class === formData.category)
+      .map(c => c.name);
+  };
+
+  const handleCategoryChange = (e) => {
+    const newCategory = e.target.value;
+    const currentCaliber = formData.caliber;
+    
+    // Jeśli zmieniono kategorię, sprawdź czy obecny kaliber pasuje do nowej kategorii
+    let updatedCaliber = currentCaliber;
+    if (newCategory && currentCaliber) {
+      const availableCalibers = newCategory === 'other' 
+        ? CALIBERS.map(c => c.name)
+        : CALIBERS.filter(c => c.ammo_class === newCategory).map(c => c.name);
+      
+      if (!availableCalibers.includes(currentCaliber)) {
+        // Kaliber nie pasuje do nowej kategorii - wyczyść go
+        updatedCaliber = '';
+        setUseCustomCaliber(false);
+        setFormData({ ...formData, caliberCustom: '' });
+      }
+    }
+    
+    setFormData({ 
+      ...formData, 
+      category: newCategory,
+      caliber: updatedCaliber
+    });
+  };
+
   const handleCaliberChange = (e) => {
     const value = e.target.value;
     if (value === 'custom') {
@@ -222,23 +285,33 @@ const AmmoPage = () => {
         name: formData.name,
         caliber: finalCaliber || null,
         type: formData.type || null,
+        category: formData.category || null,
         price_per_unit: price,
         units_in_package: formData.units_in_package ? parseInt(formData.units_in_package) : null
       };
       
-      await ammoAPI.create(ammoData);
+      if (editingId) {
+        await ammoAPI.update(editingId, ammoData);
+        setEditingId(null);
+        setSuccess(t('common.itemUpdated', { item: `${t('ammo.title')} ${formData.name}` }));
+      } else {
+        await ammoAPI.create(ammoData);
+        setSuccess(t('common.itemAdded', { item: `${t('ammo.title')} ${formData.name}` }));
+      }
+      
       setFormData({ 
         name: '', 
         caliber: '', 
         caliberCustom: '',
         type: '',
+        category: '',
         price_per_unit: '', 
         units_in_package: '' 
       });
       setUseCustomCaliber(false);
-      setShowForm(false);
+      setEditingId(null);
       setError(null);
-      setSuccess(t('common.itemAdded', { item: `${t('ammo.title')} ${formData.name}` }));
+      setShowForm(false);
       fetchAmmo();
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
@@ -251,18 +324,51 @@ const AmmoPage = () => {
     const ammoToDelete = ammo.find(a => a.id === id);
     const ammoName = ammoToDelete ? ammoToDelete.name : '';
     
-    if (window.confirm(`${t('common.confirmDeleteItem')} ${ammoName}?`)) {
-      try {
-        await ammoAPI.delete(id);
-        setSuccess(t('common.itemDeleted', { item: `${t('ammo.title')} ${ammoName}` }));
-        fetchAmmo();
-        setActiveMenuId(null);
-        setTimeout(() => setSuccess(null), 3000);
-      } catch (err) {
-        setError(err.response?.data?.detail || t('common.errorDeleting', { item: 'ammunition' }));
-        console.error(err);
+    setConfirmModal({
+      show: true,
+      title: 'Usuń amunicję',
+      message: `Czy na pewno chcesz usunąć amunicję "${ammoName}"?`,
+      itemName: ammoName,
+      onConfirm: async () => {
+        try {
+          await ammoAPI.delete(id);
+          setSuccess(t('common.itemDeleted', { item: `${t('ammo.title')} ${ammoName}` }));
+          setConfirmModal({ show: false, title: '', message: '', onConfirm: null, itemName: '' });
+          fetchAmmo();
+          setActiveMenuId(null);
+          setTimeout(() => setSuccess(null), 3000);
+        } catch (err) {
+          setError(err.response?.data?.detail || t('common.errorDeleting', { item: 'ammunition' }));
+          console.error(err);
+          setConfirmModal({ show: false, title: '', message: '', onConfirm: null, itemName: '' });
+        }
       }
-    }
+    });
+  };
+
+  const handleEdit = (ammoItem) => {
+    const ammoCaliber = ammoItem.caliber || '';
+    const ammoCategory = ammoItem.category || '';
+    
+    // Sprawdź czy kaliber jest w dostępnych dla danej kategorii
+    const availableCalibers = ammoCategory && ammoCategory !== 'other'
+      ? CALIBERS.filter(c => c.ammo_class === ammoCategory).map(c => c.name)
+      : CALIBERS.map(c => c.name);
+    const isInList = availableCalibers.includes(ammoCaliber) || CALIBERS.map(c => c.name).includes(ammoCaliber);
+    
+    setFormData({
+      name: ammoItem.name,
+      caliber: isInList ? ammoCaliber : '',
+      caliberCustom: isInList ? '' : ammoCaliber,
+      type: ammoItem.type || '',
+      category: ammoCategory || '',
+      price_per_unit: ammoItem.price_per_unit ? ammoItem.price_per_unit.toString().replace('.', ',') : '',
+      units_in_package: ammoItem.units_in_package ? ammoItem.units_in_package.toString() : ''
+    });
+    setUseCustomCaliber(!isInList && ammoCaliber !== '');
+    setEditingId(ammoItem.id);
+    setShowForm(true);
+    setActiveMenuId(null);
   };
 
   const handleAddQuantity = async (id) => {
@@ -339,20 +445,7 @@ const AmmoPage = () => {
           <h2 style={{ margin: 0 }}>{t('ammo.title')}</h2>
           <button 
             className="btn btn-primary" 
-            onClick={() => {
-              setShowForm(!showForm);
-              if (showForm) {
-                setFormData({ 
-                  name: '', 
-                  caliber: '', 
-                  caliberCustom: '',
-                  type: '',
-                  price_per_unit: '', 
-                  units_in_package: '' 
-                });
-                setUseCustomCaliber(false);
-              }
-            }}
+            onClick={() => setShowForm(true)}
             style={{ 
               backgroundColor: '#007bff',
               color: 'white',
@@ -363,7 +456,7 @@ const AmmoPage = () => {
               fontSize: '0.9rem'
             }}
           >
-            {showForm ? t('ammo.cancel') : t('ammo.addAmmo')}
+            {t('ammo.addAmmo')}
           </button>
         </div>
 
@@ -410,9 +503,85 @@ const AmmoPage = () => {
         )}
 
         {showForm && (
-          <div className="card" style={{ marginBottom: '1.5rem' }}>
-            <h3 style={{ marginBottom: '1.5rem', fontSize: '1.5rem', fontWeight: 'bold' }}>{t('ammo.addNewAmmo')}</h3>
-            <form onSubmit={handleSubmit}>
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.7)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 2000,
+              padding: '1rem'
+            }}
+            onClick={() => {
+              setShowForm(false);
+              setEditingId(null);
+              setFormData({ 
+                name: '', 
+                caliber: '', 
+                caliberCustom: '',
+                type: '',
+                category: '',
+                price_per_unit: '', 
+                units_in_package: '' 
+              });
+              setUseCustomCaliber(false);
+            }}
+          >
+            <div
+              className="card"
+              style={{
+                maxWidth: '600px',
+                width: '100%',
+                maxHeight: '90vh',
+                overflowY: 'auto',
+                position: 'relative',
+                marginBottom: 0
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => {
+                  setShowForm(false);
+                  setEditingId(null);
+                  setFormData({ 
+                    name: '', 
+                    caliber: '', 
+                    caliberCustom: '',
+                    type: '',
+                    category: '',
+                    price_per_unit: '', 
+                    units_in_package: '' 
+                  });
+                  setUseCustomCaliber(false);
+                }}
+                style={{
+                  position: 'absolute',
+                  top: '1rem',
+                  right: '1rem',
+                  background: 'none',
+                  border: 'none',
+                  color: '#fff',
+                  fontSize: '1.5rem',
+                  cursor: 'pointer',
+                  padding: '0.25rem 0.5rem',
+                  lineHeight: 1,
+                  zIndex: 1
+                }}
+                onMouseEnter={(e) => e.target.style.color = '#dc3545'}
+                onMouseLeave={(e) => e.target.style.color = '#fff'}
+              >
+                ×
+              </button>
+
+              <h3 style={{ marginTop: 0, marginBottom: '1.5rem', fontSize: '1.5rem', fontWeight: 'bold' }}>
+                {editingId ? t('common.edit') + ' ' + t('ammo.title') : t('ammo.addNewAmmo')}
+              </h3>
+              <form onSubmit={handleSubmit}>
               <div className="form-group" style={{ marginBottom: '1.5rem' }}>
                 <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
                   {t('ammo.ammoName')}
@@ -435,6 +604,31 @@ const AmmoPage = () => {
                   }}
                 />
               </div>
+
+              <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+                <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                  Kategoria
+                </label>
+                <select
+                  className="form-input"
+                  value={formData.category}
+                  onChange={handleCategoryChange}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    backgroundColor: 'var(--input-bg)',
+                    color: 'var(--text-primary)',
+                    border: `1px solid var(--border-color)`,
+                    borderRadius: '4px',
+                    fontSize: '1rem'
+                  }}
+                >
+                  <option value="">Wybierz kategorię</option>
+                  {AMMO_CATEGORIES.map(category => (
+                    <option key={category.value} value={category.value}>{category.label}</option>
+                  ))}
+                </select>
+              </div>
               
               <div className="form-group" style={{ marginBottom: '1.5rem' }}>
                 <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
@@ -448,6 +642,7 @@ const AmmoPage = () => {
                         value={formData.caliber}
                         onChange={handleCaliberChange}
                         required
+                        disabled={!formData.category}
                         style={{
                           flex: 1,
                           padding: '0.75rem',
@@ -455,14 +650,20 @@ const AmmoPage = () => {
                           color: 'var(--text-primary)',
                           border: `1px solid var(--border-color)`,
                           borderRadius: '4px',
-                          fontSize: '1rem'
+                          fontSize: '1rem',
+                          opacity: formData.category ? 1 : 0.6,
+                          cursor: formData.category ? 'pointer' : 'not-allowed'
                         }}
                       >
-                        <option value="">{t('ammo.selectCaliber')}</option>
-                        {COMMON_CALIBERS.map(caliber => (
+                        <option value="">
+                          {formData.category 
+                            ? (t('ammo.selectCaliber') || 'Wybierz kaliber') 
+                            : (t('ammo.selectCategoryFirst') || 'Najpierw wybierz kategorię')}
+                        </option>
+                        {getAvailableCalibers().map(caliber => (
                           <option key={caliber} value={caliber}>{caliber}</option>
                         ))}
-                        <option value="custom">{t('ammo.customCaliber')}</option>
+                        <option value="custom">{t('ammo.customCaliber') || 'Własny kaliber'}</option>
                       </select>
                     </>
                   ) : (
@@ -580,23 +781,46 @@ const AmmoPage = () => {
                 />
               </div>
 
-              <button 
-                type="submit" 
-                className="btn btn-success"
-                style={{
-                  backgroundColor: '#4caf50',
-                  color: 'var(--text-primary)',
-                  border: 'none',
-                  padding: '0.75rem 2rem',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontSize: '1rem',
-                  fontWeight: '500'
-                }}
-              >
-                {t('ammo.addAmmo')}
-              </button>
+              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
+                <button 
+                  type="button" 
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    setShowForm(false);
+                    setEditingId(null);
+                    setFormData({ 
+                      name: '', 
+                      caliber: '', 
+                      caliberCustom: '',
+                      type: '',
+                      category: '',
+                      price_per_unit: '', 
+                      units_in_package: '' 
+                    });
+                    setUseCustomCaliber(false);
+                  }}
+                >
+                  {t('common.cancel')}
+                </button>
+                <button 
+                  type="submit" 
+                  className="btn btn-success"
+                  style={{
+                    backgroundColor: '#4caf50',
+                    color: 'var(--text-primary)',
+                    border: 'none',
+                    padding: '0.75rem 2rem',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '1rem',
+                    fontWeight: '500'
+                  }}
+                >
+                  {editingId ? t('common.save') : t('ammo.addAmmo')}
+                </button>
+              </div>
             </form>
+            </div>
           </div>
         )}
 
@@ -835,6 +1059,19 @@ const AmmoPage = () => {
                             {t('ammo.addQuantity')}
                                   </div>
                                   <div
+                            onClick={() => handleEdit(item)}
+                                    style={{
+                                      padding: '0.75rem 1rem',
+                                      cursor: 'pointer',
+                                      color: 'var(--text-primary)',
+                                      borderBottom: `1px solid var(--border-color)`
+                                    }}
+                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3c3c3c'}
+                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                          >
+                            {t('common.edit')}
+                                  </div>
+                                  <div
                             onClick={() => handleDelete(item.id)}
                                     style={{
                                       padding: '0.75rem 1rem',
@@ -905,6 +1142,52 @@ const AmmoPage = () => {
           )}
         </div>
       </div>
+
+      {confirmModal.show && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 3000
+          }}
+          onClick={() => setConfirmModal({ show: false, title: '', message: '', onConfirm: null, itemName: '' })}
+        >
+          <div
+            className="card"
+            style={{ maxWidth: '400px', width: '90%' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 style={{ margin: 0, marginBottom: '1rem', color: '#f44336' }}>{confirmModal.title}</h3>
+            <p style={{ marginBottom: '1.5rem', color: 'var(--text-primary)' }}>{confirmModal.message}</p>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setConfirmModal({ show: false, title: '', message: '', onConfirm: null, itemName: '' })}
+                className="btn btn-secondary"
+              >
+                Anuluj
+              </button>
+              <button
+                onClick={() => {
+                  if (confirmModal.onConfirm) {
+                    confirmModal.onConfirm();
+                  }
+                }}
+                className="btn btn-primary"
+                style={{ backgroundColor: '#f44336', borderColor: '#f44336' }}
+              >
+                Usuń
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

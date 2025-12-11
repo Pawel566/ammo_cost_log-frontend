@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.6.8] – 2025-12-11
+### Dodano
+- Ikony rang wyświetlane na stronie Pulpit (Dashboard) pod tytułem rangi i nad paskiem postępu
+- Ikony rang wyświetlane na stronie "Moje konto" obok informacji o randze
+- Mapowanie ikon rang dla pierwszych 6 poziomów (rank_01.png do rank_06.png)
+- Rozszerzone pliki .gitignore dla frontendu z wzorcami dla buildów, cache i plików tymczasowych
+
+### Zmieniono
+- Zwiększono rozmiar ikon rang w DashboardPage z 120px do 180px
+- Zmieniono "jakość sesji" na "punktacja końcowa" w nagłówku tabeli i szczegółach sesji
+- Ulepszono układ wyświetlania rangi na stronie "Moje konto" - ikona po prawej stronie z odstępem 4 spacji
+
+### Naprawiono
+- Poprawiono układ wyświetlania rangi na stronie "Moje konto" - teksty jedno pod drugim, ikona obok
+
 ## [0.6.5] – 2025-01-XX
 ### Dodano
 - System obsługi wielu walut (PLN, USD, EUR, GBP) z automatyczną konwersją

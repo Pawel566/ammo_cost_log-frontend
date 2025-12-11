@@ -18,28 +18,22 @@ const MaintenanceStatusIcon = ({ status }) => {
   } else if (status === 'yellow' || status === 'warning') {
     // Pomarańczowa ikona ostrzegawcza - Wkrótce wymagana
     return (
-      <img 
-        src="/assets/warning_weapon_orange.png" 
-        alt="Warning"
-        style={{ 
-          width: `${iconSize}px`, 
-          height: `${iconSize}px`,
-          objectFit: 'contain'
-        }}
-      />
+      <svg width={iconSize} height={iconSize} viewBox="0 0 1536.000000 1024.000000" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style={{ display: 'inline-block', flexShrink: 0, verticalAlign: 'middle', overflow: 'visible' }}>
+        <g transform="translate(0.000000,1024.000000) scale(0.100000,-0.100000)" fill="#ff9800" stroke="none">
+          <path d="M7217 8129 c-91 -13 -202 -72 -272 -143 -51 -52 -103 -137 -337 -541 -152 -264 -368 -637 -480 -830 -428 -733 -744 -1275 -816 -1400 -41 -71 -125 -215 -187 -320 -62 -104 -200 -341 -307 -525 -108 -184 -281 -481 -386 -660 -105 -179 -200 -355 -213 -390 -16 -49 -22 -87 -21 -155 1 -207 104 -370 292 -465 141 -70 -89 -65 2835 -65 2540 0 2653 1 2715 18 335 95 510 433 374 722 -10 22 -93 168 -184 325 -92 157 -242 416 -335 575 -92 160 -234 403 -315 540 -81 138 -201 342 -267 455 -66 113 -245 419 -398 680 -153 261 -335 572 -405 690 -70 118 -194 330 -275 470 -514 885 -519 893 -656 965 -113 59 -219 75 -362 54z m199 -376 c31 -22 109 -151 484 -793 259 -445 570 -976 775 -1325 84 -143 271 -462 415 -710 144 -247 281 -481 305 -520 23 -38 104 -176 180 -305 76 -129 209 -354 295 -500 228 -386 230 -390 230 -442 0 -55 -31 -106 -80 -130 -33 -17 -182 -18 -2685 -18 -2550 0 -2652 1 -2690 19 -61 28 -78 53 -83 121 -5 70 -35 12 313 605 126 215 259 442 296 505 37 63 174 297 304 520 131 223 357 610 503 860 145 250 317 545 382 655 64 110 152 261 195 335 153 266 588 1006 621 1058 48 73 84 94 155 90 36 -3 66 -11 85 -25z"/>
+          <path d="M6347 5638 c-9 -7 -23 -30 -32 -50 -12 -29 -21 -38 -40 -38 -13 0 -35 -10 -49 -22 -31 -28 -186 -384 -193 -443 -7 -54 15 -73 94 -81 103 -11 183 -75 183 -147 0 -16 -69 -206 -154 -421 -186 -474 -190 -486 -191 -561 0 -73 39 -162 89 -200 66 -50 98 -55 382 -55 328 0 309 -9 304 145 -2 70 6 108 56 298 l57 217 227 0 c242 0 307 7 380 42 55 27 141 110 168 164 27 53 76 206 102 321 l21 92 267 3 c248 3 270 5 313 24 49 23 92 70 110 122 8 23 23 37 55 51 58 26 60 33 56 267 -2 155 -11 173 -82 183 -38 5 -47 11 -63 42 -10 19 -28 41 -39 48 -31 19 -76 4 -95 -32 -8 -18 -21 -35 -27 -39 -6 -4 -403 -8 -883 -8 -779 0 -873 2 -887 16 -9 8 -16 22 -16 29 0 36 -79 58 -113 33z m1213 -753 c0 -55 -75 -275 -113 -333 -53 -79 -107 -92 -368 -92 -164 0 -179 1 -179 18 0 17 36 137 45 152 3 4 33 -7 67 -25 133 -71 316 -89 333 -33 9 25 -6 41 -69 77 -70 39 -152 116 -205 190 l-42 61 265 0 c226 0 266 -2 266 -15z"/>
+        </g>
+      </svg>
     );
   } else if (status === 'red' || status === 'required') {
     // Czerwona ikona ostrzegawcza - Wymagana
     return (
-      <img 
-        src="/assets/warning_weapon_red.png" 
-        alt="Required"
-        style={{ 
-          width: `${iconSize}px`, 
-          height: `${iconSize}px`,
-          objectFit: 'contain'
-        }}
-      />
+      <svg width={iconSize} height={iconSize} viewBox="0 0 1536.000000 1024.000000" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style={{ display: 'inline-block', flexShrink: 0, verticalAlign: 'middle', overflow: 'visible' }}>
+        <g transform="translate(0.000000,1024.000000) scale(0.100000,-0.100000)" fill="#f44336" stroke="none">
+          <path d="M7217 8129 c-91 -13 -202 -72 -272 -143 -51 -52 -103 -137 -337 -541 -152 -264 -368 -637 -480 -830 -428 -733 -744 -1275 -816 -1400 -41 -71 -125 -215 -187 -320 -62 -104 -200 -341 -307 -525 -108 -184 -281 -481 -386 -660 -105 -179 -200 -355 -213 -390 -16 -49 -22 -87 -21 -155 1 -207 104 -370 292 -465 141 -70 -89 -65 2835 -65 2540 0 2653 1 2715 18 335 95 510 433 374 722 -10 22 -93 168 -184 325 -92 157 -242 416 -335 575 -92 160 -234 403 -315 540 -81 138 -201 342 -267 455 -66 113 -245 419 -398 680 -153 261 -335 572 -405 690 -70 118 -194 330 -275 470 -514 885 -519 893 -656 965 -113 59 -219 75 -362 54z m199 -376 c31 -22 109 -151 484 -793 259 -445 570 -976 775 -1325 84 -143 271 -462 415 -710 144 -247 281 -481 305 -520 23 -38 104 -176 180 -305 76 -129 209 -354 295 -500 228 -386 230 -390 230 -442 0 -55 -31 -106 -80 -130 -33 -17 -182 -18 -2685 -18 -2550 0 -2652 1 -2690 19 -61 28 -78 53 -83 121 -5 70 -35 12 313 605 126 215 259 442 296 505 37 63 174 297 304 520 131 223 357 610 503 860 145 250 317 545 382 655 64 110 152 261 195 335 153 266 588 1006 621 1058 48 73 84 94 155 90 36 -3 66 -11 85 -25z"/>
+          <path d="M6347 5638 c-9 -7 -23 -30 -32 -50 -12 -29 -21 -38 -40 -38 -13 0 -35 -10 -49 -22 -31 -28 -186 -384 -193 -443 -7 -54 15 -73 94 -81 103 -11 183 -75 183 -147 0 -16 -69 -206 -154 -421 -186 -474 -190 -486 -191 -561 0 -73 39 -162 89 -200 66 -50 98 -55 382 -55 328 0 309 -9 304 145 -2 70 6 108 56 298 l57 217 227 0 c242 0 307 7 380 42 55 27 141 110 168 164 27 53 76 206 102 321 l21 92 267 3 c248 3 270 5 313 24 49 23 92 70 110 122 8 23 23 37 55 51 58 26 60 33 56 267 -2 155 -11 173 -82 183 -38 5 -47 11 -63 42 -10 19 -28 41 -39 48 -31 19 -76 4 -95 -32 -8 -18 -21 -35 -27 -39 -6 -4 -403 -8 -883 -8 -779 0 -873 2 -887 16 -9 8 -16 22 -16 29 0 36 -79 58 -113 33z m1213 -753 c0 -55 -75 -275 -113 -333 -53 -79 -107 -92 -368 -92 -164 0 -179 1 -179 18 0 17 36 137 45 152 3 4 33 -7 67 -25 133 -71 316 -89 333 -33 9 25 -6 41 -69 77 -70 39 -152 116 -205 190 l-42 61 265 0 c226 0 266 -2 266 -15z"/>
+        </g>
+      </svg>
     );
   } else {
     // Szara ikona z przekreśleniem - Nie dotyczy
@@ -59,48 +53,67 @@ const CALIBERS_BY_GUN_TYPE = {
     '9×19',
     '.45 ACP',
     '.40 S&W',
-    '.380 ACP',
+    '.380 ACP (9×17)',
+    '.32 ACP',
     '10 mm Auto',
     '.357 SIG',
-    '.32 ACP',
     '.22 LR'
   ],
   'Pistolet maszynowy': [
     '9×19',
-    '.40 S&W',
     '.45 ACP',
-    '10 mm Auto'
+    '.40 S&W',
+    '.380 ACP (9×17)',
+    '.32 ACP',
+    '10 mm Auto',
+    '.357 SIG',
+    '.22 LR'
   ],
   'Karabinek': [
     '5.56×45 / .223 Rem',
     '7.62×39',
     '7.62×51 / .308 Win',
-    '6.5 Grendel',
-    '6 mm ARC',
-    '9×19 (PCC)'
+    '7.62×54R',
+    '6.5 Creedmoor',
+    '.30-06 Springfield',
+    '.300 WinMag',
+    '.243 Win',
+    '.270 Win',
+    '.22 LR'
   ],
   'Karabin': [
+    '5.56×45 / .223 Rem',
+    '7.62×39',
+    '7.62×51 / .308 Win',
     '7.62×54R',
-    '8×57 IS',
-    '.30-06',
-    '7.5×55 Swiss',
     '6.5 Creedmoor',
+    '.30-06 Springfield',
     '.300 WinMag',
-    '.338 Lapua Magnum',
     '.243 Win',
-    '.270 Win'
+    '.270 Win',
+    '.22 LR'
   ],
   'Strzelba': [
     '12/70',
     '12/76',
     '20/70',
-    '20/76'
+    '.410 bore'
   ],
   'Rewolwer': [
-    '.357 Magnum',
     '.38 Special',
+    '.357 Magnum',
     '.44 Magnum',
-    '.22 LR'
+    '.44 Special',
+    '.45 Colt',
+    '.454 Casull'
+  ],
+  'Inna': [
+    '4.6×30 HK',
+    '5.7×28 FN',
+    '.22 Hornet',
+    '7.92×33 Kurz',
+    '.458 SOCOM',
+    '.50 Beowulf'
   ]
 };
 
@@ -134,7 +147,8 @@ const GunsPage = () => {
     caliber: '',
     caliberCustom: '',
     type: '',
-    notes: ''
+    notes: '',
+    created_at: ''
   });
   const [useCustomCaliber, setUseCustomCaliber] = useState(false);
   
@@ -152,6 +166,7 @@ const GunsPage = () => {
   
   // Menu akcji
   const [activeMenuId, setActiveMenuId] = useState(null);
+  const [confirmModal, setConfirmModal] = useState({ show: false, title: '', message: '', onConfirm: null, itemName: '' });
   
   // Ustawienia użytkownika
   const [userSettings, setUserSettings] = useState({
@@ -292,14 +307,19 @@ const GunsPage = () => {
   };
 
   const calculateRoundsSinceLastMaintenance = (gunId) => {
-    const lastMaint = getLastMaintenance(gunId);
-    if (!lastMaint) return 0;
-
     const gunSessions = sessions[gunId];
     if (!gunSessions || !Array.isArray(gunSessions)) return 0;
 
+    const lastMaint = getLastMaintenance(gunId);
+    
+    // Jeśli nie ma konserwacji, liczymy wszystkie strzały od pierwszej sesji
+    if (!lastMaint) {
+      return gunSessions.reduce((sum, session) => sum + (session.shots || 0), 0);
+    }
+
     const maintenanceDate = new Date(lastMaint.date);
     
+    // Jeśli jest konserwacja, liczymy tylko strzały po dacie konserwacji
     let totalRounds = 0;
     gunSessions.forEach(session => {
       const sessionDate = new Date(session.date);
@@ -341,12 +361,42 @@ const GunsPage = () => {
 
   const getMaintenanceStatus = (gunId) => {
     const lastMaint = getLastMaintenance(gunId);
-    if (!lastMaint) {
-      return { status: 'none', color: '#888', message: '-' };
-    }
-
+    
     const rounds = calculateRoundsSinceLastMaintenance(gunId);
     const days = calculateDaysSinceLastMaintenance(gunId);
+    
+    // Jeśli nie ma konserwacji, sprawdź czy broń ma sesje bez konserwacji
+    if (!lastMaint) {
+      const gunSessions = sessions[gunId];
+      if (!gunSessions || gunSessions.length === 0) {
+        return { status: 'none', color: '#888', message: '-', reason: '' };
+      }
+      const totalShots = gunSessions.reduce((sum, s) => sum + (s.shots || 0), 0);
+      const roundsLimit = userSettings.maintenance_rounds_limit || 500;
+      const roundsPercentage = Math.round((totalShots / roundsLimit) * 100);
+      
+      if (totalShots >= roundsLimit) {
+        return { 
+          status: 'red', 
+          color: '#f44336', 
+          message: t('common.required'),
+          reason: `${t('common.required')}: ${roundsPercentage}% (${totalShots}/${roundsLimit})`,
+          rounds: totalShots,
+          days: null
+        };
+      } else if (roundsPercentage >= 75) {
+        return {
+          status: 'yellow',
+          color: '#ff9800',
+          message: t('common.soonRequired'),
+          reason: `${roundsPercentage}% (${totalShots}/${roundsLimit})`,
+          rounds: totalShots,
+          days: null
+        };
+      }
+      // Jeśli nie przekroczono limitu strzałów, zwróć status 'green'
+      return { status: 'green', color: '#4caf50', message: t('common.ok'), reason: '', rounds: totalShots, days: null };
+    }
 
     const roundsLimit = userSettings.maintenance_rounds_limit || 500;
     const daysLimit = userSettings.maintenance_days_limit || 90;
@@ -461,7 +511,8 @@ const GunsPage = () => {
         name: formData.name,
         caliber: finalCaliber || null,
         type: formData.type || null,
-        notes: formData.notes || null
+        notes: formData.notes || null,
+        created_at: formData.created_at || null
       };
       
       let gunName = formData.name;
@@ -476,7 +527,7 @@ const GunsPage = () => {
         setSuccess(t('common.itemAdded', { item: gunDisplayName }));
       }
       
-      setFormData({ name: '', caliber: '', caliberCustom: '', type: '', notes: '' });
+      setFormData({ name: '', caliber: '', caliberCustom: '', type: '', notes: '', created_at: '' });
       setUseCustomCaliber(false);
       setShowForm(false);
       setError(null);
@@ -503,7 +554,8 @@ const GunsPage = () => {
       caliber: isInList ? gunCaliber : '',
       caliberCustom: isInList ? '' : gunCaliber,
       type: gunType,
-      notes: gun.notes || ''
+      notes: gun.notes || '',
+      created_at: gun.created_at ? gun.created_at.split('T')[0] : ''
     });
     setUseCustomCaliber(!isInList && gunCaliber !== '');
     setEditingId(gun.id);
@@ -514,7 +566,7 @@ const GunsPage = () => {
   const handleCancel = () => {
     setShowForm(false);
     setEditingId(null);
-    setFormData({ name: '', caliber: '', caliberCustom: '', type: '', notes: '' });
+    setFormData({ name: '', caliber: '', caliberCustom: '', type: '', notes: '', created_at: '' });
     setUseCustomCaliber(false);
   };
 
@@ -524,18 +576,26 @@ const GunsPage = () => {
     const gunType = gunToDelete ? (gunToDelete.type || '') : '';
     const gunDisplayName = `${gunType ? gunType + ' ' : ''}${gunName}`;
     
-    if (window.confirm(`${t('common.confirmDeleteItem')} ${gunDisplayName}?`)) {
-      try {
-        await gunsAPI.delete(id);
-        setSuccess(t('common.itemDeleted', { item: gunDisplayName }));
-        fetchGuns();
-        setActiveMenuId(null);
-        setTimeout(() => setSuccess(null), 3000);
-      } catch (err) {
-        setError(err.response?.data?.detail || t('common.errorDeleting', { item: 'weapon' }));
-        console.error(err);
+    setConfirmModal({
+      show: true,
+      title: 'Usuń broń',
+      message: `Czy na pewno chcesz usunąć broń "${gunDisplayName}"?`,
+      itemName: gunDisplayName,
+      onConfirm: async () => {
+        try {
+          await gunsAPI.delete(id);
+          setSuccess(t('common.itemDeleted', { item: gunDisplayName }));
+          setConfirmModal({ show: false, title: '', message: '', onConfirm: null, itemName: '' });
+          fetchGuns();
+          setActiveMenuId(null);
+          setTimeout(() => setSuccess(null), 3000);
+        } catch (err) {
+          setError(err.response?.data?.detail || t('common.errorDeleting', { item: 'weapon' }));
+          console.error(err);
+          setConfirmModal({ show: false, title: '', message: '', onConfirm: null, itemName: '' });
+        }
       }
-    }
+    });
   };
 
   const handleDetails = (gunId) => {
@@ -611,10 +671,58 @@ const GunsPage = () => {
         )}
 
         {showForm && (
-          <div className="card" style={{ marginBottom: '1.5rem' }}>
-            <h3 style={{ marginBottom: '1rem' }}>
-              {editingId ? t('guns.editWeapon') : t('guns.addNewWeapon')}
-            </h3>
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.7)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 2000,
+              padding: '1rem'
+            }}
+            onClick={handleCancel}
+          >
+            <div
+              className="card"
+              style={{
+                maxWidth: '600px',
+                width: '100%',
+                maxHeight: '90vh',
+                overflowY: 'auto',
+                position: 'relative',
+                marginBottom: 0
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={handleCancel}
+                style={{
+                  position: 'absolute',
+                  top: '1rem',
+                  right: '1rem',
+                  background: 'none',
+                  border: 'none',
+                  color: '#fff',
+                  fontSize: '1.5rem',
+                  cursor: 'pointer',
+                  padding: '0.25rem 0.5rem',
+                  lineHeight: 1,
+                  zIndex: 1
+                }}
+                onMouseEnter={(e) => e.target.style.color = '#dc3545'}
+                onMouseLeave={(e) => e.target.style.color = '#fff'}
+              >
+                ×
+              </button>
+
+              <h3 style={{ marginTop: 0, marginBottom: '1rem' }}>
+                {editingId ? t('guns.editWeapon') : t('guns.addNewWeapon')}
+              </h3>
             <form onSubmit={handleSubmit}>
               <div className="form-group">
                 <label className="form-label">{t('guns.weaponName')}</label>
@@ -719,10 +827,29 @@ const GunsPage = () => {
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 />
               </div>
-              <button type="submit" className="btn btn-success">
-                {editingId ? t('guns.saveChanges') : t('guns.addWeapon')}
-              </button>
+              <div className="form-group" style={{ display: 'none' }}>
+                <label className="form-label">{t('guns.createdAt')}</label>
+                <input
+                  type="date"
+                  className="form-input"
+                  value={formData.created_at}
+                  onChange={(e) => setFormData({ ...formData, created_at: e.target.value })}
+                />
+              </div>
+              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
+                <button 
+                  type="button" 
+                  className="btn btn-secondary"
+                  onClick={handleCancel}
+                >
+                  {t('common.cancel')}
+                </button>
+                <button type="submit" className="btn btn-success">
+                  {editingId ? t('guns.saveChanges') : t('guns.addWeapon')}
+                </button>
+              </div>
             </form>
+            </div>
           </div>
         )}
 
@@ -901,17 +1028,21 @@ const GunsPage = () => {
                         <td style={{ padding: '0.75rem' }}>{gun.caliber || '-'}</td>
                         <td style={{ padding: '0.75rem' }}>
                           {userSettings.maintenance_notifications_enabled ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
-                                {maintenanceStatus.status !== 'none' && <MaintenanceStatusIcon status={maintenanceStatus.status} />}
-                                <span style={{ color: maintenanceStatus.color }}>{maintenanceStatus.message}</span>
+                            (maintenanceStatus.status === 'yellow' || maintenanceStatus.status === 'red') ? (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.1rem' }}>
+                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+                                  <MaintenanceStatusIcon status={maintenanceStatus.status} />
+                                  <span style={{ color: maintenanceStatus.color }}>{maintenanceStatus.message}</span>
+                                </div>
+                                {maintenanceStatus.reason && (
+                                  <span style={{ fontSize: '0.8rem', color: '#aaa', marginLeft: '1.5rem' }}>
+                                    {maintenanceStatus.reason}
+                                  </span>
+                                )}
                               </div>
-                              {(maintenanceStatus.status === 'yellow' || maintenanceStatus.status === 'red') && maintenanceStatus.reason && (
-                                <span style={{ fontSize: '0.8rem', color: '#aaa', marginLeft: '1.5rem' }}>
-                                  {maintenanceStatus.reason}
-                                </span>
-                              )}
-                            </div>
+                            ) : (
+                              <span style={{ color: '#888' }}>-</span>
+                            )
                           ) : (
                             <span style={{ color: '#888' }}>-</span>
                           )}
@@ -999,6 +1130,52 @@ const GunsPage = () => {
           )}
         </div>
       </div>
+
+      {confirmModal.show && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 3000
+          }}
+          onClick={() => setConfirmModal({ show: false, title: '', message: '', onConfirm: null, itemName: '' })}
+        >
+          <div
+            className="card"
+            style={{ maxWidth: '400px', width: '90%' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 style={{ margin: 0, marginBottom: '1rem', color: '#f44336' }}>{confirmModal.title}</h3>
+            <p style={{ marginBottom: '1.5rem', color: 'var(--text-primary)' }}>{confirmModal.message}</p>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setConfirmModal({ show: false, title: '', message: '', onConfirm: null, itemName: '' })}
+                className="btn btn-secondary"
+              >
+                Anuluj
+              </button>
+              <button
+                onClick={() => {
+                  if (confirmModal.onConfirm) {
+                    confirmModal.onConfirm();
+                  }
+                }}
+                className="btn btn-primary"
+                style={{ backgroundColor: '#f44336', borderColor: '#f44336' }}
+              >
+                Usuń
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
