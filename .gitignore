@@ -142,3 +142,100 @@ storybook-static/
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Additional build outputs
+.vite/
+.vercel/
+.netlify/
+.next/
+out/
+.turbo/
+
+# Testing
+coverage/
+.nyc_output/
+.jest/
+
+# TypeScript
+*.tsbuildinfo
+
+# Vite
+vite.config.*.timestamp-*
+
+# React
+.react/
+
+# Storybook
+storybook-static/
+.out/
+
+# Svelte
+.svelte-kit/
+
+# Rollup
+.rollup.cache/
+
+# Webpack
+.webpack/
+
+# Parcel
+.parcel-cache/
+.parcel/
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+*.orig
+*.bak
+*.backup
+
+# Package manager
+.pnp/
+.pnp.js
+.yarn/
+.yarn-integrity
+.npm/
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+
+# Lock files (optional - uncomment if you don't want to commit them)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# Environment files
+.env
+.env.*
+!.env.example
+!.env.template
+
+# Local development
+.local/
+local/
+
+# Editor
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.iml
+*.sublime-project
+*.sublime-workspace
+
+# Debug
+.vscode/launch.json
+.vscode/tasks.json
+
+# Misc
+*.log
+*.pid
+*.seed
+*.pid.lock
+.npm
+.eslintcache
+.stylelintcache
