@@ -207,8 +207,8 @@ export const accountAPI = {
 // Auth API
 export const authAPI = {
   forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
-  resetPassword: (accessToken, password) => api.post('/auth/reset-password', { 
-    access_token: accessToken, 
+  resetPassword: (token, password) => api.post('/auth/reset-password', { 
+    token: token, 
     password 
   }),
 };
