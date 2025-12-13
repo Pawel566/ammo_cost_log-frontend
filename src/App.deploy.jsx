@@ -147,7 +147,7 @@ function App() {
   return (
     <AuthProvider>
       <ThemeProvider>
-        <Router>
+        <Router future={{ v7_startTransition: true }}>
           <AppContent />
         </Router>
       </ThemeProvider>

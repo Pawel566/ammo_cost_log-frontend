@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
+import { authAPI } from '../services/api';
 import './HomePage.css';
 
 const ResetPassword = () => {
@@ -121,27 +122,21 @@ const ResetPassword = () => {
     setLoading(true);
 
     try {
-      // Check if Supabase is configured
+      // Check if Supabase is configured (needed to exchange token for session)
       if (!supabase || !supabase.auth) {
         console.error('Supabase client not initialized during password reset');
         throw new Error(t('resetPassword.serviceUnavailable'));
       }
 
-      // Verify we have a valid session
+      // Verify we have a valid session (Supabase automatically exchanges token from URL)
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
-      if (sessionError || !session) {
+      if (sessionError || !session || !session.access_token) {
         throw new Error(t('resetPassword.sessionExpired'));
       }
 
-      // Update password using Supabase
-      const { error: updateError } = await supabase.auth.updateUser({
-        password: formData.password
-      });
-
-      if (updateError) {
-        throw updateError;
-      }
+      // Reset password using backend API
+      await authAPI.resetPassword(session.access_token, formData.password);
 
       // Sign out after password change for security
       await supabase.auth.signOut();
@@ -154,7 +149,7 @@ const ResetPassword = () => {
         navigate('/login');
       }, 2000);
     } catch (err) {
-      setError(err.message || t('resetPassword.resetError'));
+      setError(err.response?.data?.detail || err.message || t('resetPassword.resetError'));
     } finally {
       setLoading(false);
     }

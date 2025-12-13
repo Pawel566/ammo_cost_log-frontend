@@ -196,8 +196,15 @@ const GunsPage = () => {
       setGuns(items);
       setError(null);
     } catch (err) {
-      setError(t('guns.errorLoading'));
-      console.error(err);
+      const errorMessage = err.response?.data?.message || err.response?.data?.detail || t('guns.errorLoading');
+      setError(errorMessage);
+      console.error('Błąd pobierania broni:', {
+        error: err,
+        response: err.response,
+        message: errorMessage
+      });
+      // Ustaw puste dane, żeby strona się załadowała
+      setGuns([]);
     } finally {
       setLoading(false);
     }

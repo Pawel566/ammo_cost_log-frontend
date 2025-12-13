@@ -1,27 +1,21 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+.yarn/
+.yarn-integrity
+.npm/
 
-node_modules
-dist
-dist-ssr
-*.local
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+# Build outputs
+dist/
+dist-ssr/
+build/
+out/
+.next/
+.turbo/
+.vite/
+.vercel/
+.netlify/
 
 # Environment variables
 .env
@@ -30,18 +24,11 @@ dist-ssr
 .env.test.local
 .env.production.local
 .env.*.local
-
-# Build outputs
-build/
-dist/
-dist-ssr/
-*.local
-
-# OS
-.DS_Store
-Thumbs.db
+!.env.example
+!.env.template
 
 # Logs
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -49,92 +36,31 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# AI Assistant instructions
-AGENTS.md
-
-# Dependencies
-node_modules/
-.pnp
-.pnp.js
-
 # Testing
 coverage/
 .nyc_output/
-
-# Production builds
-build/
-dist/
-dist-ssr/
-.next/
-out/
-
-# Vercel
-.vercel
-
-# Turbo
-.turbo
+.jest/
 
 # Cache
 .cache/
 .parcel-cache/
 .eslintcache
 .stylelintcache
-
-# Temporary files
-*.tmp
-*.temp
-*.swp
-*.swo
-*~
-
-# Package manager locks (optional - some teams commit these)
-# package-lock.json
-# yarn.lock
-# pnpm-lock.yaml
-
-# Storybook
-storybook-static/
-
-# TypeScript
 *.tsbuildinfo
 
-# Optional npm cache directory
-.npm
-
-# Optional eslint cache
-.eslintcache
-
-# Optional REPL history
-.node_repl_history
-
-# Output of 'npm pack'
-*.tgz
-
-# Yarn Integrity file
-.yarn-integrity
-
-# dotenv environment variable files
-.env
-.env.development
-.env.test
-.env.production
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# Vite
-.vite/
-
-# Editor
+# Editor directories and files
 .vscode/
 !.vscode/extensions.json
+!.vscode/settings.json
 .idea/
+*.iml
+*.sublime-project
+*.sublime-workspace
 *.swp
 *.swo
 *~
 
-# OS
+# OS files
 .DS_Store
 .DS_Store?
 ._*
@@ -142,32 +68,31 @@ storybook-static/
 .Trashes
 ehthumbs.db
 Thumbs.db
+Desktop.ini
 
-# Additional build outputs
-.vite/
-.vercel/
-.netlify/
-.next/
-out/
-.turbo/
+# Temporary files
+*.tmp
+*.temp
+*.orig
+*.bak
+*.backup
+*.pid
+*.seed
+*.pid.lock
 
-# Testing
-coverage/
-.nyc_output/
-.jest/
-
-# TypeScript
-*.tsbuildinfo
-
-# Vite
-vite.config.*.timestamp-*
-
-# React
-.react/
+# Package manager
+*.tgz
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
 
 # Storybook
 storybook-static/
 .out/
+
+# React
+.react/
 
 # Svelte
 .svelte-kit/
@@ -182,50 +107,15 @@ storybook-static/
 .parcel-cache/
 .parcel/
 
-# Temporary files
-*.tmp
-*.temp
-*.swp
-*.swo
-*~
-*.orig
-*.bak
-*.backup
+# Vite specific
+vite.config.*.timestamp-*
 
-# Package manager
-.pnp/
-.pnp.js
-.yarn/
-.yarn-integrity
-.npm/
-.yarn/cache
-.yarn/unplugged
-.yarn/build-state.yml
-.yarn/install-state.gz
-
-# Lock files (optional - uncomment if you don't want to commit them)
-# package-lock.json
-# yarn.lock
-# pnpm-lock.yaml
-
-# Environment files
-.env
-.env.*
-!.env.example
-!.env.template
+# AI Assistant instructions
+AGENTS.md
 
 # Local development
 .local/
 local/
-
-# Editor
-.vscode/
-!.vscode/extensions.json
-!.vscode/settings.json
-.idea/
-*.iml
-*.sublime-project
-*.sublime-workspace
 
 # Debug
 .vscode/launch.json
@@ -236,6 +126,3 @@ local/
 *.pid
 *.seed
 *.pid.lock
-.npm
-.eslintcache
-.stylelintcache

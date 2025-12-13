@@ -8,7 +8,9 @@ let supabase = null;
 if (supabaseUrl && supabaseAnonKey && supabaseUrl !== 'https://your-project-id.supabase.co') {
   try {
     supabase = createClient(supabaseUrl, supabaseAnonKey)
-    console.log('Supabase client initialized successfully')
+    if (import.meta.env.MODE === 'development') {
+      console.log('Supabase client initialized successfully')
+    }
   } catch (e) {
     console.error('Failed to initialize Supabase client:', e)
   }
@@ -16,7 +18,11 @@ if (supabaseUrl && supabaseAnonKey && supabaseUrl !== 'https://your-project-id.s
   if (import.meta.env.MODE === 'production') {
     console.error('Supabase credentials not found in production! Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel environment variables.')
   } else {
-    console.warn('Supabase credentials not found. Authentication will be disabled.')
+    // W trybie deweloperskim Supabase jest opcjonalny - używany tylko do resetowania hasła
+    // Główna autentykacja działa przez backend API
+    if (import.meta.env.MODE === 'development') {
+      console.info('Supabase not configured (optional). Password reset feature will be unavailable. Main authentication works through backend API.')
+    }
   }
 }
 

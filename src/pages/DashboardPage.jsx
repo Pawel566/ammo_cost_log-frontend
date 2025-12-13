@@ -213,13 +213,40 @@ const DashboardPage = () => {
     try {
       setLoading(true);
       const [gunsRes, sessionsRes, ammoRes, maintenanceRes, settingsRes, rankRes, skillLevelRes] = await Promise.all([
-        gunsAPI.getAll(),
-        shootingSessionsAPI.getAll(),
-        ammoAPI.getAll(),
-        maintenanceAPI.getAll(),
-        settingsAPI.get(),
+        gunsAPI.getAll().catch((err) => {
+          console.error('Błąd pobierania broni w Dashboard:', {
+            error: err,
+            response: err.response,
+            status: err.response?.status,
+            data: err.response?.data
+          });
+          const errorMsg = err.response?.data?.message || err.response?.data?.detail || t('common.error');
+          setError(`Błąd pobierania broni: ${errorMsg}`);
+          return { data: { items: [], total: 0 } };
+        }),
+        shootingSessionsAPI.getAll().catch((err) => {
+          console.error('Błąd pobierania sesji:', err);
+          return { data: [] };
+        }),
+        ammoAPI.getAll().catch((err) => {
+          console.error('Błąd pobierania amunicji:', err);
+          return { data: { items: [], total: 0 } };
+        }),
+        maintenanceAPI.getAll().catch((err) => {
+          console.error('Błąd pobierania konserwacji:', err);
+          setError(err.response?.data?.message || t('common.error'));
+          return { data: [] };
+        }),
+        settingsAPI.get().catch((err) => {
+          console.error('Błąd pobierania ustawień:', err);
+          return { data: null };
+        }),
         accountAPI.getRank().catch((err) => {
           console.error('Błąd pobierania rangi:', err);
+          // Dla nowych użytkowników może zwracać 404/503 - zwróć domyślne wartości
+          if (err.response?.status === 404 || err.response?.status === 503) {
+            return { data: { rank: t('account.beginner'), passed_sessions: 0, progress_percent: 0 } };
+          }
           return { data: null };
         }),
         accountAPI.getSkillLevel().catch(() => ({ data: { skill_level: 'beginner' } }))
@@ -229,6 +256,17 @@ const DashboardPage = () => {
       const sessionsData = Array.isArray(sessionsRes.data) ? sessionsRes.data : [];
       const ammo = Array.isArray(ammoRes.data) ? ammoRes.data : ammoRes.data?.items ?? [];
       const maintenanceData = maintenanceRes.data || [];
+      
+      // Debug logging
+      if (import.meta.env.MODE === 'development') {
+        console.log('Dashboard data loaded:', {
+          gunsCount: gunsData.length,
+          sessionsCount: sessionsData.length,
+          ammoCount: ammo.length,
+          maintenanceCount: maintenanceData.length,
+          gunsResponse: gunsRes.data
+        });
+      }
       
       // Ustawienia użytkownika
       let newSettings = {
@@ -469,8 +507,15 @@ const DashboardPage = () => {
         </div>
 
         {error && (
-          <div className="alert alert-danger" style={{ marginBottom: '1rem' }}>
-            {error}
+          <div className="alert alert-danger" style={{ 
+            marginBottom: '1rem', 
+            padding: '1rem',
+            backgroundColor: '#f8d7da',
+            color: '#721c24',
+            border: '1px solid #f5c6cb',
+            borderRadius: '4px'
+          }}>
+            <strong>Błąd:</strong> {error}
           </div>
         )}
 
