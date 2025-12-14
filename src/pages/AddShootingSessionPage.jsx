@@ -140,8 +140,15 @@ const AddShootingSessionPage = () => {
     try {
       setLoading(true);
       const [gunsRes, ammoRes] = await Promise.all([
-        gunsAPI.getAll(),
-        ammoAPI.getAll()
+        gunsAPI.getAll().catch((err) => {
+          console.error('Błąd pobierania broni:', err);
+          setError(err.response?.data?.message || t('common.error'));
+          return { data: { items: [], total: 0 } };
+        }),
+        ammoAPI.getAll().catch((err) => {
+          console.error('Błąd pobierania amunicji:', err);
+          return { data: { items: [], total: 0 } };
+        })
       ]);
       const gunsData = gunsRes.data;
       const ammoData = ammoRes.data;

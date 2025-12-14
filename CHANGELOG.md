@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.6.8] – 2025-12-13
+### Dodano
+- Flaga `authReady` w `AuthContext` do zapobiegania race condition po logowaniu
+- Dokumentacja w `AuthContext.jsx` i `README.md` o obowiązkowym użyciu `authReady` dla requestów zależnych od usera
+- Retry/graceful fallback dla błędów 404/500 na pierwszym loadzie w kontekstach (ThemeContext, CurrencyContext, LanguageContext)
+
+### Zmieniono
+- Optymalizacja requestów w DashboardPage - redukcja z 7 do 4 requestów w głównym Promise.all
+- Opóźnione pobieranie danych pomocniczych (ammo, maintenance, skillLevel, zdjęcie broni) - nie blokują pierwszego renderu
+- Wszystkie konteksty (ThemeContext, CurrencyContext, LanguageContext) czekają na `authReady` zamiast tylko `user`
+- DashboardPage, SettingsPage, AccountPage czekają na `authReady` przed wykonaniem requestów
+
+### Naprawiono
+- Race condition po logowaniu - requesty zależne od usera (theme, settings, rank) nie są już wysyłane zanim token jest zweryfikowany
+- Błędy 500/404 po pierwszym logowaniu - wszystkie requesty czekają na pełną weryfikację autentykacji
+- Dashboard odporny na puste dane - wszystkie miejsca używające `.map`, `.length`, `.property` są zabezpieczone
+
 ## [0.6.8] – 2025-12-11
 ### Dodano
 - Ikony rang wyświetlane na stronie Pulpit (Dashboard) pod tytułem rangi i nad paskiem postępu

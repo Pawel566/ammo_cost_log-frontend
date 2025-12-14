@@ -1,8 +1,14 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://ammo-cost-log-backend.onrender.com/api'
-  : '/api';
+// Vite uses import.meta.env for environment variables
+// VITE_API_BASE_URL should be set in .env or .env.local
+// In development, use relative URL '/api' to leverage Vite proxy (configured in vite.config.js)
+// In production, use full URL
+// If VITE_API_BASE_URL is explicitly set, use it (allows override for testing)
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
+  (import.meta.env.MODE === 'production' 
+    ? 'https://ammo-cost-log-backend.onrender.com/api'
+    : '/api');
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
@@ -21,10 +27,15 @@ function isGuestExpired() {
 }
 
 api.interceptors.request.use((config) => {
+  // Always get fresh token from localStorage (don't rely on api.defaults.headers)
   const accessToken = localStorage.getItem('access_token');
   if (accessToken) {
     config.headers["Authorization"] = `Bearer ${accessToken}`;
+    // Remove guest headers if we have a token
+    delete config.headers["X-Guest-Id"];
+    delete config.headers["X-Guest-Id-Expires-At"];
   } else {
+    // No token - use guest mode
     let guestId = localStorage.getItem(GUEST_ID_KEY);
     let guestExpires = localStorage.getItem(GUEST_EXPIRES_KEY);
     if (!guestId || !guestExpires || isGuestExpired()) {
@@ -33,9 +44,23 @@ api.interceptors.request.use((config) => {
       guestId = null;
       guestExpires = null;
     }
+    // Remove auth header if no token
+    delete config.headers["Authorization"];
     if (guestId) config.headers["X-Guest-Id"] = guestId;
     if (guestExpires) config.headers["X-Guest-Id-Expires-At"] = guestExpires;
   }
+  
+  // Debug logging (only in development)
+  if (import.meta.env.MODE === 'development') {
+    console.log('API Request:', {
+      method: config.method?.toUpperCase(),
+      url: config.url,
+      baseURL: config.baseURL,
+      hasAuth: !!config.headers["Authorization"],
+      hasGuestId: !!config.headers["X-Guest-Id"]
+    });
+  }
+  
   return config;
 }, (error) => Promise.reject(error));
 
@@ -52,7 +77,45 @@ api.interceptors.response.use((response) => {
     }
   }
   return response;
-}, (error) => Promise.reject(error));
+}, (error) => {
+  // Log errors for debugging
+  if (error.response) {
+    console.error('API Error Response:', {
+      url: error.config?.url,
+      fullUrl: `${error.config?.baseURL}${error.config?.url}`,
+      method: error.config?.method?.toUpperCase(),
+      status: error.response.status,
+      statusText: error.response.statusText,
+      data: error.response.data,
+      headers: error.response.headers
+    });
+    
+    // For 500 errors, log more details
+    if (error.response.status === 500) {
+      console.error('500 Internal Server Error Details:', {
+        requestUrl: `${error.config?.baseURL}${error.config?.url}`,
+        requestMethod: error.config?.method?.toUpperCase(),
+        requestHeaders: error.config?.headers,
+        responseData: error.response.data,
+        errorMessage: error.message
+      });
+    }
+  } else if (error.request) {
+    console.error('API Request Error (No Response):', {
+      url: error.config?.url,
+      fullUrl: `${error.config?.baseURL}${error.config?.url}`,
+      method: error.config?.method?.toUpperCase(),
+      message: 'No response received from server',
+      request: error.request
+    });
+  } else {
+    console.error('API Error (Setup):', {
+      message: error.message,
+      config: error.config
+    });
+  }
+  return Promise.reject(error);
+});
 
 // Guns API
 export const gunsAPI = {
@@ -60,7 +123,7 @@ export const gunsAPI = {
   create: (gunData) => api.post('/guns', gunData),
   update: (id, gunData) => api.put(`/guns/${id}`, gunData),
   delete: (id) => api.delete(`/guns/${id}`),
-  uploadImage: (id, formData) => api.post(`/guns/${id}/upload-image`, formData, {
+  uploadImage: (id, formData) => api.post(`/guns/${id}/image`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
   getImage: (id) => api.get(`/guns/${id}/image`),
@@ -144,6 +207,10 @@ export const accountAPI = {
 // Auth API
 export const authAPI = {
   forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
+  resetPassword: (token, password) => api.post('/auth/reset-password', { 
+    token: token, 
+    password 
+  }),
 };
 
 // Currency Rates API

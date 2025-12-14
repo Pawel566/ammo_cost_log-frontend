@@ -250,8 +250,15 @@ const MyWeaponsPage = () => {
       setGuns(uniqueGuns);
       setError('');
     } catch (err) {
-      setError(t('myWeapons.errorLoading'));
-      console.error(err);
+      const errorMessage = err.response?.data?.message || err.response?.data?.detail || t('myWeapons.errorLoading');
+      setError(errorMessage);
+      console.error('Błąd pobierania broni:', {
+        error: err,
+        response: err.response,
+        message: errorMessage
+      });
+      // Ustaw puste dane, żeby strona się załadowała
+      setGuns([]);
     } finally {
       setLoading(false);
     }

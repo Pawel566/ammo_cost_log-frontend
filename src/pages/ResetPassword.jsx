@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { supabase } from '../lib/supabase';
+import { authAPI } from '../services/api';
 import './HomePage.css';
 
 const ResetPassword = () => {
@@ -16,73 +16,44 @@ const ResetPassword = () => {
   const [loading, setLoading] = useState(false);
   const [tokenValid, setTokenValid] = useState(false);
   const [checkingToken, setCheckingToken] = useState(true);
+  const [recoveryToken, setRecoveryToken] = useState(null);
 
   useEffect(() => {
     const checkRecoveryToken = async () => {
       setCheckingToken(true);
       setError('');
 
-      if (!supabase || !supabase.auth) {
-        console.error('Supabase client not initialized. Missing environment variables:', {
-          hasUrl: !!import.meta.env.VITE_SUPABASE_URL,
-          hasKey: !!import.meta.env.VITE_SUPABASE_ANON_KEY,
-          url: import.meta.env.VITE_SUPABASE_URL ? 'Set' : 'Missing',
-          key: import.meta.env.VITE_SUPABASE_ANON_KEY ? 'Set' : 'Missing'
-        });
-        setError(t('resetPassword.serviceUnavailable'));
-        setCheckingToken(false);
-        return;
-      }
-
       try {
         // Check hash first (Supabase typically uses hash for redirects)
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
         const hashAccessToken = hashParams.get('access_token');
         const hashType = hashParams.get('type');
+        const hashRefreshToken = hashParams.get('refresh_token');
 
         // Also check query params as fallback
         const searchParams = new URLSearchParams(window.location.search);
         const queryAccessToken = searchParams.get('access_token');
         const queryType = searchParams.get('type');
+        const queryRefreshToken = searchParams.get('refresh_token');
 
         const accessToken = hashAccessToken || queryAccessToken;
+        const refreshToken = hashRefreshToken || queryRefreshToken;
         const type = hashType || queryType;
 
         if (accessToken && type === 'recovery') {
-          // Supabase automatically processes the hash and sets the session
-          // Wait a bit for Supabase to process the token
-          await new Promise(resolve => setTimeout(resolve, 500));
-
-          // Check if we have a valid session
-          const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+          // Build the full token (Supabase recovery tokens are in format: access_token#refresh_token)
+          const fullToken = refreshToken ? `${accessToken}#${refreshToken}` : accessToken;
           
-          if (sessionError) {
-            console.error('Session error:', sessionError);
-            setError(t('resetPassword.invalidToken'));
-            setCheckingToken(false);
-            return;
-          }
-
-          if (session) {
-            setTokenValid(true);
-            setCheckingToken(false);
-            // Clear the hash/query from URL for cleaner UX
-            window.history.replaceState({}, document.title, window.location.pathname);
-          } else {
-            setError(t('resetPassword.invalidToken'));
-            setCheckingToken(false);
-          }
+          // Store token for later use in form submission
+          setRecoveryToken(fullToken);
+          setTokenValid(true);
+          setCheckingToken(false);
+          
+          // Clear the hash/query from URL for cleaner UX
+          window.history.replaceState({}, document.title, window.location.pathname);
         } else {
-          // Check if we have an active session (user might have already processed the token)
-          const { data: { session } } = await supabase.auth.getSession();
-          
-          if (session) {
-            setTokenValid(true);
-            setCheckingToken(false);
-          } else {
-            setError(t('resetPassword.invalidToken'));
-            setCheckingToken(false);
-          }
+          setError(t('resetPassword.invalidToken'));
+          setCheckingToken(false);
         }
       } catch (err) {
         console.error('Error checking recovery token:', err);
@@ -121,40 +92,24 @@ const ResetPassword = () => {
     setLoading(true);
 
     try {
-      // Check if Supabase is configured
-      if (!supabase || !supabase.auth) {
-        console.error('Supabase client not initialized during password reset');
-        throw new Error(t('resetPassword.serviceUnavailable'));
-      }
-
-      // Verify we have a valid session
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !session) {
+      // Check if we have a recovery token
+      if (!recoveryToken) {
         throw new Error(t('resetPassword.sessionExpired'));
       }
 
-      // Update password using Supabase
-      const { error: updateError } = await supabase.auth.updateUser({
-        password: formData.password
-      });
-
-      if (updateError) {
-        throw updateError;
-      }
-
-      // Sign out after password change for security
-      await supabase.auth.signOut();
+      // Reset password using backend API with token from URL
+      await authAPI.resetPassword(recoveryToken, formData.password);
 
       setSuccess(t('resetPassword.passwordChanged'));
       setFormData({ password: '', confirmPassword: '' });
+      setRecoveryToken(null);
       
       // Redirect to login after 2 seconds
       setTimeout(() => {
         navigate('/login');
       }, 2000);
     } catch (err) {
-      setError(err.message || t('resetPassword.resetError'));
+      setError(err.response?.data?.detail || err.message || t('resetPassword.resetError'));
     } finally {
       setLoading(false);
     }

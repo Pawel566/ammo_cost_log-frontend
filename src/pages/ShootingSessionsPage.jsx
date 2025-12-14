@@ -139,9 +139,19 @@ const ShootingSessionsPage = () => {
     try {
       setLoading(true);
       const [sessionsRes, gunsRes, ammoRes] = await Promise.all([
-        shootingSessionsAPI.getAll(),
-        gunsAPI.getAll(),
-        ammoAPI.getAll()
+        shootingSessionsAPI.getAll().catch((err) => {
+          console.error('Błąd pobierania sesji:', err);
+          return { data: [] };
+        }),
+        gunsAPI.getAll().catch((err) => {
+          console.error('Błąd pobierania broni:', err);
+          setError(err.response?.data?.message || t('common.error'));
+          return { data: { items: [], total: 0 } };
+        }),
+        ammoAPI.getAll().catch((err) => {
+          console.error('Błąd pobierania amunicji:', err);
+          return { data: { items: [], total: 0 } };
+        })
       ]);
       const allSessions = Array.isArray(sessionsRes.data) ? sessionsRes.data : [];
       const gunsData = gunsRes.data;

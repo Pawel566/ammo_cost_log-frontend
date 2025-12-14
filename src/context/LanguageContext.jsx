@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from './AuthContext';
 import { settingsAPI } from '../services/api';
@@ -15,11 +15,18 @@ export const useLanguage = () => {
 
 export const LanguageProvider = ({ children }) => {
   const { i18n } = useTranslation();
-  const { user } = useAuth();
+  const { user, authReady } = useAuth();
   const [loading, setLoading] = useState(true);
+  const retryCountRef = useRef(0);
 
   useEffect(() => {
-    const loadLanguage = async () => {
+    if (!authReady) {
+      return;
+    }
+    
+    retryCountRef.current = 0;
+    
+    const loadLanguage = async (retry = false) => {
       try {
         const savedLanguage = localStorage.getItem('i18nextLng') || 'pl';
         
@@ -31,7 +38,20 @@ export const LanguageProvider = ({ children }) => {
               await i18n.changeLanguage(userLanguage);
               localStorage.setItem('i18nextLng', userLanguage);
             }
+            retryCountRef.current = 0;
           } catch (error) {
+            const status = error.response?.status;
+            const isFirstLoad = retryCountRef.current === 0;
+            
+            // Retry dla błędów 404/500 na pierwszym loadzie
+            if (isFirstLoad && (status === 404 || status === 500) && !retry) {
+              setTimeout(() => {
+                retryCountRef.current = 1;
+                loadLanguage(true);
+              }, 500);
+              return;
+            }
+            
             console.error('Error loading user language:', error);
             if (savedLanguage && savedLanguage !== i18n.language) {
               await i18n.changeLanguage(savedLanguage);
@@ -50,7 +70,7 @@ export const LanguageProvider = ({ children }) => {
     };
 
     loadLanguage();
-  }, [user, i18n]);
+  }, [user, authReady, i18n]);
 
   const changeLanguage = async (language) => {
     try {
@@ -81,6 +101,7 @@ export const LanguageProvider = ({ children }) => {
     </LanguageContext.Provider>
   );
 };
+
 
 
 

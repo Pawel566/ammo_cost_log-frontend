@@ -11,7 +11,7 @@ import './App.css';
 function App() {
   return (
     <AuthProvider>
-      <Router>
+      <Router future={{ v7_startTransition: true }}>
         <div className="App">
           <nav className="navbar">
             <div className="container">

@@ -112,11 +112,16 @@ const MaintenancePage = () => {
   const fetchMaintenance = async () => {
     try {
       const params = selectedGunId ? { gun_id: selectedGunId } : {};
-      const response = await maintenanceAPI.getAll(params);
+      const response = await maintenanceAPI.getAll(params).catch((err) => {
+        console.error('Błąd pobierania konserwacji:', err);
+        setError(err.response?.data?.message || t('maintenance.errorLoadingMaintenance'));
+        return { data: [] };
+      });
       setMaintenance(response.data || []);
       setError('');
     } catch (err) {
-      setError(t('maintenance.errorLoadingMaintenance'));
+      console.error('Błąd w fetchMaintenance:', err);
+      setError(err.response?.data?.message || t('maintenance.errorLoadingMaintenance'));
       console.error(err);
     }
   };

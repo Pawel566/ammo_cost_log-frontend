@@ -219,8 +219,9 @@ const AmmoPage = () => {
 
   const getAvailableCalibers = () => {
     if (!formData.category || formData.category === 'other') {
-      // Dla kategorii "other" lub brak kategorii - pokaż wszystkie
-      return CALIBERS.map(c => c.name);
+      // Dla kategorii "other" lub brak kategorii - pokaż wszystkie (usuwamy duplikaty)
+      const allCalibers = CALIBERS.map(c => c.name);
+      return [...new Set(allCalibers)];
     }
     // Filtruj kalibry według wybranej kategorii
     return CALIBERS
@@ -236,7 +237,7 @@ const AmmoPage = () => {
     let updatedCaliber = currentCaliber;
     if (newCategory && currentCaliber) {
       const availableCalibers = newCategory === 'other' 
-        ? CALIBERS.map(c => c.name)
+        ? [...new Set(CALIBERS.map(c => c.name))]
         : CALIBERS.filter(c => c.ammo_class === newCategory).map(c => c.name);
       
       if (!availableCalibers.includes(currentCaliber)) {
@@ -660,8 +661,8 @@ const AmmoPage = () => {
                             ? (t('ammo.selectCaliber') || 'Wybierz kaliber') 
                             : (t('ammo.selectCategoryFirst') || 'Najpierw wybierz kategorię')}
                         </option>
-                        {getAvailableCalibers().map(caliber => (
-                          <option key={caliber} value={caliber}>{caliber}</option>
+                        {getAvailableCalibers().map((caliber, index) => (
+                          <option key={`${caliber}-${index}`} value={caliber}>{caliber}</option>
                         ))}
                         <option value="custom">{t('ammo.customCaliber') || 'Własny kaliber'}</option>
                       </select>
@@ -850,8 +851,8 @@ const AmmoPage = () => {
                   }}
                 >
                   <option value="">{t('common.all')}</option>
-                  {getUniqueCalibers().map(caliber => (
-                    <option key={caliber} value={caliber}>{caliber}</option>
+                  {getUniqueCalibers().map((caliber, index) => (
+                    <option key={`caliber-filter-${caliber}-${index}`} value={caliber}>{caliber}</option>
                   ))}
                 </select>
               </div>
