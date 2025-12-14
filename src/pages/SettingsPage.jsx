@@ -4,12 +4,14 @@ import { settingsAPI } from '../services/api';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useCurrency } from '../context/CurrencyContext';
+import { useAuth } from '../context/AuthContext';
 
 const SettingsPage = () => {
   const { t } = useTranslation();
   const { theme, changeTheme } = useTheme();
   const { currentLanguage, changeLanguage } = useLanguage();
   const { currentCurrency, changeCurrency } = useCurrency();
+  const { authReady } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -27,8 +29,10 @@ const SettingsPage = () => {
   });
 
   useEffect(() => {
-    fetchSettings();
-  }, []);
+    if (authReady) {
+      fetchSettings();
+    }
+  }, [authReady]);
 
   useEffect(() => {
     // Synchronizuj motyw z kontekstem

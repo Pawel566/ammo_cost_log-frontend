@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { settingsAPI } from '../services/api';
 import { useAuth } from './AuthContext';
 
@@ -15,14 +15,15 @@ export const useTheme = () => {
 export const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState('dark');
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
+  const { user, authReady } = useAuth();
+  const retryCountRef = useRef(0);
 
   useEffect(() => {
     // Odśwież motyw po zalogowaniu/wylogowaniu użytkownika
-    if (!loading) {
+    if (authReady && !loading) {
       fetchTheme();
     }
-  }, [user?.user_id]);
+  }, [user?.user_id, authReady]);
 
   const applyTheme = (newTheme) => {
     const root = document.documentElement;
@@ -57,13 +58,30 @@ export const ThemeProvider = ({ children }) => {
     }
   };
 
-  const fetchTheme = async (setLoadingFlag = true) => {
+  const fetchTheme = async (setLoadingFlag = true, retry = false) => {
+    if (!authReady && !retry) {
+      return;
+    }
+    
     try {
       const response = await settingsAPI.get();
       const savedTheme = response.data?.theme || 'dark';
       setTheme(savedTheme);
       applyTheme(savedTheme);
+      retryCountRef.current = 0;
     } catch (err) {
+      const status = err.response?.status;
+      const isFirstLoad = retryCountRef.current === 0;
+      
+      // Retry dla błędów 404/500 na pierwszym loadzie
+      if (isFirstLoad && (status === 404 || status === 500) && authReady) {
+        setTimeout(() => {
+          retryCountRef.current = 1;
+          fetchTheme(setLoadingFlag, true);
+        }, 500);
+        return;
+      }
+      
       console.error('Błąd podczas pobierania motywu:', err);
       applyTheme('dark');
     } finally {
@@ -74,16 +92,18 @@ export const ThemeProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    // Pobierz motyw z ustawień przy załadowaniu
-    fetchTheme(true);
-  }, []);
+    // Pobierz motyw z ustawień przy załadowaniu - tylko gdy authReady
+    if (authReady) {
+      fetchTheme(true);
+    }
+  }, [authReady]);
 
   useEffect(() => {
     // Odśwież motyw po zalogowaniu/wylogowaniu użytkownika
-    if (!loading) {
+    if (authReady && !loading) {
       fetchTheme(false);
     }
-  }, [user?.user_id, loading]);
+  }, [user?.user_id, authReady, loading]);
 
   const changeTheme = (newTheme) => {
     setTheme(newTheme);

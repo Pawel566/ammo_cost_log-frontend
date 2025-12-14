@@ -51,6 +51,51 @@ Szary motyw (#545454) z białym tekstem i zielonymi akcentami (#4caf50). Respons
 
 Automatyczny deployment na Vercel przez GitHub.
 
+## 🔐 Autentykacja i Race Condition Prevention
+
+### ⚠️ WAŻNE: authReady - obowiązkowe dla requestów zależnych od usera
+
+**Każdy nowy context / hook / strona zależna od usera MUSI czekać na `authReady`** przed wykonaniem requestów zależnych od autentykacji.
+
+#### Problem
+Po logowaniu token jest zapisany w `localStorage`, ale requesty mogą być wysłane zanim token jest w pełni zweryfikowany przez `/auth/me`, co powoduje błędy 500/404.
+
+#### Rozwiązanie
+Używaj `authReady` zamiast sprawdzania tylko `user`:
+
+```jsx
+// ❌ BŁĘDNE - może powodować race condition
+const { user } = useAuth();
+useEffect(() => {
+  if (user) {
+    settingsAPI.get(); // Może się wykonać zanim token jest gotowy!
+  }
+}, [user]);
+
+// ✅ POPRAWNE - bezpieczne
+const { user, authReady } = useAuth();
+useEffect(() => {
+  if (authReady && user) {
+    settingsAPI.get(); // Bezpieczne - token jest zweryfikowany
+  }
+}, [user, authReady]);
+```
+
+#### Kiedy `authReady` jest `true`?
+- Token został zweryfikowany przez `/auth/me` (dla zalogowanych użytkowników)
+- Lub gdy nie ma tokena (guest mode)
+
+#### Przykłady poprawnego użycia
+- ✅ `ThemeContext` - czeka na `authReady` przed `settingsAPI.get()`
+- ✅ `CurrencyContext` - czeka na `authReady` przed `settingsAPI.get()`
+- ✅ `LanguageContext` - czeka na `authReady` przed `settingsAPI.get()`
+- ✅ `DashboardPage` - czeka na `authReady` przed requestami
+- ✅ `SettingsPage` - czeka na `authReady` przed `fetchSettings()`
+- ✅ `AccountPage` - czeka na `authReady` przed `fetchSkillLevel()` i `fetchRank()`
+
+#### Retry dla błędów 404/500
+Wszystkie konteksty mają wbudowany retry dla błędów 404/500 na pierwszym loadzie (graceful fallback).
+
 ## 📜 Changelog
 
 Zobacz pełną historię zmian → [CHANGELOG.md](CHANGELOG.md)

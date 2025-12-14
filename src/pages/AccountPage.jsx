@@ -6,7 +6,7 @@ import { accountAPI } from '../services/api';
 
 const AccountPage = () => {
   const { t } = useTranslation();
-  const { user, signOut } = useAuth();
+  const { user, signOut, authReady } = useAuth();
   const navigate = useNavigate();
   const [skillLevel, setSkillLevel] = useState('beginner');
   const [rankInfo, setRankInfo] = useState(null);
@@ -25,9 +25,11 @@ const AccountPage = () => {
   });
 
   useEffect(() => {
-    fetchSkillLevel();
-    fetchRank();
-  }, []);
+    if (authReady) {
+      fetchSkillLevel();
+      fetchRank();
+    }
+  }, [authReady]);
 
   const fetchSkillLevel = async () => {
     try {

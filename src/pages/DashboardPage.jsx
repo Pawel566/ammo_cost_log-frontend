@@ -48,7 +48,7 @@ const MaintenanceStatusIcon = ({ status }) => {
 const DashboardPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, authReady } = useAuth();
   const { formatCurrency } = useCurrencyConverter();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -78,63 +78,89 @@ const DashboardPage = () => {
   const [maintenance, setMaintenance] = useState([]);
 
   useEffect(() => {
-    fetchDashboardData();
-  }, []);
+    if (authReady) {
+      fetchDashboardData();
+    }
+  }, [authReady]);
 
   const getLastMaintenance = (gunId) => {
-    const gunMaintenance = maintenance.filter(m => m.gun_id === gunId);
+    const gunMaintenance = (maintenance || []).filter(m => m && m.gun_id === gunId);
     if (!gunMaintenance || gunMaintenance.length === 0) {
       return null;
     }
-    return gunMaintenance.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+    try {
+      return gunMaintenance.sort((a, b) => {
+        try {
+          return new Date(b?.date || 0) - new Date(a?.date || 0);
+        } catch {
+          return 0;
+        }
+      })[0];
+    } catch {
+      return null;
+    }
   };
 
   const calculateRoundsSinceLastMaintenance = (gunId) => {
-    const gunSessions = sessions.filter(s => s.gun_id === gunId);
+    const gunSessions = (sessions || []).filter(s => s && s.gun_id === gunId);
     if (!gunSessions || gunSessions.length === 0) return 0;
 
     const lastMaint = getLastMaintenance(gunId);
     
     // Jeśli nie ma konserwacji, liczymy wszystkie strzały od pierwszej sesji
-    if (!lastMaint) {
-      return gunSessions.reduce((sum, session) => sum + (session.shots || 0), 0);
+    if (!lastMaint || !lastMaint.date) {
+      return gunSessions.reduce((sum, session) => sum + (session?.shots || 0), 0);
     }
 
-    const maintenanceDate = new Date(lastMaint.date);
-    
-    // Jeśli jest konserwacja, liczymy tylko strzały po dacie konserwacji
-    let totalRounds = 0;
-    gunSessions.forEach(session => {
-      const sessionDate = new Date(session.date);
-      if (sessionDate >= maintenanceDate) {
-        totalRounds += session.shots || 0;
-      }
-    });
+    try {
+      const maintenanceDate = new Date(lastMaint.date);
+      
+      // Jeśli jest konserwacja, liczymy tylko strzały po dacie konserwacji
+      let totalRounds = 0;
+      gunSessions.forEach(session => {
+        if (session && session.date) {
+          try {
+            const sessionDate = new Date(session.date);
+            if (sessionDate >= maintenanceDate) {
+              totalRounds += session.shots || 0;
+            }
+          } catch {
+            // Ignore invalid dates
+          }
+        }
+      });
 
-    return totalRounds;
+      return totalRounds;
+    } catch {
+      return gunSessions.reduce((sum, session) => sum + (session?.shots || 0), 0);
+    }
   };
 
   const calculateDaysSinceLastMaintenance = (gunId) => {
     const lastMaint = getLastMaintenance(gunId);
-    if (!lastMaint) return null;
+    if (!lastMaint || !lastMaint.date) return null;
 
-    const maintenanceDate = new Date(lastMaint.date);
-    const today = new Date();
-    const diffTime = today - maintenanceDate;
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    
-    return diffDays;
+    try {
+      const maintenanceDate = new Date(lastMaint.date);
+      const today = new Date();
+      const diffTime = today - maintenanceDate;
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      
+      return diffDays;
+    } catch {
+      return null;
+    }
   };
 
   const getMaintenanceStatus = (gunId) => {
     const lastMaint = getLastMaintenance(gunId);
     if (!lastMaint) {
       // Sprawdź czy broń ma sesje bez konserwacji
-      const gunSessions = sessions.filter(s => s.gun_id === gunId);
+      const gunSessions = (sessions || []).filter(s => s && s.gun_id === gunId);
       if (gunSessions.length === 0) {
         return { status: 'none', color: '#888', message: '-', reason: '' };
       }
-      const totalShots = gunSessions.reduce((sum, s) => sum + (s.shots || 0), 0);
+      const totalShots = gunSessions.reduce((sum, s) => sum + (s?.shots || 0), 0);
       const roundsLimit = userSettings.maintenance_rounds_limit || 500;
       if (totalShots >= roundsLimit) {
         return { 
@@ -212,7 +238,8 @@ const DashboardPage = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const [gunsRes, sessionsRes, ammoRes, maintenanceRes, settingsRes, rankRes, skillLevelRes] = await Promise.all([
+      // Pobierz tylko dane krytyczne dla pierwszego renderu
+      const [gunsRes, sessionsRes, settingsRes, rankRes] = await Promise.all([
         gunsAPI.getAll().catch((err) => {
           console.error('Błąd pobierania broni w Dashboard:', {
             error: err,
@@ -228,15 +255,6 @@ const DashboardPage = () => {
           console.error('Błąd pobierania sesji:', err);
           return { data: [] };
         }),
-        ammoAPI.getAll().catch((err) => {
-          console.error('Błąd pobierania amunicji:', err);
-          return { data: { items: [], total: 0 } };
-        }),
-        maintenanceAPI.getAll().catch((err) => {
-          console.error('Błąd pobierania konserwacji:', err);
-          setError(err.response?.data?.message || t('common.error'));
-          return { data: [] };
-        }),
         settingsAPI.get().catch((err) => {
           console.error('Błąd pobierania ustawień:', err);
           return { data: null };
@@ -248,23 +266,17 @@ const DashboardPage = () => {
             return { data: { rank: t('account.beginner'), passed_sessions: 0, progress_percent: 0 } };
           }
           return { data: null };
-        }),
-        accountAPI.getSkillLevel().catch(() => ({ data: { skill_level: 'beginner' } }))
+        })
       ]);
 
-      const gunsData = Array.isArray(gunsRes.data) ? gunsRes.data : gunsRes.data?.items ?? [];
-      const sessionsData = Array.isArray(sessionsRes.data) ? sessionsRes.data : [];
-      const ammo = Array.isArray(ammoRes.data) ? ammoRes.data : ammoRes.data?.items ?? [];
-      const maintenanceData = maintenanceRes.data || [];
+      const gunsData = Array.isArray(gunsRes.data) ? gunsRes.data : (gunsRes.data?.items ?? []);
+      const sessionsData = Array.isArray(sessionsRes.data) ? sessionsRes.data : (Array.isArray(sessionsRes.data?.items) ? sessionsRes.data.items : []);
       
       // Debug logging
       if (import.meta.env.MODE === 'development') {
-        console.log('Dashboard data loaded:', {
+        console.log('Dashboard main data loaded:', {
           gunsCount: gunsData.length,
-          sessionsCount: sessionsData.length,
-          ammoCount: ammo.length,
-          maintenanceCount: maintenanceData.length,
-          gunsResponse: gunsRes.data
+          sessionsCount: sessionsData.length
         });
       }
       
@@ -287,10 +299,6 @@ const DashboardPage = () => {
       }
       setUserSettings(newSettings);
       
-      // Ustaw dane przed obliczaniem statusu
-      setGuns(gunsData);
-      setSessions(sessionsData);
-      setMaintenance(maintenanceData);
 
       // Ranga użytkownika
       if (rankRes && rankRes.data) {
@@ -299,15 +307,21 @@ const DashboardPage = () => {
         setRankInfo({ rank: t('account.beginner'), passed_sessions: 0, progress_percent: 0 });
       }
 
-      // Poziom zaawansowania
-      if (skillLevelRes && skillLevelRes.data) {
-        setSkillLevel(skillLevelRes.data.skill_level || 'beginner');
-      }
+      // Poziom zaawansowania - opóźnione pobieranie (tylko tooltip)
+      accountAPI.getSkillLevel()
+        .then(res => {
+          if (res.data) {
+            setSkillLevel(res.data.skill_level || 'beginner');
+          }
+        })
+        .catch(() => {
+          setSkillLevel('beginner');
+        });
 
       // Najczęściej używana broń
       const gunUsage = {};
-      sessionsData.forEach(session => {
-        if (session.gun_id) {
+      (sessionsData || []).forEach(session => {
+        if (session && session.gun_id) {
           gunUsage[session.gun_id] = (gunUsage[session.gun_id] || 0) + (session.shots || 0);
         }
       });
@@ -322,7 +336,8 @@ const DashboardPage = () => {
       });
       
       if (mostUsedGunId) {
-        const gun = gunsData.find(g => {
+        const gun = (gunsData || []).find(g => {
+          if (!g) return false;
           const gId = typeof g.id === 'string' ? parseInt(g.id, 10) : g.id;
           const mId = typeof mostUsedGunId === 'string' ? parseInt(mostUsedGunId, 10) : mostUsedGunId;
           return gId === mId || g.id === mostUsedGunId;
@@ -331,15 +346,16 @@ const DashboardPage = () => {
           setMostUsedGun(gun);
           
           // Oblicz statystyki dla tej broni
-          const gunSessions = sessionsData.filter(s => {
+          const gunSessions = (sessionsData || []).filter(s => {
+            if (!s) return false;
             const sGunId = typeof s.gun_id === 'string' ? parseInt(s.gun_id, 10) : s.gun_id;
             const gId = typeof gun.id === 'string' ? parseInt(gun.id, 10) : gun.id;
             return sGunId === gId || s.gun_id === gun.id;
           });
           
           const sessionsCount = gunSessions.length;
-          const shotsCount = gunSessions.reduce((sum, s) => sum + (s.shots || 0), 0);
-          const totalCost = gunSessions.reduce((sum, s) => sum + (parseFloat(s.cost) || 0), 0);
+          const shotsCount = gunSessions.reduce((sum, s) => sum + (s?.shots || 0), 0);
+          const totalCost = gunSessions.reduce((sum, s) => sum + (parseFloat(s?.cost) || 0), 0);
           
           setMostUsedGunStats({
             sessionsCount,
@@ -347,76 +363,125 @@ const DashboardPage = () => {
             totalCost
           });
           
-          // Pobierz zdjęcie broni
-          try {
-            const imageRes = await gunsAPI.getImage(gun.id);
-            if (imageRes.data?.url) {
-              setMostUsedGunImage(imageRes.data.url);
-            } else {
-              setMostUsedGunImage(null);
-            }
-          } catch (err) {
-            setMostUsedGunImage(null);
-          }
+          // Zdjęcie broni będzie pobrane lazy (po renderze)
         }
       }
 
       // Statystyki miesięczne (bieżący miesiąc)
       const now = new Date();
       const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-      const monthSessions = sessionsData.filter(s => {
-        const sessionDate = new Date(s.date);
-        const sessionMonth = `${sessionDate.getFullYear()}-${String(sessionDate.getMonth() + 1).padStart(2, '0')}`;
-        return sessionMonth === currentMonth;
+      const monthSessions = (sessionsData || []).filter(s => {
+        if (!s || !s.date) return false;
+        try {
+          const sessionDate = new Date(s.date);
+          const sessionMonth = `${sessionDate.getFullYear()}-${String(sessionDate.getMonth() + 1).padStart(2, '0')}`;
+          return sessionMonth === currentMonth;
+        } catch {
+          return false;
+        }
       });
 
-      const totalShots = monthSessions.reduce((sum, s) => sum + (s.shots || 0), 0);
-      const totalCost = monthSessions.reduce((sum, s) => sum + (parseFloat(s.cost) || 0), 0);
-      const accuracySessions = monthSessions.filter(s => s.hits !== null && s.hits !== undefined && s.distance_m);
-      const totalHits = accuracySessions.reduce((sum, s) => sum + (s.hits || 0), 0);
-      const accuracyShots = accuracySessions.reduce((sum, s) => sum + (s.shots || 0), 0);
+      const totalShots = monthSessions.reduce((sum, s) => sum + (s?.shots || 0), 0);
+      const totalCost = monthSessions.reduce((sum, s) => sum + (parseFloat(s?.cost) || 0), 0);
+      const accuracySessions = monthSessions.filter(s => s && s.hits !== null && s.hits !== undefined && s.distance_m);
+      const totalHits = accuracySessions.reduce((sum, s) => sum + (s?.hits || 0), 0);
+      const accuracyShots = accuracySessions.reduce((sum, s) => sum + (s?.shots || 0), 0);
       const avgAccuracy = accuracyShots > 0 
         ? (totalHits / accuracyShots) * 100 
         : 0;
 
       setMonthlyStats({
-        sessions: monthSessions.length,
-        shots: totalShots,
-        avgAccuracy: avgAccuracy,
-        cost: totalCost
+        sessions: monthSessions.length || 0,
+        shots: totalShots || 0,
+        avgAccuracy: avgAccuracy || 0,
+        cost: totalCost || 0
       });
 
+      // Ustaw dane przed obliczaniem statusu
+      setGuns(gunsData);
+      setSessions(sessionsData);
+
+      // Pobierz dane pomocnicze asynchronicznie (opóźnione)
+      fetchSecondaryData(newSettings, gunsData, sessionsData);
+
+      setError(null);
+    } catch (err) {
+      setError(t('common.error'));
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Pobierz dane pomocnicze po załadowaniu głównych danych
+  const fetchSecondaryData = async (newSettings, gunsData, sessionsData) => {
+    try {
+      // Pobierz ammo tylko jeśli jest potrzebne
+      const ammoPromise = ammoAPI.getAll().catch((err) => {
+        console.error('Błąd pobierania amunicji:', err);
+        return { data: { items: [], total: 0 } };
+      });
+
+      // Pobierz maintenance tylko jeśli notifications są włączone
+      const maintenancePromise = newSettings.maintenance_notifications_enabled
+        ? maintenanceAPI.getAll().catch((err) => {
+            console.error('Błąd pobierania konserwacji:', err);
+            return { data: [] };
+          })
+        : Promise.resolve({ data: [] });
+
+      const [ammoRes, maintenanceRes] = await Promise.all([ammoPromise, maintenancePromise]);
+
+      const ammo = Array.isArray(ammoRes.data) ? ammoRes.data : (ammoRes.data?.items ?? []);
+      const maintenanceData = Array.isArray(maintenanceRes.data) ? maintenanceRes.data : (maintenanceRes.data?.items ?? []);
+
       // Stan amunicji - wszystkie pozycje
-      setLowAmmoAlerts(ammo.filter(item => (item.units_in_package || 0) > 0));
+      setLowAmmoAlerts((ammo || []).filter(item => item && (item.units_in_package || 0) > 0));
 
       // Alerty o konserwacji - użyj tej samej logiki co MyWeaponsPage
-      // Musimy użyć nowych ustawień
       if (newSettings.maintenance_notifications_enabled) {
+        setMaintenance(maintenanceData);
         const alerts = [];
-        gunsData.forEach(gun => {
-          // Tymczasowo ustaw ustawienia dla obliczeń
+        (gunsData || []).forEach(gun => {
+          if (!gun) return;
           const tempSettings = newSettings;
-          const lastMaint = maintenanceData.filter(m => m.gun_id === gun.id)
-            .sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+          const lastMaint = (maintenanceData || []).filter(m => m && m.gun_id === gun.id)
+            .sort((a, b) => {
+              try {
+                return new Date(b?.date || 0) - new Date(a?.date || 0);
+              } catch {
+                return 0;
+              }
+            })[0];
           
           let rounds = 0;
           let days = null;
           
-          if (lastMaint) {
-            const maintenanceDate = new Date(lastMaint.date);
-            const gunSessions = sessionsData.filter(s => s.gun_id === gun.id);
-            gunSessions.forEach(session => {
-              const sessionDate = new Date(session.date);
-              if (sessionDate >= maintenanceDate) {
-                rounds += session.shots || 0;
-              }
-            });
-            const today = new Date();
-            const diffTime = today - maintenanceDate;
-            days = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+          if (lastMaint && lastMaint.date) {
+            try {
+              const maintenanceDate = new Date(lastMaint.date);
+              const gunSessions = (sessionsData || []).filter(s => s && s.gun_id === gun.id);
+              gunSessions.forEach(session => {
+                if (session && session.date) {
+                  try {
+                    const sessionDate = new Date(session.date);
+                    if (sessionDate >= maintenanceDate) {
+                      rounds += session.shots || 0;
+                    }
+                  } catch {
+                    // Ignore invalid dates
+                  }
+                }
+              });
+              const today = new Date();
+              const diffTime = today - maintenanceDate;
+              days = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            } catch {
+              // If date parsing fails, treat as no maintenance
+            }
           } else {
-            const gunSessions = sessionsData.filter(s => s.gun_id === gun.id);
-            rounds = gunSessions.reduce((sum, s) => sum + (s.shots || 0), 0);
+            const gunSessions = (sessionsData || []).filter(s => s && s.gun_id === gun.id);
+            rounds = gunSessions.reduce((sum, s) => sum + (s?.shots || 0), 0);
           }
           
           const roundsLimit = tempSettings.maintenance_rounds_limit || 500;
@@ -477,16 +542,28 @@ const DashboardPage = () => {
           }
         });
         setMaintenanceAlerts(alerts);
+      } else {
+        setMaintenance([]);
       }
-
-      setError(null);
     } catch (err) {
-      setError(t('common.error'));
-      console.error(err);
-    } finally {
-      setLoading(false);
+      console.error('Błąd pobierania danych pomocniczych:', err);
     }
   };
+
+  // Lazy load zdjęcia broni po renderze mostUsedGun
+  useEffect(() => {
+    if (mostUsedGun && !mostUsedGunImage) {
+      gunsAPI.getImage(mostUsedGun.id)
+        .then(imageRes => {
+          if (imageRes.data?.url) {
+            setMostUsedGunImage(imageRes.data.url);
+          }
+        })
+        .catch(() => {
+          // Ignore errors - zdjęcie nie jest krytyczne
+        });
+    }
+  }, [mostUsedGun, mostUsedGunImage]);
 
   if (loading) {
     return <div className="text-center">{t('common.loading')}</div>;
@@ -854,24 +931,26 @@ const DashboardPage = () => {
                 {t('dashboard.ammoStatus')}
               </h3>
             </div>
-            {lowAmmoAlerts.length > 0 ? (
+            {(lowAmmoAlerts && lowAmmoAlerts.length > 0) ? (
               <div>
                 {lowAmmoAlerts.slice(0, 3).map((item, index) => (
-                  <div key={item.id} style={{ marginBottom: index < lowAmmoAlerts.length - 1 ? '1rem' : '0' }}>
-                    <div style={{ 
-                      fontWeight: 'bold',
-                      marginBottom: '0.25rem'
-                    }}>
-                      {item.name}
+                  item ? (
+                    <div key={item.id || index} style={{ marginBottom: index < lowAmmoAlerts.length - 1 ? '1rem' : '0' }}>
+                      <div style={{ 
+                        fontWeight: 'bold',
+                        marginBottom: '0.25rem'
+                      }}>
+                        {item.name || '-'}
+                      </div>
+                      <div style={{ 
+                        fontSize: '0.9rem',
+                        color: 'var(--text-tertiary)',
+                        marginBottom: '0.5rem'
+                      }}>
+                        {item.caliber ? `${item.caliber} - ` : ''}{item.units_in_package || 0} {t('dashboard.fromStock')}
+                      </div>
                     </div>
-                    <div style={{ 
-                      fontSize: '0.9rem',
-                      color: 'var(--text-tertiary)',
-                      marginBottom: '0.5rem'
-                    }}>
-                      {item.caliber ? `${item.caliber} - ` : ''}{item.units_in_package} {t('dashboard.fromStock')}
-                    </div>
-                  </div>
+                  ) : null
                 ))}
               </div>
             ) : (
@@ -891,34 +970,36 @@ const DashboardPage = () => {
                 {t('dashboard.maintenance')}
               </h3>
             </div>
-            {maintenanceAlerts.length > 0 ? (
+            {(maintenanceAlerts && maintenanceAlerts.length > 0) ? (
               <div>
                 {maintenanceAlerts.slice(0, 3).map((alert, index) => (
-                  <div key={alert.gun.id} style={{ marginBottom: index < maintenanceAlerts.length - 1 ? '1rem' : '0' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.1rem' }}>
-                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
-                        {(alert.status.status === 'yellow' || alert.status.status === 'red') && <MaintenanceStatusIcon status={alert.status.status} />}
-                        <Link 
-                          to={`/my-weapons?gun_id=${alert.gun.id}`}
-                          style={{ 
-                            color: alert.status.color, 
-                            textDecoration: 'none',
-                            fontWeight: 'bold',
-                            cursor: 'pointer'
-                          }}
-                          onMouseEnter={(e) => e.target.style.textDecoration = 'underline'}
-                          onMouseLeave={(e) => e.target.style.textDecoration = 'none'}
-                        >
-                          {alert.gun.name}
-                        </Link>
+                  alert && alert.gun ? (
+                    <div key={alert.gun.id || index} style={{ marginBottom: index < maintenanceAlerts.length - 1 ? '1rem' : '0' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.1rem' }}>
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+                          {(alert.status?.status === 'yellow' || alert.status?.status === 'red') && <MaintenanceStatusIcon status={alert.status.status} />}
+                          <Link 
+                            to={`/my-weapons?gun_id=${alert.gun.id}`}
+                            style={{ 
+                              color: alert.status?.color || '#aaa', 
+                              textDecoration: 'none',
+                              fontWeight: 'bold',
+                              cursor: 'pointer'
+                            }}
+                            onMouseEnter={(e) => e.target.style.textDecoration = 'underline'}
+                            onMouseLeave={(e) => e.target.style.textDecoration = 'none'}
+                          >
+                            {alert.gun.name || '-'}
+                          </Link>
+                        </div>
+                        {(alert.status?.status === 'yellow' || alert.status?.status === 'red') && alert.status?.reason && (
+                          <span style={{ fontSize: '0.8rem', color: '#aaa', marginLeft: '1.5rem' }}>
+                            {alert.status.reason}
+                          </span>
+                        )}
                       </div>
-                      {(alert.status.status === 'yellow' || alert.status.status === 'red') && alert.status.reason && (
-                        <span style={{ fontSize: '0.8rem', color: '#aaa', marginLeft: '1.5rem' }}>
-                          {alert.status.reason}
-                        </span>
-                      )}
                     </div>
-                  </div>
+                  ) : null
                 ))}
               </div>
             ) : (
