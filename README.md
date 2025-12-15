@@ -10,7 +10,7 @@ React frontend do aplikacji zarządzania strzelectwem z inteligentnym asystentem
 - **Statystyki** - miesięczne podsumowania i wykresy
 - **Tryb gościa i logowanie** - obsługa sesji sandboxowych i użytkowników Supabase
 - **Wielojęzyczność** - wsparcie dla języka polskiego i angielskiego
-- **Obsługa wielu walut** - automatyczna konwersja między PLN, USD, EUR, GBP z aktualnymi kursami z API NBP
+- **Obsługa wielu walut** - automatyczna konwersja między PLN USD, EUR, GBP z aktualnymi kursami z API NBP
 - **Jednostki odległości** - wybór między metrami a yardami w ustawieniach użytkownika
 - **Rozszerzona konserwacja** - 25 czynności serwisowych zorganizowanych w sekcje tematyczne
 
