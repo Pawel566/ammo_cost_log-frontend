@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { gunsAPI, ammoAPI, shootingSessionsAPI, maintenanceAPI, settingsAPI, accountAPI } from '../services/api';
+import { dashboardAPI, accountAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useCurrencyConverter } from '../hooks/useCurrencyConverter';
 
@@ -73,9 +73,6 @@ const DashboardPage = () => {
     maintenance_rounds_limit: 500,
     maintenance_days_limit: 90
   });
-  const [guns, setGuns] = useState([]);
-  const [sessions, setSessions] = useState([]);
-  const [maintenance, setMaintenance] = useState([]);
 
   useEffect(() => {
     if (authReady) {
@@ -83,228 +80,96 @@ const DashboardPage = () => {
     }
   }, [authReady]);
 
-  const getLastMaintenance = (gunId) => {
-    const gunMaintenance = (maintenance || []).filter(m => m && m.gun_id === gunId);
-    if (!gunMaintenance || gunMaintenance.length === 0) {
-      return null;
-    }
-    try {
-      return gunMaintenance.sort((a, b) => {
-        try {
-          return new Date(b?.date || 0) - new Date(a?.date || 0);
-        } catch {
-          return 0;
-        }
-      })[0];
-    } catch {
-      return null;
-    }
-  };
-
-  const calculateRoundsSinceLastMaintenance = (gunId) => {
-    const gunSessions = (sessions || []).filter(s => s && s.gun_id === gunId);
-    if (!gunSessions || gunSessions.length === 0) return 0;
-
-    const lastMaint = getLastMaintenance(gunId);
-    
-    // Jeśli nie ma konserwacji, liczymy wszystkie strzały od pierwszej sesji
-    if (!lastMaint || !lastMaint.date) {
-      return gunSessions.reduce((sum, session) => sum + (session?.shots || 0), 0);
-    }
-
-    try {
-      const maintenanceDate = new Date(lastMaint.date);
-      
-      // Jeśli jest konserwacja, liczymy tylko strzały po dacie konserwacji
-      let totalRounds = 0;
-      gunSessions.forEach(session => {
-        if (session && session.date) {
-          try {
-            const sessionDate = new Date(session.date);
-            if (sessionDate >= maintenanceDate) {
-              totalRounds += session.shots || 0;
-            }
-          } catch {
-            // Ignore invalid dates
-          }
-        }
-      });
-
-      return totalRounds;
-    } catch {
-      return gunSessions.reduce((sum, session) => sum + (session?.shots || 0), 0);
-    }
-  };
-
-  const calculateDaysSinceLastMaintenance = (gunId) => {
-    const lastMaint = getLastMaintenance(gunId);
-    if (!lastMaint || !lastMaint.date) return null;
-
-    try {
-      const maintenanceDate = new Date(lastMaint.date);
-      const today = new Date();
-      const diffTime = today - maintenanceDate;
-      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-      
-      return diffDays;
-    } catch {
-      return null;
-    }
-  };
-
-  const getMaintenanceStatus = (gunId) => {
-    const lastMaint = getLastMaintenance(gunId);
-    if (!lastMaint) {
-      // Sprawdź czy broń ma sesje bez konserwacji
-      const gunSessions = (sessions || []).filter(s => s && s.gun_id === gunId);
-      if (gunSessions.length === 0) {
-        return { status: 'none', color: '#888', message: '-', reason: '' };
-      }
-      const totalShots = gunSessions.reduce((sum, s) => sum + (s?.shots || 0), 0);
-      const roundsLimit = userSettings.maintenance_rounds_limit || 500;
-      if (totalShots >= roundsLimit) {
-        return { 
-          status: 'red', 
-          color: '#f44336', 
-          message: t('common.required'),
-          reason: t('common.shotsExceeded', { shots: totalShots, limit: roundsLimit })
-        };
-      }
-      return { status: 'none', color: '#888', message: '-', reason: '' };
-    }
-
-    const rounds = calculateRoundsSinceLastMaintenance(gunId);
-    const days = calculateDaysSinceLastMaintenance(gunId);
-
-    const roundsLimit = userSettings.maintenance_rounds_limit || 500;
-    const daysLimit = userSettings.maintenance_days_limit || 90;
-
-    let useRounds = true;
-    let percentage = 0;
-    let finalStatus = 'green';
-
-    if (rounds === 0) {
-      useRounds = false;
-      percentage = (days / daysLimit) * 100;
-    } else if (days < daysLimit) {
-      useRounds = true;
-      percentage = (rounds / roundsLimit) * 100;
-    } else {
-      useRounds = false;
-      percentage = (days / daysLimit) * 100;
-    }
-
-    if (percentage >= 100) {
-      finalStatus = 'red';
-    } else if (percentage >= 75) {
-      finalStatus = 'yellow';
-    } else {
-      finalStatus = 'green';
-    }
-
-    let color, message, reason = '';
-    const roundsPercentage = Math.round((rounds / roundsLimit) * 100);
-    const daysPercentage = Math.round((days / daysLimit) * 100);
-
-    if (finalStatus === 'red') {
-      color = '#f44336';
-      message = t('common.required');
-      if (useRounds && rounds >= roundsLimit) {
-        reason = t('common.shotsExceeded', { shots: rounds, limit: roundsLimit });
-      } else if (!useRounds && days >= daysLimit) {
-        reason = t('common.daysExceeded', { days: days, limit: daysLimit });
-      } else if (useRounds) {
-        reason = `${roundsPercentage}% ${t('common.shots')} (${rounds}/${roundsLimit})`;
-      } else {
-        reason = `${daysPercentage}% ${t('common.days')} (${days}/${daysLimit} ${t('common.days')})`;
-      }
-    } else if (finalStatus === 'yellow') {
-      color = '#ff9800';
-      message = t('common.soonRequired');
-      if (useRounds) {
-        reason = `${roundsPercentage}% ${t('common.shots')} (${rounds}/${roundsLimit})`;
-      } else {
-        reason = `${daysPercentage}% ${t('common.days')} (${days}/${daysLimit} ${t('common.days')})`;
-      }
-    } else {
-      color = '#4caf50';
-      message = t('common.ok');
-      reason = '';
-    }
-
-    return { status: finalStatus, color, message, reason, rounds, days };
-  };
 
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      // Pobierz tylko dane krytyczne dla pierwszego renderu
-      const [gunsRes, sessionsRes, settingsRes, rankRes] = await Promise.all([
-        gunsAPI.getAll().catch((err) => {
-          console.error('Błąd pobierania broni w Dashboard:', {
-            error: err,
-            response: err.response,
-            status: err.response?.status,
-            data: err.response?.data
-          });
-          const errorMsg = err.response?.data?.message || err.response?.data?.detail || t('common.error');
-          setError(`Błąd pobierania broni: ${errorMsg}`);
-          return { data: { items: [], total: 0 } };
-        }),
-        shootingSessionsAPI.getAll().catch((err) => {
-          console.error('Błąd pobierania sesji:', err);
-          return { data: [] };
-        }),
-        settingsAPI.get().catch((err) => {
-          console.error('Błąd pobierania ustawień:', err);
-          return { data: null };
-        }),
-        accountAPI.getRank().catch((err) => {
-          console.error('Błąd pobierania rangi:', err);
-          // Dla nowych użytkowników może zwracać 404/503 - zwróć domyślne wartości
-          if (err.response?.status === 404 || err.response?.status === 503) {
-            return { data: { rank: t('account.beginner'), passed_sessions: 0, progress_percent: 0 } };
-          }
-          return { data: null };
-        })
-      ]);
-
-      const gunsData = Array.isArray(gunsRes.data) ? gunsRes.data : (gunsRes.data?.items ?? []);
-      const sessionsData = Array.isArray(sessionsRes.data) ? sessionsRes.data : (Array.isArray(sessionsRes.data?.items) ? sessionsRes.data.items : []);
       
-      // Debug logging
-      if (import.meta.env.MODE === 'development') {
-        console.log('Dashboard main data loaded:', {
-          gunsCount: gunsData.length,
-          sessionsCount: sessionsData.length
+      // Jeden request do /dashboard
+      const dashboardRes = await dashboardAPI.get().catch((err) => {
+        console.error('Błąd pobierania dashboardu:', err);
+        const errorMsg = err.response?.data?.message || err.response?.data?.detail || t('common.error');
+        setError(`Błąd pobierania dashboardu: ${errorMsg}`);
+        return { data: null };
+      });
+
+      if (!dashboardRes.data) {
+        setError(t('common.error'));
+        return;
+      }
+
+      const dashboard = dashboardRes.data;
+
+      // Najczęściej używana broń
+      if (dashboard.most_used_gun) {
+        setMostUsedGun({
+          id: dashboard.most_used_gun.id,
+          name: dashboard.most_used_gun.name
+        });
+        setMostUsedGunStats({
+          sessionsCount: dashboard.most_used_gun.total_sessions || 0,
+          shotsCount: dashboard.most_used_gun.total_shots || 0,
+          totalCost: dashboard.most_used_gun.total_cost || 0
+        });
+        // Thumbnail jest już w danych z backendu
+        if (dashboard.most_used_gun.thumbnail) {
+          setMostUsedGunImage(dashboard.most_used_gun.thumbnail);
+        }
+      }
+
+      // Statystyki bieżącego miesiąca
+      if (dashboard.current_month_stats) {
+        setMonthlyStats({
+          sessions: dashboard.current_month_stats.sessions || 0,
+          shots: dashboard.current_month_stats.shots || 0,
+          avgAccuracy: dashboard.current_month_stats.avg_accuracy || 0,
+          cost: dashboard.current_month_stats.cost || 0
         });
       }
-      
-      // Ustawienia użytkownika
-      let newSettings = {
-        low_ammo_notifications_enabled: true,
-        maintenance_notifications_enabled: true,
-        maintenance_rounds_limit: 500,
-        maintenance_days_limit: 90
-      };
-      if (settingsRes.data) {
-        newSettings = {
-          low_ammo_notifications_enabled: settingsRes.data.low_ammo_notifications_enabled !== undefined 
-            ? settingsRes.data.low_ammo_notifications_enabled : true,
-          maintenance_notifications_enabled: settingsRes.data.maintenance_notifications_enabled !== undefined
-            ? settingsRes.data.maintenance_notifications_enabled : true,
-          maintenance_rounds_limit: settingsRes.data.maintenance_rounds_limit || 500,
-          maintenance_days_limit: settingsRes.data.maintenance_days_limit || 90
-        };
-      }
-      setUserSettings(newSettings);
-      
 
       // Ranga użytkownika
-      if (rankRes && rankRes.data) {
-        setRankInfo(rankRes.data);
+      if (dashboard.rank) {
+        setRankInfo({
+          rank: dashboard.rank.name || t('account.beginner'),
+          passed_sessions: dashboard.rank.passed_sessions || 0,
+          progress_percent: dashboard.rank.progress_percent || 0,
+          is_max_rank: dashboard.rank.is_max_rank || false,
+          next_rank: dashboard.rank.next_rank,
+          next_rank_min: dashboard.rank.next_rank_min
+        });
       } else {
         setRankInfo({ rank: t('account.beginner'), passed_sessions: 0, progress_percent: 0 });
+      }
+
+      // Status amunicji
+      if (dashboard.ammo_status && Array.isArray(dashboard.ammo_status)) {
+        setLowAmmoAlerts(dashboard.ammo_status);
+      } else {
+        setLowAmmoAlerts([]);
+      }
+
+      // Status konserwacji
+      if (dashboard.maintenance_status) {
+        if (dashboard.maintenance_status.state === 'OK') {
+          setMaintenanceAlerts([]);
+        } else {
+          // Przekształć dane z backendu do formatu używanego w UI
+          const alerts = dashboard.maintenance_status.items.map(item => ({
+            gun: {
+              id: item.gun_id,
+              name: item.gun_name
+            },
+            status: {
+              status: item.status,
+              color: item.status === 'red' ? '#f44336' : '#ff9800',
+              message: item.status === 'red' ? t('common.required') : t('common.soonRequired'),
+              reason: item.reason
+            }
+          }));
+          setMaintenanceAlerts(alerts);
+        }
+      } else {
+        setMaintenanceAlerts([]);
       }
 
       // Poziom zaawansowania - opóźnione pobieranie (tylko tooltip)
@@ -318,92 +183,6 @@ const DashboardPage = () => {
           setSkillLevel('beginner');
         });
 
-      // Najczęściej używana broń
-      const gunUsage = {};
-      (sessionsData || []).forEach(session => {
-        if (session && session.gun_id) {
-          gunUsage[session.gun_id] = (gunUsage[session.gun_id] || 0) + (session.shots || 0);
-        }
-      });
-      
-      let maxShots = 0;
-      let mostUsedGunId = null;
-      Object.entries(gunUsage).forEach(([gunId, shots]) => {
-        if (shots > maxShots) {
-          maxShots = shots;
-          mostUsedGunId = gunId;
-        }
-      });
-      
-      if (mostUsedGunId) {
-        const gun = (gunsData || []).find(g => {
-          if (!g) return false;
-          const gId = typeof g.id === 'string' ? parseInt(g.id, 10) : g.id;
-          const mId = typeof mostUsedGunId === 'string' ? parseInt(mostUsedGunId, 10) : mostUsedGunId;
-          return gId === mId || g.id === mostUsedGunId;
-        });
-        if (gun) {
-          setMostUsedGun(gun);
-          
-          // Oblicz statystyki dla tej broni
-          const gunSessions = (sessionsData || []).filter(s => {
-            if (!s) return false;
-            const sGunId = typeof s.gun_id === 'string' ? parseInt(s.gun_id, 10) : s.gun_id;
-            const gId = typeof gun.id === 'string' ? parseInt(gun.id, 10) : gun.id;
-            return sGunId === gId || s.gun_id === gun.id;
-          });
-          
-          const sessionsCount = gunSessions.length;
-          const shotsCount = gunSessions.reduce((sum, s) => sum + (s?.shots || 0), 0);
-          const totalCost = gunSessions.reduce((sum, s) => sum + (parseFloat(s?.cost) || 0), 0);
-          
-          setMostUsedGunStats({
-            sessionsCount,
-            shotsCount,
-            totalCost
-          });
-          
-          // Zdjęcie broni będzie pobrane lazy (po renderze)
-        }
-      }
-
-      // Statystyki miesięczne (bieżący miesiąc)
-      const now = new Date();
-      const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-      const monthSessions = (sessionsData || []).filter(s => {
-        if (!s || !s.date) return false;
-        try {
-          const sessionDate = new Date(s.date);
-          const sessionMonth = `${sessionDate.getFullYear()}-${String(sessionDate.getMonth() + 1).padStart(2, '0')}`;
-          return sessionMonth === currentMonth;
-        } catch {
-          return false;
-        }
-      });
-
-      const totalShots = monthSessions.reduce((sum, s) => sum + (s?.shots || 0), 0);
-      const totalCost = monthSessions.reduce((sum, s) => sum + (parseFloat(s?.cost) || 0), 0);
-      const accuracySessions = monthSessions.filter(s => s && s.hits !== null && s.hits !== undefined && s.distance_m);
-      const totalHits = accuracySessions.reduce((sum, s) => sum + (s?.hits || 0), 0);
-      const accuracyShots = accuracySessions.reduce((sum, s) => sum + (s?.shots || 0), 0);
-      const avgAccuracy = accuracyShots > 0 
-        ? (totalHits / accuracyShots) * 100 
-        : 0;
-
-      setMonthlyStats({
-        sessions: monthSessions.length || 0,
-        shots: totalShots || 0,
-        avgAccuracy: avgAccuracy || 0,
-        cost: totalCost || 0
-      });
-
-      // Ustaw dane przed obliczaniem statusu
-      setGuns(gunsData);
-      setSessions(sessionsData);
-
-      // Pobierz dane pomocnicze asynchronicznie (opóźnione)
-      fetchSecondaryData(newSettings, gunsData, sessionsData);
-
       setError(null);
     } catch (err) {
       setError(t('common.error'));
@@ -413,157 +192,6 @@ const DashboardPage = () => {
     }
   };
 
-  // Pobierz dane pomocnicze po załadowaniu głównych danych
-  const fetchSecondaryData = async (newSettings, gunsData, sessionsData) => {
-    try {
-      // Pobierz ammo tylko jeśli jest potrzebne
-      const ammoPromise = ammoAPI.getAll().catch((err) => {
-        console.error('Błąd pobierania amunicji:', err);
-        return { data: { items: [], total: 0 } };
-      });
-
-      // Pobierz maintenance tylko jeśli notifications są włączone
-      const maintenancePromise = newSettings.maintenance_notifications_enabled
-        ? maintenanceAPI.getAll().catch((err) => {
-            console.error('Błąd pobierania konserwacji:', err);
-            return { data: [] };
-          })
-        : Promise.resolve({ data: [] });
-
-      const [ammoRes, maintenanceRes] = await Promise.all([ammoPromise, maintenancePromise]);
-
-      const ammo = Array.isArray(ammoRes.data) ? ammoRes.data : (ammoRes.data?.items ?? []);
-      const maintenanceData = Array.isArray(maintenanceRes.data) ? maintenanceRes.data : (maintenanceRes.data?.items ?? []);
-
-      // Stan amunicji - wszystkie pozycje
-      setLowAmmoAlerts((ammo || []).filter(item => item && (item.units_in_package || 0) > 0));
-
-      // Alerty o konserwacji - użyj tej samej logiki co MyWeaponsPage
-      if (newSettings.maintenance_notifications_enabled) {
-        setMaintenance(maintenanceData);
-        const alerts = [];
-        (gunsData || []).forEach(gun => {
-          if (!gun) return;
-          const tempSettings = newSettings;
-          const lastMaint = (maintenanceData || []).filter(m => m && m.gun_id === gun.id)
-            .sort((a, b) => {
-              try {
-                return new Date(b?.date || 0) - new Date(a?.date || 0);
-              } catch {
-                return 0;
-              }
-            })[0];
-          
-          let rounds = 0;
-          let days = null;
-          
-          if (lastMaint && lastMaint.date) {
-            try {
-              const maintenanceDate = new Date(lastMaint.date);
-              const gunSessions = (sessionsData || []).filter(s => s && s.gun_id === gun.id);
-              gunSessions.forEach(session => {
-                if (session && session.date) {
-                  try {
-                    const sessionDate = new Date(session.date);
-                    if (sessionDate >= maintenanceDate) {
-                      rounds += session.shots || 0;
-                    }
-                  } catch {
-                    // Ignore invalid dates
-                  }
-                }
-              });
-              const today = new Date();
-              const diffTime = today - maintenanceDate;
-              days = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-            } catch {
-              // If date parsing fails, treat as no maintenance
-            }
-          } else {
-            const gunSessions = (sessionsData || []).filter(s => s && s.gun_id === gun.id);
-            rounds = gunSessions.reduce((sum, s) => sum + (s?.shots || 0), 0);
-          }
-          
-          const roundsLimit = tempSettings.maintenance_rounds_limit || 500;
-          const daysLimit = tempSettings.maintenance_days_limit || 90;
-          
-          let useRounds = true;
-          let percentage = 0;
-          
-          if (rounds === 0) {
-            useRounds = false;
-            percentage = days !== null ? (days / daysLimit) * 100 : 0;
-          } else if (days === null || days < daysLimit) {
-            useRounds = true;
-            percentage = (rounds / roundsLimit) * 100;
-          } else {
-            useRounds = false;
-            percentage = (days / daysLimit) * 100;
-          }
-          
-          let finalStatus = 'green';
-          if (percentage >= 100) {
-            finalStatus = 'red';
-          } else if (percentage >= 75) {
-            finalStatus = 'yellow';
-          }
-          
-          if (finalStatus === 'yellow' || finalStatus === 'red') {
-            let color, message, reason = '';
-            const roundsPercentage = Math.round((rounds / roundsLimit) * 100);
-            const daysPercentage = days !== null ? Math.round((days / daysLimit) * 100) : 0;
-            
-            if (finalStatus === 'red') {
-              color = '#f44336';
-              message = t('common.required');
-              if (useRounds && rounds >= roundsLimit) {
-                reason = `${t('common.required')}: ${t('common.shots')} ${rounds}/${roundsLimit}`;
-              } else if (!useRounds && days !== null && days >= daysLimit) {
-                reason = `${t('common.required')}: ${days}/${daysLimit} ${t('common.days')}`;
-              } else if (useRounds) {
-                reason = `${roundsPercentage}% ${t('common.shots')} (${rounds}/${roundsLimit})`;
-              } else {
-                reason = `${daysPercentage}% ${t('common.days')} (${days}/${daysLimit} ${t('common.days')})`;
-              }
-            } else {
-              color = '#ff9800';
-              message = t('common.soonRequired');
-              if (useRounds) {
-                reason = `${roundsPercentage}% ${t('common.shots')} (${rounds}/${roundsLimit})`;
-              } else {
-                reason = `${daysPercentage}% ${t('common.days')} (${days}/${daysLimit} ${t('common.days')})`;
-              }
-            }
-            
-            alerts.push({
-              gun,
-              status: { status: finalStatus, color, message, reason }
-            });
-          }
-        });
-        setMaintenanceAlerts(alerts);
-      } else {
-        setMaintenance([]);
-      }
-    } catch (err) {
-      console.error('Błąd pobierania danych pomocniczych:', err);
-    }
-  };
-
-  // Lazy load zdjęcia broni po renderze mostUsedGun
-  useEffect(() => {
-    if (mostUsedGun && !mostUsedGunImage) {
-      gunsAPI.getImage(mostUsedGun.id)
-        .then(imageRes => {
-          if (imageRes.data?.url) {
-            setMostUsedGunImage(imageRes.data.url);
-          }
-        })
-        .catch(() => {
-          // Ignore errors - zdjęcie nie jest krytyczne
-        });
-    }
-  }, [mostUsedGun, mostUsedGunImage]);
 
   if (loading) {
     return <div className="text-center">{t('common.loading')}</div>;
