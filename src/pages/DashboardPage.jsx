@@ -205,6 +205,8 @@ const DashboardPage = () => {
             <img 
               src="/assets/session_icon_dark.png" 
               alt="Ammo Cost Log" 
+              loading="lazy"
+              decoding="async"
               style={{ width: '32px', height: '32px' }}
             />
             {t('dashboard.title')}
@@ -254,6 +256,8 @@ const DashboardPage = () => {
                     <img 
                       src={mostUsedGunImage}
                       alt={mostUsedGun.name}
+                      loading="lazy"
+                      decoding="async"
                       style={{ 
                         maxWidth: '100%',
                         maxHeight: '100%',
@@ -268,6 +272,8 @@ const DashboardPage = () => {
                     <img 
                       src="/assets/Add_weapon_icon.png" 
                       alt="Brak zdjęcia"
+                      loading="lazy"
+                      decoding="async"
                       style={{ 
                         maxWidth: '100%',
                         maxHeight: '100%',
@@ -420,6 +426,8 @@ const DashboardPage = () => {
                         <img 
                           src={`/badges/rank_${String(rankNumber).padStart(2, '0')}.png`}
                           alt={rankName}
+                          loading="lazy"
+                          decoding="async"
                           style={{ 
                             maxWidth: '180px',
                             maxHeight: '180px',
