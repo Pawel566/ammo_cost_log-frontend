@@ -66,7 +66,9 @@ const AmmoPage = () => {
   const { t } = useTranslation();
   const { formatCurrency } = useCurrencyConverter();
   const [ammo, setAmmo] = useState([]);
-  const [filteredAmmo, setFilteredAmmo] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [limit] = useState(25);
+  const [offset, setOffset] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
@@ -87,10 +89,6 @@ const AmmoPage = () => {
   const [caliberFilter, setCaliberFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   
-  // Paginacja
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [currentPage, setCurrentPage] = useState(1);
-  
   // Sortowanie
   const [sortColumn, setSortColumn] = useState(null);
   const [sortDirection, setSortDirection] = useState('asc'); // 'asc' lub 'desc'
@@ -107,7 +105,7 @@ const AmmoPage = () => {
   useEffect(() => {
     fetchAmmo();
     fetchSettings();
-  }, []);
+  }, [offset, caliberFilter, typeFilter]);
 
   // Odśwież dane amunicji gdy strona staje się aktywna (np. po powrocie z innej strony)
   useEffect(() => {
@@ -130,69 +128,25 @@ const AmmoPage = () => {
     }
   };
 
-  useEffect(() => {
-    applyFilters();
-  }, [ammo, caliberFilter, typeFilter, sortColumn, sortDirection]);
-
   const fetchAmmo = async () => {
     try {
       setLoading(true);
-      const response = await ammoAPI.getAll();
+      const params = { limit, offset };
+      const response = await ammoAPI.getAll(params);
       const data = response.data;
       const items = Array.isArray(data) ? data : data?.items ?? [];
+      const totalCount = data?.total ?? 0;
       setAmmo(items);
+      setTotal(totalCount);
       setError(null);
     } catch (err) {
       setError(t('ammo.errorLoading'));
       console.error(err);
+      setAmmo([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
-  };
-
-  const applyFilters = () => {
-    let filtered = [...ammo];
-    
-    if (caliberFilter) {
-      filtered = filtered.filter(item => item.caliber === caliberFilter);
-    }
-    
-    if (typeFilter) {
-      filtered = filtered.filter(item => item.type === typeFilter);
-    }
-    
-    // Sortowanie
-    if (sortColumn) {
-      filtered.sort((a, b) => {
-        let aValue = a[sortColumn];
-        let bValue = b[sortColumn];
-        
-        // Specjalna obsługa dla units_in_package (liczba)
-        if (sortColumn === 'units_in_package') {
-          aValue = aValue || 0;
-          bValue = bValue || 0;
-          return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
-        }
-        
-        // Specjalna obsługa dla price_per_unit (liczba)
-        if (sortColumn === 'price_per_unit') {
-          aValue = aValue || 0;
-          bValue = bValue || 0;
-          return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
-        }
-        
-        // Dla pozostałych kolumn - sortowanie tekstowe
-        aValue = String(aValue || '').toLowerCase();
-        bValue = String(bValue || '').toLowerCase();
-        
-        if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
-        if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
-        return 0;
-      });
-    }
-    
-    setFilteredAmmo(filtered);
-    setCurrentPage(1);
   };
 
   const handleSort = (column) => {
@@ -410,17 +364,6 @@ const AmmoPage = () => {
     return !isNaN(unitsNum) && unitsNum > 0 && unitsNum < 20;
   };
 
-  // Paginacja
-  const totalPages = Math.ceil(filteredAmmo.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedAmmo = filteredAmmo.slice(startIndex, endIndex);
-
-  const handlePageChange = (newPage) => {
-    if (newPage >= 1 && newPage <= totalPages) {
-      setCurrentPage(newPage);
-    }
-  };
 
   // Zamknij menu przy kliknięciu poza nim
   useEffect(() => {
@@ -840,7 +783,10 @@ const AmmoPage = () => {
                 <label style={{ marginRight: '0.5rem', color: '#aaa', fontSize: '0.9rem' }}>{t('ammo.filterByCaliber')}</label>
                 <select
                   value={caliberFilter}
-                  onChange={(e) => setCaliberFilter(e.target.value)}
+                  onChange={(e) => {
+                    setCaliberFilter(e.target.value);
+                    setOffset(0);
+                  }}
                   style={{
                     padding: '0.5rem',
                     backgroundColor: 'var(--input-bg)',
@@ -860,7 +806,10 @@ const AmmoPage = () => {
                 <label style={{ marginRight: '0.5rem', color: '#aaa', fontSize: '0.9rem' }}>{t('ammo.filterByType')}</label>
                 <select
                   value={typeFilter}
-                  onChange={(e) => setTypeFilter(e.target.value)}
+                  onChange={(e) => {
+                    setTypeFilter(e.target.value);
+                    setOffset(0);
+                  }}
                   style={{
                     padding: '0.5rem',
                     backgroundColor: 'var(--input-bg)',
@@ -878,33 +827,10 @@ const AmmoPage = () => {
               </div>
             </div>
             
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ color: '#aaa', fontSize: '0.9rem' }}>{t('common.show')}:</span>
-              <select
-                value={itemsPerPage}
-                onChange={(e) => {
-                  setItemsPerPage(Number(e.target.value));
-                  setCurrentPage(1);
-                }}
-                style={{
-                  padding: '0.5rem',
-                  backgroundColor: '#2c2c2c',
-                  color: 'white',
-                  border: '1px solid #555',
-                  borderRadius: '4px',
-                  fontSize: '0.9rem'
-                }}
-              >
-                <option value={10}>10</option>
-                <option value={25}>25</option>
-                <option value={50}>50</option>
-                <option value={100}>100</option>
-              </select>
-            </div>
           </div>
 
           {/* Tabela */}
-          {paginatedAmmo.length === 0 ? (
+          {ammo.length === 0 ? (
             <p className="text-center" style={{ color: '#888', padding: '2rem' }}>
               {t('ammo.noAmmoMatch')}
             </p>
@@ -993,7 +919,7 @@ const AmmoPage = () => {
                   </tr>
                 </thead>
                 <tbody>
-                    {paginatedAmmo.map((item) => {
+                    {ammo.map((item) => {
                     const price = Number(item.price_per_unit || 0);
                       const units = item.units_in_package || 0;
                       const lowStock = isLowStock(units) && userSettings.low_ammo_notifications_enabled;
@@ -1096,46 +1022,46 @@ const AmmoPage = () => {
             </div>
               
               {/* Paginacja */}
-              {totalPages > 1 && (
+              {total > limit && (
                 <div style={{ 
                   display: 'flex', 
-                  justifyContent: 'center', 
+                  justifyContent: 'flex-end', 
                   alignItems: 'center', 
                   gap: '0.5rem',
                   marginTop: '1rem',
                   paddingTop: '1rem',
-                  borderTop: '1px solid #555'
+                  borderTop: `1px solid var(--border-color)`
                 }}>
                   <button
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
+                    onClick={() => setOffset(prev => Math.max(0, prev - limit))}
+                    disabled={offset === 0}
                     style={{
                       background: 'none',
                       border: 'none',
-                      color: currentPage === 1 ? 'var(--text-tertiary)' : 'var(--text-primary)',
-                      cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-                      fontSize: '1rem',
-                      padding: '0.5rem 1rem'
+                      color: offset === 0 ? 'var(--text-tertiary)' : 'var(--text-primary)',
+                      cursor: offset === 0 ? 'not-allowed' : 'pointer',
+                      fontSize: '1.2rem',
+                      padding: '0.25rem 0.5rem'
                     }}
                   >
-                    &lt;
+                    ←
                   </button>
-                  <span style={{ color: '#aaa', padding: '0.5rem 1rem' }}>
-                    {currentPage}
+                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', padding: '0 1rem' }}>
+                    {Math.floor(offset / limit) + 1} / {Math.ceil(total / limit)}
                   </span>
                   <button
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
+                    onClick={() => setOffset(prev => prev + limit)}
+                    disabled={offset + limit >= total}
                     style={{
                       background: 'none',
                       border: 'none',
-                      color: currentPage === totalPages ? 'var(--text-tertiary)' : 'var(--text-primary)',
-                      cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
-                      fontSize: '1rem',
-                      padding: '0.5rem 1rem'
+                      color: offset + limit >= total ? 'var(--text-tertiary)' : 'var(--text-primary)',
+                      cursor: offset + limit >= total ? 'not-allowed' : 'pointer',
+                      fontSize: '1.2rem',
+                      padding: '0.25rem 0.5rem'
                     }}
                   >
-                    &gt;
+                    →
                   </button>
                 </div>
               )}

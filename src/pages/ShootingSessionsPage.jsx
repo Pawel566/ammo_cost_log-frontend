@@ -12,7 +12,9 @@ const ShootingSessionsPage = () => {
   const { t } = useTranslation();
   const { formatCurrency } = useCurrencyConverter();
   const [sessions, setSessions] = useState([]);
-  const [filteredSessions, setFilteredSessions] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [limit] = useState(25);
+  const [offset, setOffset] = useState(0);
   const [guns, setGuns] = useState([]);
   const [ammo, setAmmo] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -29,16 +31,15 @@ const ShootingSessionsPage = () => {
 
  
   const [sortColumn, setSortColumn] = useState(null);
-  const [sortDirection, setSortDirection] = useState('asc');
-  
-  // Paginacja
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [currentPage, setCurrentPage] = useState(1); 
+  const [sortDirection, setSortDirection] = useState('asc'); 
+
+  useEffect(() => {
+    fetchSkillLevel();
+  }, []);
 
   useEffect(() => {
     fetchData();
-    fetchSkillLevel();
-  }, []);
+  }, [offset, filterType, filterValue, filterGunId]);
 
   // Obsługa parametru gun_id z URL
   useEffect(() => {
@@ -55,7 +56,6 @@ const ShootingSessionsPage = () => {
         setFilterGunId(gunIdNum);
       }
     } else if (!gunId) {
-      // Resetuj filterGunId tylko gdy nie ma parametru w URL
       setFilterGunId(null);
     }
   }, [searchParams, guns]);
@@ -128,20 +128,21 @@ const ShootingSessionsPage = () => {
     return null;
   };
 
-  useEffect(() => {
-    if (sessions.length > 0 || filterGunId !== null) {
-      applyFilters();
-      setCurrentPage(1); // Resetuj do pierwszej strony przy zmianie filtrów
-    }
-  }, [filterType, filterValue, filterGunId, sessions, guns, ammo, sortColumn, sortDirection]);
 
   const fetchData = async () => {
     try {
       setLoading(true);
+      const params = { limit, offset };
+      if (filterValue && filterType) {
+        params.search = filterValue;
+      }
+      if (filterGunId) {
+        params.gun_id = filterGunId;
+      }
       const [sessionsRes, gunsRes, ammoRes] = await Promise.all([
-        shootingSessionsAPI.getAll().catch((err) => {
+        shootingSessionsAPI.getAll(params).catch((err) => {
           console.error('Błąd pobierania sesji:', err);
-          return { data: [] };
+          return { data: { items: [], total: 0 } };
         }),
         gunsAPI.getAll().catch((err) => {
           console.error('Błąd pobierania broni:', err);
@@ -153,13 +154,15 @@ const ShootingSessionsPage = () => {
           return { data: { items: [], total: 0 } };
         })
       ]);
-      const allSessions = Array.isArray(sessionsRes.data) ? sessionsRes.data : [];
+      const sessionsData = sessionsRes.data;
+      const allSessions = Array.isArray(sessionsData) ? sessionsData : sessionsData?.items ?? [];
+      const sessionsTotal = sessionsData?.total ?? 0;
       const gunsData = gunsRes.data;
       const ammoData = ammoRes.data;
       const gunItems = Array.isArray(gunsData) ? gunsData : gunsData?.items ?? [];
       const ammoItems = Array.isArray(ammoData) ? ammoData : ammoData?.items ?? [];
       setSessions(allSessions);
-      setFilteredSessions(allSessions);
+      setTotal(sessionsTotal);
       setGuns(gunItems);
       setAmmo(ammoItems);
       setError(null);
@@ -171,123 +174,14 @@ const ShootingSessionsPage = () => {
     }
   };
 
-  const applyFilters = () => {
-    let filtered = [...sessions];
-
-    // Jeśli mamy filterGunId (z URL), filtruj bezpośrednio po ID
-    if (filterGunId !== null && filterType === 'gun') {
-      filtered = filtered.filter(session => {
-        if (!session.gun_id) return false;
-        // Normalizuj typy ID do porównania
-        const sessionGunId = typeof session.gun_id === 'string' ? parseInt(session.gun_id, 10) : Number(session.gun_id);
-        const filterId = typeof filterGunId === 'string' ? parseInt(filterGunId, 10) : Number(filterGunId);
-        const matches = sessionGunId === filterId;
-        return matches;
-      });
-    } else if (filterType && filterValue) {
-      filtered = filtered.filter(session => {
-      const value = filterValue.toLowerCase();
-      switch (filterType) {
-        case 'gun':
-          // Filtruj po nazwie (gdy nie ma filterGunId)
-          const gun = guns.find(g => g.id === session.gun_id);
-          return gun && gun.name.toLowerCase().includes(value);
-        case 'ammo':
-          const ammoItem = ammo.find(a => a.id === session.ammo_id);
-          return ammoItem && ammoItem.name.toLowerCase().includes(value);
-        case 'date':
-          return new Date(session.date).toLocaleDateString('pl-PL').includes(value);
-        case 'cost':
-          return session.cost && session.cost.toString().includes(value);
-        case 'distance':
-          const distanceValue = session.distance ? `${session.distance} ${session.distance_unit || 'm'}` : '';
-          return distanceValue && distanceValue.toLowerCase().includes(value);
-        case 'accuracy':
-          return (session.final_score && session.final_score.toString().includes(value)) || 
-                 (session.accuracy_percent && session.accuracy_percent.toString().includes(value));
-        default:
-          return true;
-      }
-    });
-    }
-
-    
-    if (sortColumn) {
-      filtered.sort((a, b) => {
-        let aValue, bValue;
-        
-        switch (sortColumn) {
-          case 'date':
-            aValue = new Date(a.date);
-            bValue = new Date(b.date);
-            return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
-          case 'gun':
-            const gunA = guns.find(g => g.id === a.gun_id);
-            const gunB = guns.find(g => g.id === b.gun_id);
-            aValue = gunA ? gunA.name.toLowerCase() : '';
-            bValue = gunB ? gunB.name.toLowerCase() : '';
-            break;
-          case 'ammo':
-            const ammoA = ammo.find(am => am.id === a.ammo_id);
-            const ammoB = ammo.find(am => am.id === b.ammo_id);
-            aValue = ammoA ? ammoA.name.toLowerCase() : '';
-            bValue = ammoB ? ammoB.name.toLowerCase() : '';
-            break;
-          case 'shots':
-            aValue = a.shots || 0;
-            bValue = b.shots || 0;
-            return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
-          case 'cost':
-            aValue = a.cost || 0;
-            bValue = b.cost || 0;
-            return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
-          case 'distance':
-            // Sortuj po oryginalnej wartości w metrach (distance_m) dla spójności
-            aValue = a.distance_m || 0;
-            bValue = b.distance_m || 0;
-            return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
-          case 'hits':
-            aValue = a.hits !== null && a.hits !== undefined ? a.hits : 0;
-            bValue = b.hits !== null && b.hits !== undefined ? b.hits : 0;
-            return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
-          case 'accuracy':
-            aValue = a.final_score !== null && a.final_score !== undefined ? a.final_score : 
-                     (a.accuracy_percent !== null && a.accuracy_percent !== undefined ? a.accuracy_percent : 0);
-            bValue = b.final_score !== null && b.final_score !== undefined ? b.final_score : 
-                     (b.accuracy_percent !== null && b.accuracy_percent !== undefined ? b.accuracy_percent : 0);
-            return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
-          case 'type':
-            
-            aValue = (a.session_type === 'advanced') ? 1 : 0;
-            bValue = (b.session_type === 'advanced') ? 1 : 0;
-            return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
-          default:
-            aValue = String(a[sortColumn] || '').toLowerCase();
-            bValue = String(b[sortColumn] || '').toLowerCase();
-        }
-        
-        
-        if (typeof aValue === 'string' && typeof bValue === 'string') {
-          if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
-          if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
-        }
-        
-        return 0;
-      });
-    }
-
-    setFilteredSessions(filtered);
-  };
-
   const handleSort = (column) => {
     if (sortColumn === column) {
-      // Zmień kierunek sortowania
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
-      // Ustaw nową kolumnę i domyślny kierunek
       setSortColumn(column);
       setSortDirection('asc');
     }
+    setOffset(0);
   };
 
   const getGunName = (gunId) => {
@@ -450,7 +344,9 @@ const ShootingSessionsPage = () => {
                 value={filterType}
                 onChange={(e) => {
                   setFilterType(e.target.value);
-                  setFilterGunId(null); // Resetuj filterGunId przy ręcznej zmianie filtra
+                  setFilterGunId(null);
+                  setFilterValue('');
+                  setOffset(0);
                 }}
               >
                 <option value="">{t('sessions.filterBy')}</option>
@@ -471,39 +367,17 @@ const ShootingSessionsPage = () => {
                   onChange={(e) => {
                     setFilterValue(e.target.value);
                     if (filterType !== 'gun') {
-                      setFilterGunId(null); // Resetuj filterGunId gdy zmieniamy wartość innego filtra
+                      setFilterGunId(null);
                     }
+                    setOffset(0);
                   }}
                 />
               )}
             </div>
             
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ color: '#aaa', fontSize: '0.9rem' }}>{t('sessions.show')}</span>
-              <select
-                value={itemsPerPage}
-                onChange={(e) => {
-                  setItemsPerPage(Number(e.target.value));
-                  setCurrentPage(1);
-                }}
-                style={{
-                  padding: '0.5rem',
-                  backgroundColor: '#2c2c2c',
-                  color: 'white',
-                  border: '1px solid #555',
-                  borderRadius: '4px',
-                  fontSize: '0.9rem'
-                }}
-              >
-                <option value={10}>10</option>
-                <option value={25}>25</option>
-                <option value={50}>50</option>
-                <option value={100}>100</option>
-              </select>
-            </div>
           </div>
 
-          {filteredSessions.length === 0 ? (
+          {sessions.length === 0 ? (
             <p className="text-center" style={{ color: 'var(--text-tertiary)', padding: '2rem' }}>
               {t('sessions.noSessions')}
             </p>
@@ -619,9 +493,7 @@ const ShootingSessionsPage = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredSessions
-                    .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-                    .map((session) => (
+                  {sessions.map((session) => (
                     <tr 
                       key={session.id}
                       onClick={() => handleRowClick(session)}
@@ -814,7 +686,7 @@ const ShootingSessionsPage = () => {
           )}
 
           {/* Nawigacja paginacji */}
-          {filteredSessions.length > itemsPerPage && (
+          {total > limit && (
             <div style={{ 
               display: 'flex', 
               justifyContent: 'flex-end', 
@@ -825,13 +697,13 @@ const ShootingSessionsPage = () => {
               borderTop: `1px solid var(--border-color)`
             }}>
               <button
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
+                onClick={() => setOffset(prev => Math.max(0, prev - limit))}
+                disabled={offset === 0}
                 style={{
                   background: 'none',
                   border: 'none',
-                  color: currentPage === 1 ? 'var(--text-tertiary)' : 'var(--text-primary)',
-                  cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                  color: offset === 0 ? 'var(--text-tertiary)' : 'var(--text-primary)',
+                  cursor: offset === 0 ? 'not-allowed' : 'pointer',
                   fontSize: '1.2rem',
                   padding: '0.25rem 0.5rem'
                 }}
@@ -839,16 +711,16 @@ const ShootingSessionsPage = () => {
                 ←
               </button>
               <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', padding: '0 1rem' }}>
-                {t('sessions.page')} {currentPage} {t('sessions.of')} {Math.ceil(filteredSessions.length / itemsPerPage)}
+                {t('sessions.page')} {Math.floor(offset / limit) + 1} {t('sessions.of')} {Math.ceil(total / limit)}
               </span>
               <button
-                onClick={() => setCurrentPage(prev => Math.min(Math.ceil(filteredSessions.length / itemsPerPage), prev + 1))}
-                disabled={currentPage === Math.ceil(filteredSessions.length / itemsPerPage)}
+                onClick={() => setOffset(prev => prev + limit)}
+                disabled={offset + limit >= total}
                 style={{
                   background: 'none',
                   border: 'none',
-                  color: currentPage === Math.ceil(filteredSessions.length / itemsPerPage) ? 'var(--text-tertiary)' : 'var(--text-primary)',
-                  cursor: currentPage === Math.ceil(filteredSessions.length / itemsPerPage) ? 'not-allowed' : 'pointer',
+                  color: offset + limit >= total ? 'var(--text-tertiary)' : 'var(--text-primary)',
+                  cursor: offset + limit >= total ? 'not-allowed' : 'pointer',
                   fontSize: '1.2rem',
                   padding: '0.25rem 0.5rem'
                 }}
