@@ -29,13 +29,15 @@ function isGuestExpired() {
 api.interceptors.request.use((config) => {
   // Always get fresh token from localStorage (don't rely on api.defaults.headers)
   const accessToken = localStorage.getItem('access_token');
-  if (accessToken) {
-    config.headers["Authorization"] = `Bearer ${accessToken}`;
-    // Remove guest headers if we have a token
+  const hasValidToken = accessToken && accessToken.trim().length > 0;
+  
+  if (hasValidToken) {
+    config.headers["Authorization"] = `Bearer ${accessToken.trim()}`;
+    // Remove guest headers if we have a valid token
     delete config.headers["X-Guest-Id"];
     delete config.headers["X-Guest-Id-Expires-At"];
   } else {
-    // No token - use guest mode
+    // No valid token - use guest mode
     let guestId = localStorage.getItem(GUEST_ID_KEY);
     let guestExpires = localStorage.getItem(GUEST_EXPIRES_KEY);
     if (!guestId || !guestExpires || isGuestExpired()) {
@@ -44,7 +46,7 @@ api.interceptors.request.use((config) => {
       guestId = null;
       guestExpires = null;
     }
-    // Remove auth header if no token
+    // Remove auth header if no valid token
     delete config.headers["Authorization"];
     if (guestId) config.headers["X-Guest-Id"] = guestId;
     if (guestExpires) config.headers["X-Guest-Id-Expires-At"] = guestExpires;
