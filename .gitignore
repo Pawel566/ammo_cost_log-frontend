@@ -126,3 +126,4 @@ local/
 *.pid
 *.seed
 *.pid.lock
+AGENTS.MD
