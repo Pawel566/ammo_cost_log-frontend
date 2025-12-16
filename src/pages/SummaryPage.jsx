@@ -138,7 +138,7 @@ const MonthlyCostsChart = ({ data, t, formatCurrency }) => {
 const SummaryPage = () => {
   const { t } = useTranslation();
   const { formatCurrency, convert } = useCurrencyConverter();
-  const [summary, setSummary] = useState([]);
+  const [summary, setSummary] = useState({ total: 0, items: [] });
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -155,9 +155,9 @@ const SummaryPage = () => {
         shootingSessionsAPI.getAll()
       ]);
       const summaryData = summaryRes.data;
-      const summaryItems = Array.isArray(summaryData) ? summaryData : summaryData?.items ?? [];
+      const summaryResult = Array.isArray(summaryData) ? { total: 0, items: summaryData } : (summaryData || { total: 0, items: [] });
       const allSessions = Array.isArray(sessionsRes.data) ? sessionsRes.data : [];
-      setSummary(summaryItems);
+      setSummary(summaryResult);
       setSessions(allSessions);
       setError(null);
     } catch (err) {
@@ -232,7 +232,7 @@ const SummaryPage = () => {
           </div>
         )}
 
-        {summary.length === 0 && sessions.length === 0 ? (
+        {summary.items.length === 0 ? (
           <div className="card">
             <p className="text-center" style={{ color: '#888', padding: '2rem' }}>
               {t('summary.noData')}
@@ -285,14 +285,14 @@ const SummaryPage = () => {
               </div>
             </div>
 
-            {summary.length > 0 && (
+            {summary.items.length > 0 && (
               <div className="card" style={{ marginBottom: '1.5rem' }}>
                 <h3 style={{ marginBottom: '1rem' }}>{t('summary.monthlyCosts')}</h3>
-                <MonthlyCostsChart data={summary} t={t} formatCurrency={formatCurrency} />
+                <MonthlyCostsChart data={summary.items} t={t} formatCurrency={formatCurrency} />
               </div>
             )}
 
-            {summary.length > 0 && (
+            {summary.items.length > 0 && (
               <div className="card" style={{ marginBottom: '1.5rem' }}>
                 <h3 style={{ marginBottom: '1rem' }}>{t('summary.monthlySummary')}</h3>
                 <div style={{ overflowX: 'auto' }}>
@@ -306,7 +306,7 @@ const SummaryPage = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {summary.map((month) => (
+                      {summary.items.map((month) => (
                         <tr key={month.month}>
                           <td style={{ fontWeight: '500' }}>{formatMonth(month.month)}</td>
                           <td style={{ fontWeight: 'bold', color: '#dc3545' }}>
