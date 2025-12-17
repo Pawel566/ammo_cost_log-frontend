@@ -409,7 +409,7 @@
     "activitiesList": "Activities list",
     "selectActivities": "Select activities",
     "selected": "Selected:",
-    "activities": "Performed activities:",
+    "activitiesLabel": "Performed activities:",
     "maintenanceDescription": "Description:",
     "descriptionPlaceholder": "Optional maintenance description...",
     "saveMaintenance": "Save maintenance",

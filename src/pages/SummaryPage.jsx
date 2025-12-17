@@ -150,16 +150,19 @@ const SummaryPage = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
+      setError(null);
       const [summaryRes, sessionsRes] = await Promise.all([
         shootingSessionsAPI.getSummary(),
         shootingSessionsAPI.getAll()
       ]);
       const summaryData = summaryRes.data;
-      const summaryResult = Array.isArray(summaryData) ? { total: 0, items: summaryData } : (summaryData || { total: 0, items: [] });
-      const allSessions = Array.isArray(sessionsRes.data) ? sessionsRes.data : [];
+      const summaryResult = summaryData && typeof summaryData === 'object' && !Array.isArray(summaryData)
+        ? { total: summaryData.total || 0, items: Array.isArray(summaryData.items) ? summaryData.items : [] }
+        : { total: 0, items: [] };
+      const sessionsData = sessionsRes.data;
+      const allSessions = Array.isArray(sessionsData) ? sessionsData : sessionsData?.items ?? [];
       setSummary(summaryResult);
       setSessions(allSessions);
-      setError(null);
     } catch (err) {
       setError(t('common.error'));
       console.error(err);

@@ -112,6 +112,9 @@ vite.config.*.timestamp-*
 
 # AI Assistant instructions
 AGENTS.md
+AGENTS.MD
+agents.md
+agents.MD
 
 # Local development
 .local/

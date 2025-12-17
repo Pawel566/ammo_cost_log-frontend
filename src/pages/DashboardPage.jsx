@@ -568,26 +568,31 @@ const DashboardPage = () => {
               </h3>
             </div>
             {(lowAmmoAlerts && lowAmmoAlerts.length > 0) ? (
-              <div>
-                {lowAmmoAlerts.slice(0, 3).map((item, index) => (
-                  item ? (
-                    <div key={item.id || index} style={{ marginBottom: index < lowAmmoAlerts.length - 1 ? '1rem' : '0' }}>
-                      <div style={{ 
-                        fontWeight: 'bold',
-                        marginBottom: '0.25rem'
-                      }}>
-                        {item.name || '-'}
-                      </div>
-                      <div style={{ 
-                        fontSize: '0.9rem',
-                        color: 'var(--text-tertiary)',
-                        marginBottom: '0.5rem'
-                      }}>
-                        {item.caliber ? `${item.caliber} - ` : ''}{item.units_in_package || 0} {t('dashboard.fromStock')}
-                      </div>
-                    </div>
-                  ) : null
-                ))}
+              <div
+                style={{
+                  padding: '1rem',
+                  backgroundColor: '#ff9800',
+                  color: 'white',
+                  borderRadius: '4px',
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '0.5rem'
+                }}
+              >
+                <span style={{ fontSize: '1.2rem' }}>⚠️</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>
+                    {t('ammo.lowStockWarning')}
+                  </div>
+                  <div style={{ fontSize: '0.9rem' }}>
+                    {lowAmmoAlerts.slice(0, 3).map((item, index) => (
+                      <span key={item?.id || index}>
+                        {item?.name || '-'} ({item?.units_in_package || 0} szt.)
+                        {index < Math.min(lowAmmoAlerts.length, 3) - 1 && ', '}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               </div>
             ) : (
               <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', padding: '1rem' }}>
