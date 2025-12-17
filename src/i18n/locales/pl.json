@@ -388,7 +388,7 @@
     "activitiesList": "Lista czynności",
     "selectActivities": "Wybierz czynności",
     "selected": "Wybrano:",
-    "activities": "Wykonane czynności:",
+    "activitiesLabel": "Wykonane czynności:",
     "maintenanceDescription": "Opis:",
     "descriptionPlaceholder": "Opcjonalny opis konserwacji...",
     "saveMaintenance": "Zapisz konserwację",

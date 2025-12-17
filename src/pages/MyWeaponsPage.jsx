@@ -303,7 +303,8 @@ const MyWeaponsPage = () => {
   const fetchAllSessions = async () => {
     try {
       const response = await shootingSessionsAPI.getAll({ limit: 1000 });
-      const allSessions = Array.isArray(response.data) ? response.data : [];
+      const data = response.data;
+      const allSessions = Array.isArray(data) ? data : (data?.items || []);
       
       // Grupuj sesje według gun_id
       const sessionsByGun = {};
@@ -325,13 +326,14 @@ const MyWeaponsPage = () => {
       const [attachmentsRes, maintenanceRes, sessionsRes] = await Promise.all([
         attachmentsAPI.getForGun(gunId).catch(() => ({ data: [] })),
         maintenanceAPI.getForGun(gunId).catch(() => ({ data: [] })),
-        shootingSessionsAPI.getAll({ gun_id: gunId, limit: 100 }).catch(() => ({ data: [] }))
+        shootingSessionsAPI.getAll({ gun_id: gunId, limit: 100 }).catch(() => ({ data: { items: [] } }))
       ]);
       
       setAttachments({ ...attachments, [gunId]: attachmentsRes.data || [] });
       setMaintenance({ ...maintenance, [gunId]: maintenanceRes.data || [] });
       
-      const gunSessions = Array.isArray(sessionsRes.data) ? sessionsRes.data : [];
+      const sessionsData = sessionsRes.data;
+      const gunSessions = Array.isArray(sessionsData) ? sessionsData : (sessionsData?.items || []);
       setSessions({ ...sessions, [gunId]: gunSessions });
     } catch (err) {
       console.error('Błąd pobierania szczegółów broni:', err);
@@ -572,13 +574,15 @@ const MyWeaponsPage = () => {
       return gunSessions.reduce((sum, session) => sum + (session.shots || 0), 0);
     }
 
-    const maintenanceDate = new Date(lastMaint.date);
+    // Porównuj tylko daty (bez czasu) - tak jak robi backend
+    // Format: "YYYY-MM-DD" -> porównanie stringów działa poprawnie
+    const maintenanceDateStr = lastMaint.date.substring(0, 10);
     
-    // Jeśli jest konserwacja, liczymy tylko strzały po dacie konserwacji
+    // Liczymy tylko strzały ŚCIŚLE po dniu konserwacji (date > maintenance_date)
     let totalRounds = 0;
     gunSessions.forEach(session => {
-      const sessionDate = new Date(session.date);
-      if (sessionDate >= maintenanceDate) {
+      const sessionDateStr = session.date.substring(0, 10);
+      if (sessionDateStr > maintenanceDateStr) {
         totalRounds += session.shots || 0;
       }
     });
@@ -1161,7 +1165,7 @@ const MyWeaponsPage = () => {
                                     </div>
                                     {maint.activities && maint.activities.length > 0 && (
                                       <div style={{ fontSize: '0.9rem', color: 'var(--text-tertiary)' }}>
-                                        <div style={{ marginBottom: '0.25rem', fontWeight: '500' }}>{t('myWeapons.activities')}</div>
+                                        <div style={{ marginBottom: '0.25rem', fontWeight: '500' }}>{t('myWeapons.activitiesLabel')}</div>
                                         <ul style={{ margin: 0, paddingLeft: '1.25rem', listStyle: 'disc' }}>
                                           {maint.activities.map((activity, idx) => (
                                             <li key={idx} style={{ marginBottom: '0.15rem' }}>{activity}</li>
