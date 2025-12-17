@@ -225,4 +225,9 @@ export const currencyRatesAPI = {
   getRate: (currency) => api.get(`/currency-rates/rate/${currency}`),
 };
 
+// Dashboard API
+export const dashboardAPI = {
+  get: () => api.get('/dashboard'),
+};
+
 export default api;

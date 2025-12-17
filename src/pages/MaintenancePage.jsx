@@ -7,6 +7,9 @@ const MaintenancePage = () => {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [maintenance, setMaintenance] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [limit] = useState(25);
+  const [offset, setOffset] = useState(0);
   const [guns, setGuns] = useState([]);
   const [statistics, setStatistics] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -79,7 +82,7 @@ const MaintenancePage = () => {
     } else {
       setSearchParams({});
     }
-  }, [selectedGunId]);
+  }, [selectedGunId, offset]);
 
   useEffect(() => {
     const gunIdFromUrl = searchParams.get('gun_id');
@@ -111,18 +114,26 @@ const MaintenancePage = () => {
 
   const fetchMaintenance = async () => {
     try {
-      const params = selectedGunId ? { gun_id: selectedGunId } : {};
+      const params = { limit, offset };
+      if (selectedGunId) {
+        params.gun_id = selectedGunId;
+      }
       const response = await maintenanceAPI.getAll(params).catch((err) => {
         console.error('Błąd pobierania konserwacji:', err);
         setError(err.response?.data?.message || t('maintenance.errorLoadingMaintenance'));
-        return { data: [] };
+        return { data: { items: [], total: 0 } };
       });
-      setMaintenance(response.data || []);
+      const data = response.data || {};
+      const items = Array.isArray(data) ? data : data.items || [];
+      const totalCount = data.total || 0;
+      setMaintenance(items);
+      setTotal(totalCount);
       setError('');
     } catch (err) {
       console.error('Błąd w fetchMaintenance:', err);
       setError(err.response?.data?.message || t('maintenance.errorLoadingMaintenance'));
-      console.error(err);
+      setMaintenance([]);
+      setTotal(0);
     }
   };
 
@@ -253,7 +264,10 @@ const MaintenancePage = () => {
               <select
                 className="form-input"
                 value={selectedGunId}
-                onChange={(e) => setSelectedGunId(e.target.value)}
+                onChange={(e) => {
+                  setSelectedGunId(e.target.value);
+                  setOffset(0);
+                }}
                 style={{ width: 'auto', minWidth: '200px', padding: '0.5rem' }}
               >
                 <option value="">{t('maintenance.all')}</option>
@@ -283,9 +297,7 @@ const MaintenancePage = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {maintenance
-                    .sort((a, b) => new Date(b.date) - new Date(a.date))
-                    .map((maint) => (
+                  {maintenance.map((maint) => (
                       <tr key={maint.id}>
                         <td style={{ fontWeight: '500' }}>{maint.gun_name || getGunName(maint.gun_id)}</td>
                         <td>{new Date(maint.date).toLocaleDateString('pl-PL')}</td>
@@ -421,6 +433,51 @@ const MaintenancePage = () => {
                     ))}
                 </tbody>
               </table>
+            </div>
+          )}
+
+          {/* Pagination */}
+          {total > limit && (
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'flex-end', 
+              alignItems: 'center', 
+              gap: '0.5rem',
+              marginTop: '1rem',
+              paddingTop: '1rem',
+              borderTop: `1px solid var(--border-color)`
+            }}>
+              <button
+                onClick={() => setOffset(prev => Math.max(0, prev - limit))}
+                disabled={offset === 0}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: offset === 0 ? 'var(--text-tertiary)' : 'var(--text-primary)',
+                  cursor: offset === 0 ? 'not-allowed' : 'pointer',
+                  fontSize: '1.2rem',
+                  padding: '0.25rem 0.5rem'
+                }}
+              >
+                ←
+              </button>
+              <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', padding: '0 1rem' }}>
+                {Math.floor(offset / limit) + 1} / {Math.ceil(total / limit)}
+              </span>
+              <button
+                onClick={() => setOffset(prev => prev + limit)}
+                disabled={offset + limit >= total}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: offset + limit >= total ? 'var(--text-tertiary)' : 'var(--text-primary)',
+                  cursor: offset + limit >= total ? 'not-allowed' : 'pointer',
+                  fontSize: '1.2rem',
+                  padding: '0.25rem 0.5rem'
+                }}
+              >
+                →
+              </button>
             </div>
           )}
         </div>

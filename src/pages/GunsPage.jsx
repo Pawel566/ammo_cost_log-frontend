@@ -134,7 +134,9 @@ const GunsPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [guns, setGuns] = useState([]);
-  const [filteredGuns, setFilteredGuns] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [limit] = useState(25);
+  const [offset, setOffset] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
@@ -155,10 +157,6 @@ const GunsPage = () => {
   // Filtry
   const [typeFilter, setTypeFilter] = useState('');
   const [caliberFilter, setCaliberFilter] = useState('');
-  
-  // Paginacja
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [currentPage, setCurrentPage] = useState(1);
   
   // Sortowanie
   const [sortColumn, setSortColumn] = useState(null);
@@ -181,19 +179,18 @@ const GunsPage = () => {
     fetchAllMaintenance();
     fetchAllSessions();
     fetchSettings();
-  }, []);
-
-  useEffect(() => {
-    applyFilters();
-  }, [guns, typeFilter, caliberFilter, sortColumn, sortDirection]);
+  }, [offset, typeFilter, caliberFilter]);
 
   const fetchGuns = async () => {
     try {
       setLoading(true);
-      const response = await gunsAPI.getAll();
+      const params = { limit, offset };
+      const response = await gunsAPI.getAll(params);
       const data = response.data;
       const items = Array.isArray(data) ? data : data?.items ?? [];
+      const totalCount = data?.total ?? 0;
       setGuns(items);
+      setTotal(totalCount);
       setError(null);
     } catch (err) {
       const errorMessage = err.response?.data?.message || err.response?.data?.detail || t('guns.errorLoading');
@@ -203,8 +200,8 @@ const GunsPage = () => {
         response: err.response,
         message: errorMessage
       });
-      // Ustaw puste dane, żeby strona się załadowała
       setGuns([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
@@ -235,8 +232,9 @@ const GunsPage = () => {
 
   const fetchAllSessions = async () => {
     try {
-      const response = await shootingSessionsAPI.getAll({ limit: 1000 });
-      const allSessions = Array.isArray(response.data) ? response.data : [];
+      const response = await shootingSessionsAPI.getAll({ limit: 100, offset: 0 });
+      const sessionsData = response.data;
+      const allSessions = Array.isArray(sessionsData) ? sessionsData : sessionsData?.items ?? [];
       
       const sessionsByGun = {};
       allSessions.forEach(session => {
@@ -250,37 +248,6 @@ const GunsPage = () => {
     } catch (err) {
       console.error('Błąd pobierania sesji:', err);
     }
-  };
-
-  const applyFilters = () => {
-    let filtered = [...guns];
-    
-    if (typeFilter) {
-      filtered = filtered.filter(gun => gun.type === typeFilter);
-    }
-    
-    if (caliberFilter) {
-      filtered = filtered.filter(gun => gun.caliber === caliberFilter);
-    }
-    
-    // Sortowanie
-    if (sortColumn) {
-      filtered.sort((a, b) => {
-        let aValue = a[sortColumn] || '';
-        let bValue = b[sortColumn] || '';
-        
-        // Konwersja na stringi dla porównania
-        aValue = String(aValue).toLowerCase();
-        bValue = String(bValue).toLowerCase();
-        
-        if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
-        if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
-        return 0;
-      });
-    }
-    
-    setFilteredGuns(filtered);
-    setCurrentPage(1);
   };
 
   const handleSort = (column) => {
@@ -610,17 +577,6 @@ const GunsPage = () => {
     setActiveMenuId(null);
   };
 
-  // Paginacja
-  const totalPages = Math.ceil(filteredGuns.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedGuns = filteredGuns.slice(startIndex, endIndex);
-
-  const handlePageChange = (newPage) => {
-    if (newPage >= 1 && newPage <= totalPages) {
-      setCurrentPage(newPage);
-    }
-  };
 
   // Zamknij menu przy kliknięciu poza nim
   useEffect(() => {
@@ -875,7 +831,10 @@ const GunsPage = () => {
                 <label style={{ marginRight: '0.5rem', color: '#aaa', fontSize: '0.9rem' }}>{t('guns.filterByType')}</label>
                 <select
                   value={typeFilter}
-                  onChange={(e) => setTypeFilter(e.target.value)}
+                  onChange={(e) => {
+                    setTypeFilter(e.target.value);
+                    setOffset(0);
+                  }}
                   style={{
                     padding: '0.5rem',
                     backgroundColor: 'var(--input-bg)',
@@ -895,7 +854,10 @@ const GunsPage = () => {
                 <label style={{ marginRight: '0.5rem', color: '#aaa', fontSize: '0.9rem' }}>{t('guns.filterByCaliber')}</label>
                 <select
                   value={caliberFilter}
-                  onChange={(e) => setCaliberFilter(e.target.value)}
+                  onChange={(e) => {
+                    setCaliberFilter(e.target.value);
+                    setOffset(0);
+                  }}
                   style={{
                     padding: '0.5rem',
                     backgroundColor: 'var(--input-bg)',
@@ -914,60 +876,46 @@ const GunsPage = () => {
             </div>
             
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ color: '#aaa', fontSize: '0.9rem' }}>{t('common.show')}:</span>
-              <select
-                value={itemsPerPage}
-                onChange={(e) => {
-                  setItemsPerPage(Number(e.target.value));
-                  setCurrentPage(1);
-                }}
-                style={{
-                  padding: '0.5rem',
-                  backgroundColor: '#2c2c2c',
-                  color: 'white',
-                  border: '1px solid #555',
-                  borderRadius: '4px',
-                  fontSize: '0.9rem'
-                }}
-              >
-                <option value={10}>10</option>
-                <option value={25}>25</option>
-                <option value={50}>50</option>
-                <option value={100}>100</option>
-              </select>
-              <button
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: currentPage === 1 ? 'var(--text-tertiary)' : 'var(--text-primary)',
-                  cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-                  fontSize: '1.2rem',
-                  padding: '0.25rem 0.5rem'
-                }}
-              >
-                ←
-              </button>
-              <button
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: currentPage === totalPages ? 'var(--text-tertiary)' : 'var(--text-primary)',
-                  cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
-                  fontSize: '1.2rem',
-                  padding: '0.25rem 0.5rem'
-                }}
-              >
-                →
-              </button>
+              {total > limit && (
+                <>
+                  <button
+                    onClick={() => setOffset(prev => Math.max(0, prev - limit))}
+                    disabled={offset === 0}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: offset === 0 ? 'var(--text-tertiary)' : 'var(--text-primary)',
+                      cursor: offset === 0 ? 'not-allowed' : 'pointer',
+                      fontSize: '1.2rem',
+                      padding: '0.25rem 0.5rem'
+                    }}
+                  >
+                    ←
+                  </button>
+                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', padding: '0 1rem' }}>
+                    {Math.floor(offset / limit) + 1} / {Math.ceil(total / limit)}
+                  </span>
+                  <button
+                    onClick={() => setOffset(prev => prev + limit)}
+                    disabled={offset + limit >= total}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: offset + limit >= total ? 'var(--text-tertiary)' : 'var(--text-primary)',
+                      cursor: offset + limit >= total ? 'not-allowed' : 'pointer',
+                      fontSize: '1.2rem',
+                      padding: '0.25rem 0.5rem'
+                    }}
+                  >
+                    →
+                  </button>
+                </>
+              )}
             </div>
           </div>
 
           {/* Tabela */}
-          {paginatedGuns.length === 0 ? (
+          {guns.length === 0 ? (
             <p className="text-center" style={{ color: '#888', padding: '2rem' }}>
               {t('guns.noWeaponsMatch')}
             </p>
@@ -1026,7 +974,7 @@ const GunsPage = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {paginatedGuns.map((gun) => {
+                  {guns.map((gun) => {
                     const maintenanceStatus = getMaintenanceStatus(gun.id);
                     return (
                       <tr key={gun.id} style={{ borderBottom: '1px solid #333' }}>
