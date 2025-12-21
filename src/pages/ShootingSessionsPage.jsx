@@ -576,7 +576,10 @@ const ShootingSessionsPage = () => {
                             } else {
                               color = '#dc3545'; // Czerwony
                             }
-                            const message = getQualityMessage(score, userSkillLevel);
+                            // Sztywny komentarz tylko dla sesji standardowej
+                            const message = session.session_type !== 'advanced' 
+                              ? getQualityMessage(score, userSkillLevel) 
+                              : null;
                             return (
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                                 <span style={{ 
