@@ -5,6 +5,18 @@ import { shootingSessionsAPI, gunsAPI, ammoAPI, accountAPI } from '../services/a
 import { useAuth } from '../context/AuthContext';
 import { useCurrencyConverter } from '../hooks/useCurrencyConverter';
 
+// Parsuje ai_comment JSON i zwraca obiekt analizy
+const parseAIAnalysis = (aiComment) => {
+  if (!aiComment) return null;
+  try {
+    const parsed = JSON.parse(aiComment);
+    return parsed;
+  } catch {
+    // Stary format - zwykły tekst
+    return { summary: aiComment };
+  }
+};
+
 const ShootingSessionsPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -598,7 +610,7 @@ const ShootingSessionsPage = () => {
                           }}
                           onClick={(e) => e.stopPropagation()}
                         >
-                          {session.session_type === 'advanced' ? (session.ai_comment || '-') : '-'}
+                          {session.session_type === 'advanced' ? (parseAIAnalysis(session.ai_comment)?.summary || '-') : '-'}
                         </td>
                       )}
                       <td>
@@ -919,25 +931,129 @@ const ShootingSessionsPage = () => {
                 </div>
               )}
 
-              {selectedSession.session_type === 'advanced' && (
-                <div>
-                  <div style={{ marginBottom: '0.5rem' }}>
-                    <strong>{t('sessions.aiComment')}</strong>
+              {selectedSession.session_type === 'advanced' && (() => {
+                const analysis = parseAIAnalysis(selectedSession.ai_comment);
+                if (!analysis) return (
+                  <div>
+                    <div style={{ marginBottom: '0.5rem' }}>
+                      <strong>{t('sessions.aiComment')}</strong>
+                    </div>
+                    <div style={{ 
+                      padding: '0.75rem', 
+                      backgroundColor: 'var(--bg-secondary)', 
+                      borderRadius: '4px',
+                      color: 'var(--text-tertiary)'
+                    }}>
+                      -
+                    </div>
                   </div>
-                  <div style={{ 
-                    marginTop: '0.5rem', 
-                    padding: '0.75rem', 
-                    backgroundColor: 'var(--bg-secondary)', 
-                    borderRadius: '4px',
-                    whiteSpace: 'pre-wrap',
-                    wordWrap: 'break-word',
-                    minHeight: '100px',
-                    color: 'var(--text-primary)'
-                  }}>
-                    {selectedSession.ai_comment || '-'}
+                );
+                
+                return (
+                  <div>
+                    <div style={{ marginBottom: '0.5rem' }}>
+                      <strong>{t('sessions.aiComment')}</strong>
+                    </div>
+                    <div style={{ 
+                      marginTop: '0.5rem', 
+                      padding: '1rem', 
+                      backgroundColor: 'var(--bg-secondary)', 
+                      borderRadius: '8px',
+                      color: 'var(--text-primary)'
+                    }}>
+                      {/* Podsumowanie */}
+                      {analysis.summary && (
+                        <div style={{ marginBottom: '1rem', fontSize: '1.05rem', fontWeight: '500' }}>
+                          {analysis.summary}
+                        </div>
+                      )}
+                      
+                      {/* Sekcje szczegółowe */}
+                      <div style={{ display: 'grid', gap: '0.75rem' }}>
+                        {analysis.accuracy_comment && (
+                          <div>
+                            <div style={{ fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
+                              {t('sessions.accuracy', 'Celność')}
+                            </div>
+                            <div>{analysis.accuracy_comment}</div>
+                          </div>
+                        )}
+                        
+                        {analysis.precision_comment && (
+                          <div>
+                            <div style={{ fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
+                              {t('sessions.precision', 'Precyzja')}
+                            </div>
+                            <div>{analysis.precision_comment}</div>
+                          </div>
+                        )}
+                        
+                        {analysis.score_comment && (
+                          <div>
+                            <div style={{ fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
+                              {t('sessions.score', 'Ocena')}
+                            </div>
+                            <div>{analysis.score_comment}</div>
+                          </div>
+                        )}
+                        
+                        {analysis.weapon_context && (
+                          <div>
+                            <div style={{ fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
+                              {t('sessions.weaponContext', 'Kontekst broni')}
+                            </div>
+                            <div>{analysis.weapon_context}</div>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Mocne strony */}
+                      {analysis.strengths && analysis.strengths.length > 0 && (
+                        <div style={{ marginTop: '1rem' }}>
+                          <div style={{ fontWeight: '600', color: '#4caf50', marginBottom: '0.5rem' }}>
+                            {t('sessions.strengths', 'Mocne strony')}
+                          </div>
+                          <ul style={{ margin: 0, paddingLeft: '1.25rem' }}>
+                            {analysis.strengths.map((s, i) => <li key={i}>{s}</li>)}
+                          </ul>
+                        </div>
+                      )}
+                      
+                      {/* Słabe strony */}
+                      {analysis.weaknesses && analysis.weaknesses.length > 0 && (
+                        <div style={{ marginTop: '0.75rem' }}>
+                          <div style={{ fontWeight: '600', color: '#ff9800', marginBottom: '0.5rem' }}>
+                            {t('sessions.weaknesses', 'Do poprawy')}
+                          </div>
+                          <ul style={{ margin: 0, paddingLeft: '1.25rem' }}>
+                            {analysis.weaknesses.map((w, i) => <li key={i}>{w}</li>)}
+                          </ul>
+                        </div>
+                      )}
+                      
+                      {/* Wskazówki */}
+                      {analysis.tips && analysis.tips.length > 0 && (
+                        <div style={{ marginTop: '0.75rem' }}>
+                          <div style={{ fontWeight: '600', color: '#2196f3', marginBottom: '0.5rem' }}>
+                            {t('sessions.tips', 'Wskazówki')}
+                          </div>
+                          <ul style={{ margin: 0, paddingLeft: '1.25rem' }}>
+                            {analysis.tips.map((tip, i) => <li key={i}>{tip}</li>)}
+                          </ul>
+                        </div>
+                      )}
+                      
+                      {/* Szacowany poziom */}
+                      {analysis.skill_level_estimate && (
+                        <div style={{ marginTop: '1rem', padding: '0.5rem 0.75rem', backgroundColor: 'var(--bg-tertiary)', borderRadius: '4px', display: 'inline-block' }}>
+                          <span style={{ color: 'var(--text-secondary)' }}>{t('sessions.skillLevelEstimate', 'Szacowany poziom')}: </span>
+                          <strong>{analysis.skill_level_estimate}</strong>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
               {/* Zdjęcie tarczy - tylko dla właściciela sesji */}
               {selectedSession.target_image_path && user && !user.is_guest && selectedSession.user_id === user.user_id && (

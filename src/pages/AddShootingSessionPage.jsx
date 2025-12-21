@@ -519,31 +519,21 @@ const AddShootingSessionPage = () => {
           }
         }
         
-        // Wygeneruj komentarz AI jeśli są wymagane dane (także po edycji)
+        // Wygeneruj zaawansowaną analizę AI jeśli są wymagane dane (także po edycji)
         if (sessionMode === 'advanced' && formData.distance_m && formData.shots && user && !user.is_guest) {
           const hasHits = formData.hits && formData.hits.trim() !== '';
-          const hasTargetImage = targetImageUrl !== null || (targetImageFile !== null);
-          const shouldGenerateAI = hasHits || hasTargetImage;
           
-          if (shouldGenerateAI) {
+          if (hasHits) {
             try {
               setAnalyzingAI(true);
-              const result = await shootingSessionsAPI.generateAIComment(id);
-              // Jeśli Vision policzyło trafienia (przypadek A), zaktualizuj widok
-              if (result.data && result.data.hits !== undefined && !hasHits) {
-                setFormData(prev => ({
-                  ...prev,
-                  hits: result.data.hits.toString()
-                }));
-              }
+              await shootingSessionsAPI.generateAdvancedAnalysis(id);
             } catch (err) {
-              // Nie blokuj zapisu sesji, jeśli generowanie komentarza się nie powiodło
-              console.error('Błąd podczas generowania komentarza AI:', err);
-              // Pokaż użytkownikowi informację o błędzie
+              // Nie blokuj zapisu sesji, jeśli generowanie analizy się nie powiodło
+              console.error('Błąd podczas generowania analizy AI:', err);
               if (err.response?.data?.detail) {
                 setError(`Błąd analizy AI: ${err.response.data.detail}`);
               } else {
-                setError('Nie udało się wygenerować komentarza AI. Sprawdź czy masz ustawiony klucz OpenAI API.');
+                setError('Nie udało się wygenerować analizy AI. Sprawdź czy masz ustawiony klucz OpenAI API.');
               }
             } finally {
               setAnalyzingAI(false);
@@ -572,33 +562,22 @@ const AddShootingSessionPage = () => {
           }
         }
         
-        // Wygeneruj komentarz AI jeśli są wymagane dane
-        // Wymagania: dystans + strzały + (trafienia LUB zdjęcie) + użytkownik zalogowany
+        // Wygeneruj zaawansowaną analizę AI jeśli są wymagane dane
+        // Wymagania: dystans + strzały + trafienia + użytkownik zalogowany
         if (sessionMode === 'advanced' && formData.distance_m && formData.shots && user && !user.is_guest) {
           const hasHits = formData.hits && formData.hits.trim() !== '';
-          // Sprawdź czy jest zdjęcie (przesłane lub wybrane przez użytkownika)
-          const hasTargetImageFinal = hasTargetImage || (targetImageFile !== null);
-          const shouldGenerateAI = hasHits || hasTargetImageFinal;
           
-          if (shouldGenerateAI) {
-          try {
+          if (hasHits) {
+            try {
               setAnalyzingAI(true);
-              const result = await shootingSessionsAPI.generateAIComment(sessionId);
-              // Jeśli Vision policzyło trafienia (przypadek A), zaktualizuj widok
-              if (result.data && result.data.hits !== undefined && !hasHits) {
-                setFormData(prev => ({
-                  ...prev,
-                  hits: result.data.hits.toString()
-                }));
-              }
-          } catch (err) {
-            // Nie blokuj zapisu sesji, jeśli generowanie komentarza się nie powiodło
-            console.error('Błąd podczas generowania komentarza AI:', err);
-              // Pokaż użytkownikowi informację o błędzie
+              await shootingSessionsAPI.generateAdvancedAnalysis(sessionId);
+            } catch (err) {
+              // Nie blokuj zapisu sesji, jeśli generowanie analizy się nie powiodło
+              console.error('Błąd podczas generowania analizy AI:', err);
               if (err.response?.data?.detail) {
                 setError(`Błąd analizy AI: ${err.response.data.detail}`);
               } else {
-                setError('Nie udało się wygenerować komentarza AI. Sprawdź czy masz ustawiony klucz OpenAI API.');
+                setError('Nie udało się wygenerować analizy AI. Sprawdź czy masz ustawiony klucz OpenAI API.');
               }
             } finally {
               setAnalyzingAI(false);
