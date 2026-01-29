@@ -160,6 +160,7 @@ export const sessionsAPI = {
           delete: (id) => api.delete(`/shooting-sessions/${id}`),
           getSummary: () => api.get('/shooting-sessions/summary'),
           generateAdvancedAnalysis: (id) => api.post(`/shooting-sessions/${id}/advanced-analysis`),
+          analyzeTarget: (id) => api.post(`/shooting-sessions/${id}/analyze-target`),
           uploadTargetImage: (id, formData) => api.post(`/shooting-sessions/${id}/target-image`, formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
           }),

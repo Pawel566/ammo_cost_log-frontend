@@ -21,6 +21,7 @@ const AddShootingSessionPage = () => {
   const [targetImageUrl, setTargetImageUrl] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [analyzingAI, setAnalyzingAI] = useState(false);
+  const [analyzingTarget, setAnalyzingTarget] = useState(false);
   const fileInputRef = useRef(null);
   const [formData, setFormData] = useState({
     gun_id: '',
@@ -522,13 +523,34 @@ const AddShootingSessionPage = () => {
         // Wygeneruj zaawansowaną analizę AI jeśli są wymagane dane (także po edycji)
         if (sessionMode === 'advanced' && formData.distance_m && formData.shots && user && !user.is_guest) {
           const hasHits = formData.hits && formData.hits.trim() !== '';
+          const hasGroup = formData.group_cm && formData.group_cm.trim() !== '';
+          const hasImage = targetImageFile || targetImageUrl;
+          const needsAutoAnalysis = hasImage && (!hasHits || !hasGroup);
           
-          if (hasHits) {
+          if (needsAutoAnalysis) {
+            // Automatyczna analiza zdjęcia tarczy
+            try {
+              setAnalyzingTarget(true);
+              const analyzeResult = await shootingSessionsAPI.analyzeTarget(id);
+              console.log('Wynik analizy tarczy (edycja):', analyzeResult.data);
+              
+              setAnalyzingTarget(false);
+              setAnalyzingAI(true);
+              await shootingSessionsAPI.generateAdvancedAnalysis(id);
+            } catch (err) {
+              console.error('Błąd podczas analizy tarczy:', err);
+              if (err.response?.data?.detail) {
+                setError(`Błąd analizy tarczy: ${err.response.data.detail}`);
+              }
+            } finally {
+              setAnalyzingTarget(false);
+              setAnalyzingAI(false);
+            }
+          } else if (hasHits) {
             try {
               setAnalyzingAI(true);
               await shootingSessionsAPI.generateAdvancedAnalysis(id);
             } catch (err) {
-              // Nie blokuj zapisu sesji, jeśli generowanie analizy się nie powiodło
               console.error('Błąd podczas generowania analizy AI:', err);
               if (err.response?.data?.detail) {
                 setError(`Błąd analizy AI: ${err.response.data.detail}`);
@@ -562,17 +584,40 @@ const AddShootingSessionPage = () => {
           }
         }
         
-        // Wygeneruj zaawansowaną analizę AI jeśli są wymagane dane
-        // Wymagania: dystans + strzały + trafienia + użytkownik zalogowany
+        // Jeśli mamy zdjęcie tarczy i brakuje trafień lub grupy - AI automatycznie je policzy
+        const hasHits = formData.hits && formData.hits.trim() !== '';
+        const hasGroup = formData.group_cm && formData.group_cm.trim() !== '';
+        const needsAutoAnalysis = hasTargetImage && (!hasHits || !hasGroup);
+        
         if (sessionMode === 'advanced' && formData.distance_m && formData.shots && user && !user.is_guest) {
-          const hasHits = formData.hits && formData.hits.trim() !== '';
-          
-          if (hasHits) {
+          if (needsAutoAnalysis) {
+            // Automatyczna analiza zdjęcia tarczy (liczy trafienia i grupę)
+            try {
+              setAnalyzingTarget(true);
+              const analyzeResult = await shootingSessionsAPI.analyzeTarget(sessionId);
+              console.log('Wynik analizy tarczy:', analyzeResult.data);
+              
+              // Teraz wygeneruj pełną analizę AI
+              setAnalyzingTarget(false);
+              setAnalyzingAI(true);
+              await shootingSessionsAPI.generateAdvancedAnalysis(sessionId);
+            } catch (err) {
+              console.error('Błąd podczas analizy tarczy:', err);
+              if (err.response?.data?.detail) {
+                setError(`Błąd analizy tarczy: ${err.response.data.detail}`);
+              } else {
+                setError('Nie udało się przeanalizować zdjęcia tarczy.');
+              }
+            } finally {
+              setAnalyzingTarget(false);
+              setAnalyzingAI(false);
+            }
+          } else if (hasHits) {
+            // Standardowa ścieżka - użytkownik podał trafienia ręcznie
             try {
               setAnalyzingAI(true);
               await shootingSessionsAPI.generateAdvancedAnalysis(sessionId);
             } catch (err) {
-              // Nie blokuj zapisu sesji, jeśli generowanie analizy się nie powiodło
               console.error('Błąd podczas generowania analizy AI:', err);
               if (err.response?.data?.detail) {
                 setError(`Błąd analizy AI: ${err.response.data.detail}`);
@@ -626,7 +671,35 @@ const AddShootingSessionPage = () => {
           </div>
         )}
 
-        {analyzingAI && (
+        {analyzingTarget && (
+          <div className="alert alert-info" style={{ 
+            marginBottom: '1rem', 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '0.5rem',
+            backgroundColor: '#1a5490',
+            border: '1px solid #2d6fb8',
+            color: '#fff'
+          }}>
+            <div style={{
+              width: '16px',
+              height: '16px',
+              border: `2px solid var(--text-primary)`,
+              borderTop: `2px solid transparent`,
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite'
+            }}></div>
+            <span>Analizuję zdjęcie tarczy... (liczę trafienia i grupę)</span>
+            <style>{`
+              @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+              }
+            `}</style>
+          </div>
+        )}
+
+        {analyzingAI && !analyzingTarget && (
           <div className="alert alert-info" style={{ 
             marginBottom: '1rem', 
             display: 'flex', 
@@ -1009,19 +1082,19 @@ const AddShootingSessionPage = () => {
               <button 
                 type="submit" 
                 className="btn btn-primary" 
-                disabled={analyzingAI}
+                disabled={analyzingAI || analyzingTarget}
                 style={{ 
                   padding: '0.75rem 2rem', 
                   fontSize: '1.1rem',
-                  backgroundColor: analyzingAI ? '#6c757d' : '#007bff',
+                  backgroundColor: (analyzingAI || analyzingTarget) ? '#6c757d' : '#007bff',
                   color: 'var(--text-primary)',
                   border: 'none',
                   borderRadius: '4px',
-                  cursor: analyzingAI ? 'not-allowed' : 'pointer',
-                  opacity: analyzingAI ? 0.6 : 1
+                  cursor: (analyzingAI || analyzingTarget) ? 'not-allowed' : 'pointer',
+                  opacity: (analyzingAI || analyzingTarget) ? 0.6 : 1
                 }}
               >
-                {analyzingAI ? 'Analiza AI...' : 'Zapisz'}
+                {analyzingTarget ? 'Analiza tarczy...' : analyzingAI ? 'Analiza AI...' : 'Zapisz'}
               </button>
             </div>
           </form>
