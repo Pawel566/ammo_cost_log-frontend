@@ -22,10 +22,10 @@ const AddShootingSessionPage = () => {
     hits: '',
     group_cm: '',
     cost: '',
-    posture: false,
-    optic: false,
-    support: false,
-    wind: false
+    posture: '',
+    optic: '',
+    support: '',
+    wind: ''
   });
 
   const DISTANCE_PRESETS = [
@@ -37,6 +37,36 @@ const AddShootingSessionPage = () => {
     { value: '50', label: '50 m' },
     { value: '100', label: '100 m' },
     { value: '300', label: '300 m' }
+  ];
+
+  const POSTURE_OPTIONS = [
+    { value: '', label: 'Wybierz postawę' },
+    { value: 'bench', label: 'Ławka' },
+    { value: 'prone', label: 'Leżąc' },
+    { value: 'kneeling', label: 'Klęcząc' },
+    { value: 'standing', label: 'Stojąc' }
+  ];
+
+  const OPTIC_OPTIONS = [
+    { value: '', label: 'Wybierz optykę' },
+    { value: 'scope', label: 'Luneta' },
+    { value: 'red_dot', label: 'Celownik kolimatorowy' },
+    { value: 'iron', label: 'Muszki' }
+  ];
+
+  const SUPPORT_OPTIONS = [
+    { value: '', label: 'Wybierz podporę' },
+    { value: 'bag', label: 'Worek' },
+    { value: 'bipod', label: 'Dwójnóg' },
+    { value: 'none', label: 'Brak' }
+  ];
+
+  const WIND_OPTIONS = [
+    { value: '', label: 'Wybierz wiatr' },
+    { value: 'none', label: 'Brak' },
+    { value: 'light', label: 'Lekki' },
+    { value: 'medium', label: 'Średni' },
+    { value: 'strong', label: 'Silny' }
   ];
 
   useEffect(() => {
@@ -90,10 +120,10 @@ const AddShootingSessionPage = () => {
         hits: session.hits !== null && session.hits !== undefined ? session.hits.toString() : '',
         group_cm: session.group_cm !== null && session.group_cm !== undefined ? session.group_cm.toString() : '',
         cost: fixedCost,
-        posture: session.posture || false,
-        optic: session.optic || false,
-        support: session.support || false,
-        wind: session.wind || false
+        posture: session.posture || '',
+        optic: session.optic || '',
+        support: session.support || '',
+        wind: session.wind || ''
       });
     } catch (err) {
       setError('Błąd podczas ładowania sesji');
@@ -247,11 +277,21 @@ const AddShootingSessionPage = () => {
         ammo_id: formData.ammo_id,
         date: formData.date,
         shots: Number(shots),
-        posture: formData.posture,
-        optic: formData.optic,
-        support: formData.support,
-        wind: formData.wind,
       };
+      
+      // Dodaj opcjonalne pola warunków tylko jeśli są wybrane (nie puste stringi)
+      if (formData.posture) {
+        sessionData.posture = formData.posture;
+      }
+      if (formData.optic) {
+        sessionData.optic = formData.optic;
+      }
+      if (formData.support) {
+        sessionData.support = formData.support;
+      }
+      if (formData.wind) {
+        sessionData.wind = formData.wind;
+      }
 
       // Dystans (teraz z dropdown, wartość już w metrach)
       if (formData.distance_m) {
@@ -304,11 +344,20 @@ const AddShootingSessionPage = () => {
           hits: normalize(sessionData.hits),
           group_cm: normalize(sessionData.group_cm),
           cost: normalize(sessionData.cost),
-          posture: formData.posture,
-          optic: formData.optic,
-          support: formData.support,
-          wind: formData.wind,
         };
+        // Dodaj opcjonalne pola warunków tylko jeśli są wybrane
+        if (formData.posture) {
+          normalizedData.posture = formData.posture;
+        }
+        if (formData.optic) {
+          normalizedData.optic = formData.optic;
+        }
+        if (formData.support) {
+          normalizedData.support = formData.support;
+        }
+        if (formData.wind) {
+          normalizedData.wind = formData.wind;
+        }
         // Tylko dodaj gun_id i ammo_id jeśli zostały zmienione
         if (sessionData.gun_id) {
           normalizedData.gun_id = sessionData.gun_id;
@@ -336,7 +385,23 @@ const AddShootingSessionPage = () => {
         }, 3000);
       }
     } catch (err) {
-      setError(err.response?.data?.detail || 'Błąd podczas dodawania sesji');
+      // Obsługa błędów walidacji FastAPI (422) - detail jest tablicą obiektów
+      let errorMessage = 'Błąd podczas dodawania sesji';
+      if (err.response?.data?.detail) {
+        const detail = err.response.data.detail;
+        if (Array.isArray(detail)) {
+          // Formatuj błędy walidacji jako czytelny tekst
+          errorMessage = detail.map((error) => {
+            const field = error.loc ? error.loc.join('.') : 'pole';
+            return `${field}: ${error.msg || error.message || 'Błąd walidacji'}`;
+          }).join(', ');
+        } else if (typeof detail === 'string') {
+          errorMessage = detail;
+        } else if (detail.message) {
+          errorMessage = detail.message;
+        }
+      }
+      setError(errorMessage);
       console.error(err);
     }
   };
@@ -525,82 +590,66 @@ const AddShootingSessionPage = () => {
                     Opcjonalne (warunki)
                   </h4>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                    <label style={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: '0.5rem', 
-                      cursor: 'pointer',
-                      padding: '0.5rem',
-                      borderRadius: '6px',
-                      backgroundColor: formData.posture ? 'rgba(0, 123, 255, 0.1)' : 'transparent',
-                      border: formData.posture ? '1px solid #007bff' : '1px solid var(--border-color)',
-                      transition: 'all 0.2s'
-                    }}>
-                      <input
-                        type="checkbox"
-                        checked={formData.posture}
-                        onChange={(e) => setFormData({ ...formData, posture: e.target.checked })}
-                        style={{ width: '18px', height: '18px', accentColor: '#007bff' }}
-                      />
-                      <span style={{ fontSize: '0.9rem' }}>Postawa</span>
-                    </label>
-                    <label style={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: '0.5rem', 
-                      cursor: 'pointer',
-                      padding: '0.5rem',
-                      borderRadius: '6px',
-                      backgroundColor: formData.optic ? 'rgba(0, 123, 255, 0.1)' : 'transparent',
-                      border: formData.optic ? '1px solid #007bff' : '1px solid var(--border-color)',
-                      transition: 'all 0.2s'
-                    }}>
-                      <input
-                        type="checkbox"
-                        checked={formData.optic}
-                        onChange={(e) => setFormData({ ...formData, optic: e.target.checked })}
-                        style={{ width: '18px', height: '18px', accentColor: '#007bff' }}
-                      />
-                      <span style={{ fontSize: '0.9rem' }}>Optyka</span>
-                    </label>
-                    <label style={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: '0.5rem', 
-                      cursor: 'pointer',
-                      padding: '0.5rem',
-                      borderRadius: '6px',
-                      backgroundColor: formData.support ? 'rgba(0, 123, 255, 0.1)' : 'transparent',
-                      border: formData.support ? '1px solid #007bff' : '1px solid var(--border-color)',
-                      transition: 'all 0.2s'
-                    }}>
-                      <input
-                        type="checkbox"
-                        checked={formData.support}
-                        onChange={(e) => setFormData({ ...formData, support: e.target.checked })}
-                        style={{ width: '18px', height: '18px', accentColor: '#007bff' }}
-                      />
-                      <span style={{ fontSize: '0.9rem' }}>Podpora</span>
-                    </label>
-                    <label style={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: '0.5rem', 
-                      cursor: 'pointer',
-                      padding: '0.5rem',
-                      borderRadius: '6px',
-                      backgroundColor: formData.wind ? 'rgba(0, 123, 255, 0.1)' : 'transparent',
-                      border: formData.wind ? '1px solid #007bff' : '1px solid var(--border-color)',
-                      transition: 'all 0.2s'
-                    }}>
-                      <input
-                        type="checkbox"
-                        checked={formData.wind}
-                        onChange={(e) => setFormData({ ...formData, wind: e.target.checked })}
-                        style={{ width: '18px', height: '18px', accentColor: '#007bff' }}
-                      />
-                      <span style={{ fontSize: '0.9rem' }}>Wiatr</span>
-                    </label>
+                    <div className="form-group">
+                      <label className="form-label">Postawa</label>
+                      <select
+                        className="form-input"
+                        value={formData.posture}
+                        onChange={(e) => setFormData({ ...formData, posture: e.target.value })}
+                        style={{ appearance: 'none', backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'%3E%3Cpath fill=\'%23aaa\' d=\'M6 9L1 4h10z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', paddingRight: '2.5rem' }}
+                      >
+                        {POSTURE_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Optyka</label>
+                      <select
+                        className="form-input"
+                        value={formData.optic}
+                        onChange={(e) => setFormData({ ...formData, optic: e.target.value })}
+                        style={{ appearance: 'none', backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'%3E%3Cpath fill=\'%23aaa\' d=\'M6 9L1 4h10z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', paddingRight: '2.5rem' }}
+                      >
+                        {OPTIC_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Podpora</label>
+                      <select
+                        className="form-input"
+                        value={formData.support}
+                        onChange={(e) => setFormData({ ...formData, support: e.target.value })}
+                        style={{ appearance: 'none', backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'%3E%3Cpath fill=\'%23aaa\' d=\'M6 9L1 4h10z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', paddingRight: '2.5rem' }}
+                      >
+                        {SUPPORT_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Wiatr</label>
+                      <select
+                        className="form-input"
+                        value={formData.wind}
+                        onChange={(e) => setFormData({ ...formData, wind: e.target.value })}
+                        style={{ appearance: 'none', backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'%3E%3Cpath fill=\'%23aaa\' d=\'M6 9L1 4h10z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', paddingRight: '2.5rem' }}
+                      >
+                        {WIND_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                 </div>
               </div>

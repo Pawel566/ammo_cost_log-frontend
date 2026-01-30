@@ -402,19 +402,6 @@ const ShootingSessionsPage = () => {
                       style={{ 
                         cursor: 'pointer',
                         userSelect: 'none',
-                        padding: '0.75rem',
-                        textAlign: 'center'
-                      }}
-                      onClick={() => handleSort('type')}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-hover-bg)'}
-                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                    >
-                      {t('sessions.sessionType')}
-                    </th>
-                    <th 
-                      style={{ 
-                        cursor: 'pointer',
-                        userSelect: 'none',
                         padding: '0.75rem'
                       }}
                       onClick={() => handleSort('date')}
@@ -498,9 +485,6 @@ const ShootingSessionsPage = () => {
                     >
                       Punktacja końcowa
                     </th>
-                    {sessions.some(s => s.session_type === 'advanced') && (
-                      <th style={{ padding: '0.75rem' }}>{t('sessions.comment')}</th>
-                    )}
                     <th style={{ width: '50px', padding: '0.75rem' }}></th>
                   </tr>
                 </thead>
@@ -521,17 +505,6 @@ const ShootingSessionsPage = () => {
                         e.currentTarget.style.backgroundColor = 'transparent';
                       }}
                     >
-                      <td style={{ textAlign: 'center', padding: '0.75rem' }}>
-                        <img 
-                          src={session.session_type === 'advanced' ? "/assets/session_icon_AI_dark.png" : "/assets/session_icon_dark.png"}
-                          alt={session.session_type === 'advanced' ? "Sesja zaawansowana" : "Sesja standardowa"}
-                          style={{ 
-                            width: '24px', 
-                            height: '24px',
-                            objectFit: 'contain'
-                          }}
-                        />
-                      </td>
                       <td>{new Date(session.date).toLocaleDateString('pl-PL')}</td>
                       <td>{getGunName(session.gun_id)}</td>
                       <td>{getAmmoName(session.ammo_id)}</td>
@@ -577,9 +550,7 @@ const ShootingSessionsPage = () => {
                               color = '#dc3545'; // Czerwony
                             }
                             // Sztywny komentarz tylko dla sesji standardowej
-                            const message = session.session_type !== 'advanced' 
-                              ? getQualityMessage(score, userSkillLevel) 
-                              : null;
+                            const message = getQualityMessage(score, userSkillLevel);
                             return (
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                                 <span style={{ 
@@ -603,19 +574,6 @@ const ShootingSessionsPage = () => {
                           return '-';
                         })()}
                       </td>
-                      {sessions.some(s => s.session_type === 'advanced') && (
-                        <td 
-                          style={{ 
-                            maxWidth: '300px',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap'
-                          }}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {session.session_type === 'advanced' ? (parseAIAnalysis(session.ai_comment)?.summary || '-') : '-'}
-                        </td>
-                      )}
                       <td>
                         <div className="session-menu-container" style={{ position: 'relative' }}>
                           <button
@@ -801,26 +759,7 @@ const ShootingSessionsPage = () => {
             </h2>
 
             <div style={{ display: 'grid', gap: '1rem' }}>
-              {/* 1️⃣ Typ sesji */}
-              <div>
-                <strong>{t('sessions.sessionType')}</strong>{' '}
-                <img 
-                  src={selectedSession.session_type === 'advanced' ? "/assets/session_icon_AI_dark.png" : "/assets/session_icon_dark.png"}
-                  alt={selectedSession.session_type === 'advanced' ? "Sesja zaawansowana" : "Sesja standardowa"}
-                  style={{ 
-                    width: '20px', 
-                    height: '20px',
-                    objectFit: 'contain',
-                    verticalAlign: 'middle',
-                    marginLeft: '0.5rem'
-                  }}
-                />
-                <span style={{ marginLeft: '0.5rem' }}>
-                  {selectedSession.session_type === 'advanced' ? t('sessions.advanced') : t('sessions.standard')}
-                </span>
-              </div>
-
-              {/* 2️⃣ Data */}
+              {/* 1️⃣ Data */}
               <div>
                 <strong>{t('sessions.date')}</strong> {new Date(selectedSession.date).toLocaleDateString('pl-PL')}
               </div>
@@ -918,6 +857,39 @@ const ShootingSessionsPage = () => {
                 <strong>{t('sessions.cost')}</strong> {selectedSession.cost ? formatCurrency(parseFloat(selectedSession.cost)) : '-'}
               </div>
 
+              {/* Warunki strzelania */}
+              {(selectedSession.posture || selectedSession.optic || selectedSession.support || selectedSession.wind) && (
+                <div style={{ marginTop: '0.5rem', paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}>
+                  <strong style={{ display: 'block', marginBottom: '0.75rem' }}>Warunki strzelania:</strong>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', fontSize: '0.9rem' }}>
+                    {selectedSession.posture && (
+                      <div>
+                        <span style={{ color: 'var(--text-secondary)' }}>Postawa:</span>{' '}
+                        <span>{selectedSession.posture === 'bench' ? 'Ławka' : selectedSession.posture === 'prone' ? 'Leżąc' : selectedSession.posture === 'kneeling' ? 'Klęcząc' : selectedSession.posture === 'standing' ? 'Stojąc' : selectedSession.posture}</span>
+                      </div>
+                    )}
+                    {selectedSession.optic && (
+                      <div>
+                        <span style={{ color: 'var(--text-secondary)' }}>Optyka:</span>{' '}
+                        <span>{selectedSession.optic === 'scope' ? 'Luneta' : selectedSession.optic === 'red_dot' ? 'Celownik kolimatorowy' : selectedSession.optic === 'iron' ? 'Muszki' : selectedSession.optic}</span>
+                      </div>
+                    )}
+                    {selectedSession.support && (
+                      <div>
+                        <span style={{ color: 'var(--text-secondary)' }}>Podpora:</span>{' '}
+                        <span>{selectedSession.support === 'bag' ? 'Worek' : selectedSession.support === 'bipod' ? 'Dwójnóg' : selectedSession.support === 'none' ? 'Brak' : selectedSession.support}</span>
+                      </div>
+                    )}
+                    {selectedSession.wind && (
+                      <div>
+                        <span style={{ color: 'var(--text-secondary)' }}>Wiatr:</span>{' '}
+                        <span>{selectedSession.wind === 'none' ? 'Brak' : selectedSession.wind === 'light' ? 'Lekki' : selectedSession.wind === 'medium' ? 'Średni' : selectedSession.wind === 'strong' ? 'Silny' : selectedSession.wind}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {selectedSession.notes && (
                 <div>
                   <strong>{t('sessions.notes')}</strong>
@@ -934,7 +906,7 @@ const ShootingSessionsPage = () => {
                 </div>
               )}
 
-              {selectedSession.session_type === 'advanced' && (() => {
+              {selectedSession.ai_comment && (() => {
                 const analysis = parseAIAnalysis(selectedSession.ai_comment);
                 if (!analysis) return (
                   <div>
