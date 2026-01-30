@@ -114,14 +114,6 @@ const Register = () => {
                 </button>
               </form>
               )}
-              {!success && (
-              <div className="guest-info">
-                <p>{t('register.continueAsGuest')}</p>
-                <Link to="/guns" className="guest-btn">
-                  {t('register.goToApp')}
-                </Link>
-              </div>
-              )}
             </div>
           </section>
         </div>

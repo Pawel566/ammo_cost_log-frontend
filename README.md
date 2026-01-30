@@ -83,7 +83,7 @@ useEffect(() => {
 
 #### Kiedy `authReady` jest `true`?
 - Token został zweryfikowany przez `/auth/me` (dla zalogowanych użytkowników)
-- Lub gdy nie ma tokena (guest mode)
+- Wymagane jest zalogowanie się do aplikacji
 
 #### Przykłady poprawnego użycia
 - ✅ `ThemeContext` - czeka na `authReady` przed `settingsAPI.get()`

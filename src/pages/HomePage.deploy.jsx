@@ -98,12 +98,6 @@ const HomePage = () => {
                       Zarejestruj się
                     </Link>
                   </div>
-                  <div className="guest-info">
-                    <p>Kontynuuj jako gość</p>
-                    <Link to="/guns" className="guest-btn">
-                      Przejdź do aplikacji
-                    </Link>
-                  </div>
                 </>
               )}
             </div>

@@ -30,7 +30,6 @@ import { api } from '../services/api';
  * 
  * authReady jest true gdy:
  * - Token został zweryfikowany przez /auth/me (dla zalogowanych użytkowników)
- * - Lub gdy nie ma tokena (guest mode)
  * 
  * Przykłady poprawnego użycia:
  * - ThemeContext, CurrencyContext, LanguageContext
@@ -69,12 +68,6 @@ export const AuthProvider = ({ children }) => {
     try {
       const accessToken = localStorage.getItem(ACCESS_TOKEN_KEY);
       if (!accessToken) {
-        const guestId = localStorage.getItem('guest_id');
-        const expiresAt = localStorage.getItem('guest_id_expires_at');
-        const isExpired = !expiresAt || new Date(expiresAt) < new Date();
-        if (!guestId || isExpired) {
-          api.get('/guns?limit=1').catch(() => {});
-        }
         setAuthReady(true);
         setLoading(false);
         return;
@@ -98,12 +91,6 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem(USER_USERNAME_KEY);
       setAuthHeader(null);
       setUser(null);
-      const guestId = localStorage.getItem('guest_id');
-      const expiresAt = localStorage.getItem('guest_id_expires_at');
-      const isExpired = !expiresAt || new Date(expiresAt) < new Date();
-      if (!guestId || isExpired) {
-        api.get('/guns?limit=1').catch(() => {});
-      }
       setAuthReady(true);
     } finally {
       setLoading(false);

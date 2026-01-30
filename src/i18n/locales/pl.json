@@ -523,8 +523,6 @@
     "logout": "Wyloguj się",
     "login": "Zaloguj się",
     "register": "Zarejestruj się",
-    "continueAsGuest": "Kontynuuj jako gość",
-    "goToApp": "Przejdź do aplikacji",
     "footer": "© 2024 Ammo Cost Log. Wszystkie prawa zastrzeżone."
   },
   "login": {
@@ -539,8 +537,6 @@
     "loggingIn": "Logowanie...",
     "loginButton": "Zaloguj się",
     "forgotPassword": "Nie pamiętasz hasła?",
-    "continueAsGuest": "Kontynuuj jako gość",
-    "goToApp": "Przejdź do aplikacji",
     "loginError": "Błąd logowania: {{error}}",
     "loginSuccess": "Zalogowano pomyślnie!",
     "footer": "© 2024 Ammo Cost Log. Wszystkie prawa zastrzeżone."
@@ -562,8 +558,6 @@
     "userExists": "Użytkownik o tym e-mailu już istnieje.",
     "registerSuccess": "Konto zostało utworzone pomyślnie! Możesz się teraz zalogować.",
     "goToLogin": "Przejdź do logowania",
-    "continueAsGuest": "Kontynuuj jako gość",
-    "goToApp": "Przejdź do aplikacji",
     "footer": "© 2024 Ammo Cost Log. Wszystkie prawa zastrzeżone."
   },
   "forgotPassword": {

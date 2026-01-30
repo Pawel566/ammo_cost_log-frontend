@@ -209,13 +209,6 @@ const HomePage = () => {
                   )}
                 </>
               )}
-              
-              <div className="guest-info">
-                <p>💡 <strong>Tryb gościa:</strong> Możesz korzystać z aplikacji bez logowania!</p>
-                <Link to="/guns" className="guest-btn">
-                  Przejdź do aplikacji
-                </Link>
-              </div>
             </div>
           </section>
         </div>

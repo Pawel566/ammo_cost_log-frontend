@@ -544,8 +544,6 @@
     "logout": "Log out",
     "login": "Log in",
     "register": "Register",
-    "continueAsGuest": "Continue as guest",
-    "goToApp": "Go to app",
     "footer": "© 2024 Ammo Cost Log. All rights reserved."
   },
   "login": {
@@ -560,8 +558,6 @@
     "loggingIn": "Logging in...",
     "loginButton": "Log in",
     "forgotPassword": "Forgot password?",
-    "continueAsGuest": "Continue as guest",
-    "goToApp": "Go to app",
     "loginError": "Login error: {{error}}",
     "loginSuccess": "Logged in successfully!",
     "footer": "© 2024 Ammo Cost Log. All rights reserved."
@@ -583,8 +579,6 @@
     "userExists": "User with this email already exists.",
     "registerSuccess": "Account created successfully! You can now log in.",
     "goToLogin": "Go to login",
-    "continueAsGuest": "Continue as guest",
-    "goToApp": "Go to app",
     "footer": "© 2024 Ammo Cost Log. All rights reserved."
   },
   "forgotPassword": {

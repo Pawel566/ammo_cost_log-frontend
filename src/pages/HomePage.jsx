@@ -141,12 +141,6 @@ const HomePage = () => {
                       {t('homepage.register')}
                     </Link>
                   </div>
-                  <div className="guest-info">
-                    <p>{t('homepage.continueAsGuest')}</p>
-                    <Link to="/guns" className="guest-btn">
-                      {t('homepage.goToApp')}
-                    </Link>
-                  </div>
                 </>
               )}
             </div>

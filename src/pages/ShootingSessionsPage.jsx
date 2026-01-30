@@ -253,7 +253,7 @@ const ShootingSessionsPage = () => {
     setOpenMenuId(null);
     
     // Załaduj zdjęcie tarczy jeśli istnieje i użytkownik jest właścicielem
-    if (session.target_image_path && user && !user.is_guest && session.user_id === user.user_id) {
+    if (session.target_image_path && user && session.user_id === user.user_id) {
       try {
         const response = await shootingSessionsAPI.getTargetImage(session.id);
         if (response.data && response.data.url) {
@@ -1059,7 +1059,7 @@ const ShootingSessionsPage = () => {
               })()}
 
               {/* Zdjęcie tarczy - tylko dla właściciela sesji */}
-              {selectedSession.target_image_path && user && !user.is_guest && selectedSession.user_id === user.user_id && (
+              {selectedSession.target_image_path && user && selectedSession.user_id === user.user_id && (
                 <div>
                   <div style={{ marginBottom: '0.5rem' }}>
                     <strong>{t('sessions.targetImage')}</strong>

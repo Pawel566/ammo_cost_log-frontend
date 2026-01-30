@@ -100,12 +100,6 @@ const Login = () => {
                   {t('login.forgotPassword')}
                 </Link>
               </div>
-              <div className="guest-info">
-                <p>{t('login.continueAsGuest')}</p>
-                <Link to="/guns" className="guest-btn">
-                  {t('login.goToApp')}
-                </Link>
-              </div>
             </div>
           </section>
         </div>

@@ -15,17 +15,6 @@ export const api = axios.create({
   withCredentials: false,
 });
 
-const GUEST_ID_KEY = "guest_id";
-const GUEST_EXPIRES_KEY = "guest_id_expires_at";
-
-function isGuestExpired() {
-  const expiresAt = localStorage.getItem(GUEST_EXPIRES_KEY);
-  if (!expiresAt) return true;
-  const now = new Date();
-  const exp = new Date(expiresAt);
-  return exp < now;
-}
-
 api.interceptors.request.use((config) => {
   // Always get fresh token from localStorage (don't rely on api.defaults.headers)
   const accessToken = localStorage.getItem('access_token');
@@ -33,23 +22,9 @@ api.interceptors.request.use((config) => {
   
   if (hasValidToken) {
     config.headers["Authorization"] = `Bearer ${accessToken.trim()}`;
-    // Remove guest headers if we have a valid token
-    delete config.headers["X-Guest-Id"];
-    delete config.headers["X-Guest-Id-Expires-At"];
   } else {
-    // No valid token - use guest mode
-    let guestId = localStorage.getItem(GUEST_ID_KEY);
-    let guestExpires = localStorage.getItem(GUEST_EXPIRES_KEY);
-    if (!guestId || !guestExpires || isGuestExpired()) {
-      localStorage.removeItem(GUEST_ID_KEY);
-      localStorage.removeItem(GUEST_EXPIRES_KEY);
-      guestId = null;
-      guestExpires = null;
-    }
-    // Remove auth header if no valid token
+    // No valid token - authentication is required
     delete config.headers["Authorization"];
-    if (guestId) config.headers["X-Guest-Id"] = guestId;
-    if (guestExpires) config.headers["X-Guest-Id-Expires-At"] = guestExpires;
   }
   
   // Debug logging (only in development)
@@ -58,8 +33,7 @@ api.interceptors.request.use((config) => {
       method: config.method?.toUpperCase(),
       url: config.url,
       baseURL: config.baseURL,
-      hasAuth: !!config.headers["Authorization"],
-      hasGuestId: !!config.headers["X-Guest-Id"]
+      hasAuth: !!config.headers["Authorization"]
     });
   }
   
@@ -67,17 +41,6 @@ api.interceptors.request.use((config) => {
 }, (error) => Promise.reject(error));
 
 api.interceptors.response.use((response) => {
-  const accessToken = localStorage.getItem('access_token');
-  if (!accessToken) {
-    const guestId = response.headers["x-guest-id"];
-    const guestExpires = response.headers["x-guest-id-expires-at"];
-    if (guestId) {
-      localStorage.setItem(GUEST_ID_KEY, guestId);
-    }
-    if (guestExpires) {
-      localStorage.setItem(GUEST_EXPIRES_KEY, guestExpires);
-    }
-  }
   return response;
 }, (error) => {
   // Log errors for debugging
